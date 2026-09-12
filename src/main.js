@@ -121,3 +121,4 @@ win.addEventListener("pointerdown",e=>{ e.preventDefault(); audio(); showPicker(
 buildKeypad();
 wirePicker(name=>{ applyTheme(name); themeState.current.click(); startGame(); });
 showPicker();
+document.querySelector("#buildVer").textContent = `ver: ${__BUILD_VERSION__}`;

@@ -24,3 +24,6 @@
 @keyframes treeShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
 @keyframes rocketBounce{0%,100%{transform:translateY(0) scale(1)}30%{transform:translateY(-22px) scale(1.05)}52%{transform:translateY(0) scale(.95)}72%{transform:translateY(-9px)}}
 @keyframes chickenShake{0%,100%{transform:translate(0,0) rotate(0)}20%{transform:translate(-3px,0) rotate(-9deg)}40%{transform:translate(3px,0) rotate(9deg)}60%{transform:translate(-2px,0) rotate(-5deg)}80%{transform:translate(2px,0) rotate(5deg)}}
+
+.build-ver{position:absolute; left:0; right:0; bottom:max(10px,env(safe-area-inset-bottom));
+  text-align:center; font-size:12px; letter-spacing:.02em; color:rgba(46,58,89,.35); pointer-events:none;}

@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/postbuild.mjs",
+    "build": "node scripts/bump-version.mjs && vite build && node scripts/postbuild.mjs",
     "preview": "vite preview"
   },
   "devDependencies": {

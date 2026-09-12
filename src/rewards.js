@@ -1,7 +1,7 @@
 // Streak-milestone reward animations (rain of emoji, fly-across, float-up).
 // These are generic effects; `themes.js` decides which theme fires which one.
 
-import { rnd, pick, reduceMotion } from "./config.js";
+import { rnd, pick, reduceMotion, FLYBY_DURATION } from "./config.js";
 import { fx } from "./dom.js";
 
 export function rainDown(emojis){
@@ -24,13 +24,24 @@ export function flyAcross(emoji, path){
   if(reduceMotion) return;
   const s=document.createElement("div"); s.className="flyby"; s.textContent=emoji;
   const min=Math.min(innerWidth,innerHeight); let size,sx,sy,ex,ey,ease="linear";
-  if(path==="diagonal"){ size=min*0.63; sx=-size; sy=innerHeight+size*0.3; ex=innerWidth+size; ey=-size*0.6; ease="cubic-bezier(.4,0,.6,1)"; }
+  if(path==="diagonal"){
+    // Fly at a fixed angle from bottom-left to top-right, sized off the
+    // screen's own diagonal so the angle looks the same on a tall phone
+    // as on a wide desktop (not stretched/squashed by the aspect ratio).
+    size=min*0.63;
+    const angle=40*Math.PI/180;
+    const dist=2*Math.max(innerWidth,innerHeight)+size*2;
+    const dx=Math.cos(angle)*dist, dy=Math.sin(angle)*dist;
+    const cx=innerWidth/2, cy=innerHeight/2;
+    sx=cx-dx/2; sy=cy+dy/2; ex=cx+dx/2; ey=cy-dy/2;
+    ease="cubic-bezier(.4,0,.6,1)";
+  }
   else if(path==="sky"){ size=min*0.30; sx=innerWidth+size; sy=innerHeight*0.20; ex=-size; ey=innerHeight*0.16; }
   else { size=min*0.42; const cy=innerHeight*0.5-size*0.5; sx=innerWidth+size; sy=cy; ex=-size; ey=cy; }  // ground → across the middle
   s.style.fontSize=size+"px"; document.body.appendChild(s);
   s.animate([{transform:`translate(${sx}px,${sy}px)`,opacity:1},{transform:`translate(${ex}px,${ey}px)`,opacity:1}],
-            {duration:3800, easing:ease, fill:"forwards"});
-  setTimeout(()=>s.remove(),3900);
+            {duration:FLYBY_DURATION, easing:ease, fill:"forwards"});
+  setTimeout(()=>s.remove(),FLYBY_DURATION+100);
 }
 
 export function floatUp(emoji){

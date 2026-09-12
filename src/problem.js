@@ -13,6 +13,15 @@ function pipCard(v){
 }
 function emojiGroup(v,glyph){
   const g=document.createElement("div"); g.className="emoji-group";
+  // Cap at 2 rows regardless of screen width, so a large operand (up to 9)
+  // never wraps onto enough lines to push the keypad off-screen.
+  const cols = v<=4 ? v : Math.ceil(v/2);
+  g.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+  if(v>4){
+    const vw = Math.max(3, 8-cols);
+    const maxPx = Math.max(18, 50-cols*6);
+    g.style.setProperty("--emoji-size", `clamp(16px, ${vw}vw, ${maxPx}px)`);
+  }
   for(let i=0;i<v;i++){ const s=document.createElement("span"); s.textContent=glyph; g.appendChild(s); }
   return g;
 }

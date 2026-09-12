@@ -1,5 +1,7 @@
 // Synthesized sound effects (no audio files) via the Web Audio API.
 
+import { FLYBY_DURATION } from "./config.js";
+
 let ac = null;
 export function audio(){
   if(ac){ if(ac.state==="suspended") ac.resume(); return ac; }
@@ -41,8 +43,8 @@ function noiseBuffer(dur){
   for(let i=0;i<len;i++) d[i]=Math.random()*2-1; return buf;
 }
 
-export function sZoom(){   // rocket / spaceship whoosh (doppler-ish pass)
-  const c=audio(); if(!c) return; const t=c.currentTime, dur=1.3, buf=noiseBuffer(dur); if(!buf) return;
+export function sZoom(){   // rocket / spaceship whoosh (doppler-ish pass), timed to the fly-across animation
+  const c=audio(); if(!c) return; const t=c.currentTime, dur=FLYBY_DURATION/1000, buf=noiseBuffer(dur); if(!buf) return;
   const src=c.createBufferSource(); src.buffer=buf;
   const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=1.2;
   bp.frequency.setValueAtTime(400,t);
@@ -53,8 +55,8 @@ export function sZoom(){   // rocket / spaceship whoosh (doppler-ish pass)
   src.connect(bp).connect(g).connect(c.destination); src.start(t); src.stop(t+dur);
 }
 
-export function sRumble(){  // tractor engine chug
-  const c=audio(); if(!c) return; const t=c.currentTime, dur=2.2;
+export function sRumble(){  // tractor engine chug, timed to the fly-across animation
+  const c=audio(); if(!c) return; const t=c.currentTime, dur=FLYBY_DURATION/1000;
   const o=c.createOscillator(); o.type="sawtooth"; o.frequency.setValueAtTime(72,t); o.frequency.linearRampToValueAtTime(64,t+dur);
   const lp=c.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=380;
   const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.12,t+0.15);
@@ -63,15 +65,20 @@ export function sRumble(){  // tractor engine chug
   o.connect(lp).connect(g).connect(c.destination); o.start(t); o.stop(t+dur+0.05);
 }
 
-export function sChirp(){   // bird passing tweets
+export function sChirp(){   // bird passing tweets, repeated in bursts across the fly-across animation
   const c=audio(); if(!c) return; const t=c.currentTime;
-  [0,0.18,0.36].forEach((off,i)=>{
-    const o=c.createOscillator(), g=c.createGain(); o.type="sine"; const f=1800+i*200;
-    o.frequency.setValueAtTime(f,t+off);
-    o.frequency.exponentialRampToValueAtTime(f*1.5,t+off+0.06);
-    o.frequency.exponentialRampToValueAtTime(f*0.9,t+off+0.12);
-    g.gain.setValueAtTime(0.0001,t+off); g.gain.linearRampToValueAtTime(0.10,t+off+0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+off+0.14);
-    o.connect(g).connect(c.destination); o.start(t+off); o.stop(t+off+0.16);
-  });
+  const span=FLYBY_DURATION/1000, bursts=5, gap=(span-0.5)/(bursts-1);
+  for(let b=0;b<bursts;b++){
+    const bt=b*gap;
+    [0,0.18,0.36].forEach((off,i)=>{
+      const o=c.createOscillator(), g=c.createGain(); o.type="sine"; const f=1800+i*200;
+      const start=t+bt+off;
+      o.frequency.setValueAtTime(f,start);
+      o.frequency.exponentialRampToValueAtTime(f*1.5,start+0.06);
+      o.frequency.exponentialRampToValueAtTime(f*0.9,start+0.12);
+      g.gain.setValueAtTime(0.0001,start); g.gain.linearRampToValueAtTime(0.10,start+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,start+0.14);
+      o.connect(g).connect(c.destination); o.start(start); o.stop(start+0.16);
+    });
+  }
 }

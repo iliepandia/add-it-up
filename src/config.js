@@ -7,6 +7,7 @@ export const STAR_FLY = 1050, IMPACT_AT = 0.82;
 export const POST_HOLD = 1200, WIN_HOLD = 1400, WRONG_HOLD = 1000;
 export const REVEAL_FLASH = 700, REVEAL_TO_FLASH = 500, FLASH_REPEATS = 2;
 export const KEY_FLASH_ON = 550, KEY_FLASH_GAP = 250;
+export const FLYBY_DURATION = 3800; // how long the streak-6 fly-across reward animation runs
 
 export const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
