@@ -28,11 +28,15 @@ export function flyAcross(emoji, path){
     // Fly at a fixed angle from bottom-left to top-right, sized off the
     // screen's own diagonal so the angle looks the same on a tall phone
     // as on a wide desktop (not stretched/squashed by the aspect ratio).
+    // sx/sy/ex/ey below are top-left coordinates, but cx/cy is the point
+    // where the rocket's *center* should cross — so shift by -size/2 to
+    // convert; the box is a large fraction of the screen, so skipping
+    // this shift visibly throws the crossing point off-center.
     size=min*0.63;
     const angle=40*Math.PI/180;
     const dist=2*Math.max(innerWidth,innerHeight)+size*2;
     const dx=Math.cos(angle)*dist, dy=Math.sin(angle)*dist;
-    const cx=innerWidth/2, cy=innerHeight/2;
+    const cx=innerWidth/2-size/2, cy=innerHeight/2-size/2;
     sx=cx-dx/2; sy=cy+dy/2; ex=cx+dx/2; ey=cy-dy/2;
     ease="cubic-bezier(.4,0,.6,1)";
   }

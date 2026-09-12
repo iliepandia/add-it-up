@@ -31,7 +31,7 @@ function buildStarfield(){
   for(let i=0;i<44;i++){ const d=document.createElement("div"); d.className="starDot";
     d.style.left=rnd(100)+"%"; d.style.top=rnd(100)+"%"; const sz=1+rnd(3);
     d.style.width=sz+"px"; d.style.height=sz+"px";
-    d.style.animationDuration=(3+Math.random()*3)+"s"; d.style.animationDelay=(Math.random()*3)+"s";
+    d.style.animationDuration=(0.4+Math.random()*0.6)+"s"; d.style.animationDelay=(Math.random()*1)+"s";
     starfieldLayer.appendChild(d);
   }
 }

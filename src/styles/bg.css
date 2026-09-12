@@ -16,6 +16,6 @@
 .hill.h1{left:-12%; width:72%; height:100%; background:#5DBB57;}
 .hill.h2{right:-12%; width:78%; height:80%; background:#49A043;}
 .theme-space .stars-layer{display:block; position:absolute; inset:0;}
-.starDot{position:absolute; background:#fff; border-radius:50%; opacity:.85;
-  animation:twinkle 4s ease-in-out infinite;}
-@keyframes twinkle{0%,100%{opacity:.85}50%{opacity:.4}}
+.starDot{position:absolute; background:#fff; border-radius:50%; opacity:.9;
+  animation:twinkle .8s ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:.95}50%{opacity:.15}}
