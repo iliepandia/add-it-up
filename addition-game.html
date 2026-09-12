@@ -42,6 +42,8 @@
   }
   .star.filled{color:var(--gold);}
   .star.streak{background:radial-gradient(circle closest-side, #FF3B3B 0 86%, transparent 90%);}
+  .badge{position:absolute; top:-0.1em; right:-0.12em; font-size:0.55em; line-height:1;
+    pointer-events:none; filter:drop-shadow(0 1px 1px rgba(46,58,89,.35));}
   @keyframes starSmash{
     0%{transform:scale(1.9) rotate(-14deg)} 55%{transform:scale(.78) rotate(6deg)} 100%{transform:scale(1) rotate(0)}
   }
@@ -164,8 +166,15 @@
   }
   #win.show{display:flex; animation:winIn .5s ease;}
   @keyframes winIn{from{opacity:0}to{opacity:1}}
-  #cow{font-size:clamp(120px,42vw,300px); line-height:1; animation:bob 2.2s ease-in-out infinite;}
-  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+  #trophies{
+    display:flex; flex-wrap:wrap; gap:clamp(6px,2vw,16px);
+    justify-content:center; align-items:center; max-width:92vw;
+  }
+  .trophy{font-size:clamp(40px,12vw,86px); line-height:1;
+    animation:trophyPop .4s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes trophyPop{0%{transform:scale(0) rotate(-12deg);opacity:0}
+    70%{transform:scale(1.25) rotate(6deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+  #winfx{position:absolute; inset:0; pointer-events:none; overflow:hidden;}
   #win h1{font-size:clamp(40px,12vw,88px); font-weight:700; color:var(--ink); margin:0;}
   #win p{font-size:clamp(18px,5vw,28px); font-weight:500; color:var(--grape); margin:0;}
   #playBtn{
@@ -201,10 +210,11 @@
   <div id="fx"></div>
   <div id="flash"></div>
   <div id="win">
-    <div id="cow">🐄</div>
     <h1>Good job!</h1>
+    <div id="trophies"></div>
     <p>Tap to play again</p>
     <button id="playBtn" type="button">Play</button>
+    <div id="winfx"></div>
   </div>
 
 <script>
@@ -238,17 +248,19 @@
   const CATS = Object.keys(EMOJI);
   const HAPPY = ["❤️","🎁","😄","⭐","🎉","🌈","🥳","🌟","💖","🎈","🦄","🍭","😍","🎊"];
   const WRONG_FACES = ["🤔","❓"];
-  const WIN_END = ["🐄","🚀","🦖","🚲","🚗","🎂"];
+  const WIN_END = ["🐄","🚀","🦖","🚲","🚗","🎂",
+    "🌈","🌞","🌻","🌸","🌳","🍄","🦋","🐢","🐝","🐬",
+    "🎈","🎁","🧸","🎉","🪁","🚂","⚽","🏰","🎨","🍦"];
   const PIPS = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 
   const $ = s => document.querySelector(s);
   const starsEl=$("#stars"), opA=$("#opA"), opB=$("#opB"), ansEl=$("#ans"),
         card=$("#card"), keypad=$("#keypad"), fx=$("#fx"), flash=$("#flash"),
-        win=$("#win"), cowEl=$("#cow");
+        win=$("#win"), trophiesEl=$("#trophies"), winfxEl=$("#winfx");
 
   let a=0,b=0,answer=0,presentation="digits",pipStyle="dice",entry="";
   let starCount=0, wrongCount=0, locked=true;
-  let sumMax=SUM_START, streak=0;
+  let sumMax=SUM_START, streak=0, maxStreak=0;
   const keyByDigit={};
 
   const rnd = n => Math.floor(Math.random()*n);
@@ -324,6 +336,20 @@
       starsEl.children[i].classList.toggle("streak", i<starCount && i>=starCount-streak);
     }
   }
+  function updateBadges(){         // preview badges for the next unearned streak prizes
+    const PRIZES=[[3,"🍬"],[6,"🚀"],[9,"🫧"]];
+    for(let i=0;i<GOAL;i++){ const b=starsEl.children[i].querySelector(".badge"); if(b) b.remove(); }
+    for(const [M,glyph] of PRIZES){
+      if(M>streak){
+        const idx=starCount+(M-streak)-1;         // star whose fill will complete milestone M
+        if(idx>=0 && idx<GOAL){
+          const b=document.createElement("span"); b.className="badge"; b.textContent=glyph;
+          starsEl.children[idx].appendChild(b);
+        }
+      }
+    }
+  }
+  function refreshStars(){ updateStreakDisks(); updateBadges(); }
 
   // input
   function handleDigit(d){
@@ -341,9 +367,10 @@
     setTimeout(()=>{
       sumMax=Math.min(SUM_MAX_CAP, sumMax+1);   // ramp up
       streak++;
+      maxStreak=Math.max(maxStreak, streak);
       starCount++;
       const idx=starCount-1, won=starCount>=GOAL;
-      const onImpact=()=>{ fillStar(idx); updateStreakDisks(); celebrate(); checkStreak(); };
+      const onImpact=()=>{ fillStar(idx); refreshStars(); celebrate(); checkStreak(); };
       if(reduceMotion){
         onImpact();
         setTimeout(()=> won?showWin():(newProblem(),unlockEnter()), won?WIN_HOLD:POST_HOLD);
@@ -400,9 +427,9 @@
     const cx=r.left+r.width/2, cy=r.top+r.height/2;
     for(let i=0;i<10;i++) spawnParticle("✨",cx,cy,26,22);   // small twinkles
   }
-  function spawnParticle(glyph,cx,cy,base,rng){
+  function spawnParticle(glyph,cx,cy,base,rng,parent){
     const p=document.createElement("div"); p.className="particle"; p.textContent=glyph;
-    p.style.fontSize=(base+rnd(rng))+"px"; fx.appendChild(p);
+    p.style.fontSize=(base+rnd(rng))+"px"; (parent||fx).appendChild(p);
     const ang=Math.random()*Math.PI*2, speed=6+Math.random()*9;
     let vx=Math.cos(ang)*speed, vy=Math.sin(ang)*speed-(7+Math.random()*5);
     let x=cx,y=cy,rot=rnd(360),vr=(Math.random()-0.5)*24;
@@ -471,7 +498,7 @@
     locked=true; sError();
     sumMax=Math.max(SUM_MIN, sumMax-2);          // ramp down
     streak=0;                                     // break the streak
-    updateStreakDisks();                          // remove the red disks
+    refreshStars();                               // remove disks, reposition badges
     if(!reduceMotion){ card.classList.add("shake"); card.addEventListener("animationend",()=>card.classList.remove("shake"),{once:true}); }
     flash.textContent=pick(WRONG_FACES);
     flash.classList.remove("show"); void flash.offsetWidth; flash.classList.add("show");
@@ -507,8 +534,27 @@
   }
 
   // win / restart
-  function showWin(){ cowEl.textContent=pick(WIN_END); win.classList.add("show"); locked=true; sParty(); }
-  function restart(){ win.classList.remove("show"); starCount=0; sumMax=SUM_START; streak=0; buildStars(); newProblem(); unlockEnter(); }
+  function showWin(){
+    win.classList.add("show"); locked=true;
+    revealTrophies(pick(WIN_END), Math.max(1,maxStreak));
+  }
+  function revealTrophies(glyph,count){
+    trophiesEl.innerHTML="";
+    const STEP=260, PENTA=[0,2,4,7,9,12,14,16,19,21];   // ascending pentatonic ramp
+    for(let i=0;i<count;i++) setTimeout(()=>{
+      const e=document.createElement("span"); e.className="trophy"; e.textContent=glyph;
+      trophiesEl.appendChild(e);
+      const semi=PENTA[Math.min(i,PENTA.length-1)];
+      tone(523.25*Math.pow(2,semi/12), 0, 0.22, "triangle", 0.14);
+    }, i*STEP);
+    setTimeout(starExplosion, count*STEP+250);          // after the sound, stars burst
+  }
+  function starExplosion(){
+    const n=reduceMotion?10:34, cx=innerWidth/2, cy=innerHeight*0.5;
+    for(let i=0;i<n;i++) spawnParticle("⭐",cx,cy,50,44,winfxEl);
+    sParty();
+  }
+  function restart(){ win.classList.remove("show"); starCount=0; sumMax=SUM_START; streak=0; maxStreak=0; buildStars(); refreshStars(); newProblem(); unlockEnter(); }
   function unlockEnter(){
     locked=false;
     if(!reduceMotion){ card.classList.remove("enter"); void card.offsetWidth; card.classList.add("enter"); }
@@ -533,7 +579,7 @@
   win.addEventListener("pointerdown",e=>{ e.preventDefault(); audio(); restart(); });
 
   // boot
-  buildStars(); buildKeypad(); newProblem(); unlockEnter();
+  buildStars(); refreshStars(); buildKeypad(); newProblem(); unlockEnter();
 })();
 </script>
 </body>

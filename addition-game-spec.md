@@ -102,6 +102,10 @@ answer on screen, *then* trigger the celebration.
   - **3 in a row:** a **rain of candy** (large candy, ~3 s).
   - **6 in a row:** a **giant spaceship** flies slowly across the screen (~3.8 s).
   - **9 in a row:** lots of **big bubbles** float up (~3 s).
+- **Prize badges:** each not-yet-earned milestone shows a small badge on the star whose fill will
+  complete it — 🍬 for the next 3-streak, 🚀 for 6, 🫧 for 9 — so the child sees how far to the next
+  prize. Badges reposition as the streak grows and after a wrong; a prize with too few stars left
+  to reach shows no badge.
 
 ### Wrong
 - **Shake** the on-screen items.
@@ -152,10 +156,13 @@ Sound is best-effort — the game must remain fully playable if audio is unavail
 
 **Win condition:**
 - When the **10th** star fills, the session **ends** — no new problem is generated.
-- Show a **large random emoji** — one of 🐄 🚀 🦖 🚲 🚗 🎂 — with the message **"Good job!"**,
-  the hint **"Tap to play again"**, and a **big orange "Play" button** beneath it.
-- **Restart:** the Play button **or any tap/key** anywhere on the win screen starts a new
-  session (stars reset to empty, difficulty reset to 5, new problems).
+- Show **"Good job!"**, then a **randomly chosen emoji** (from a set of **26** — happy, nature,
+  and household objects) **repeated once per point of the longest streak** reached this game.
+- The copies **reveal one at a time**, each with a **rising musical note**; when the reveal
+  finishes (the sound is over), a **star explosion** bursts over the screen.
+- Also show the hint **"Tap to play again"** and a **big orange "Play" button**.
+- **Restart:** the Play button **or any tap/key** starts a new session (stars, difficulty, and
+  longest-streak all reset).
 
 ---
 
