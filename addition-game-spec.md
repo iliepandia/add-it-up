@@ -184,10 +184,12 @@ the empty-star colour is lightened for contrast. Background/button motion is min
 | **Classic** 👦 | sky→mint gradient | tangerine `#FF8A5B` / white | candy rain / spaceship (diagonal) / bubbles up | click |
 | **Nature** 🌳 | blue sky, sun, drifting clouds | dark green `#2E7D32` / white (~5:1) | leaves fall / bird across the sky / birds up | click |
 | **Space** 🚀 | dark-magenta sky, gently flickering stars | white / magenta `#7A1466` (~7:1) | stars fall / rocket (diagonal) / volcanoes up | ding |
-| **Animal** 🐔 | blue sky, green hills | barn red `#C6402F` / white (~4.7:1) | apples fall / tractor (along the ground) / chickens up | squeak |
+| **Animal** 🐔 | blue sky, green hills | barn red `#C6402F` / white (~4.7:1) | apples fall / tractor (across the middle) / bees up | squeak |
 
-"Flies by" direction: the rocket launches **diagonally**; the bird crosses the **sky** and the
-tractor drives along the **ground** (both horizontal) so each faces its travel direction.
+"Flies by" direction: the rocket launches **diagonally**; the bird crosses the upper **sky** and
+the tractor crosses the **middle** of the screen (both horizontal) so each faces its travel
+direction. The streak-6 fly-by also carries a **matching sound** — rocket **zoom**, bird
+**chirp**, or tractor **rumble**.
 
 ---
 
