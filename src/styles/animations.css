@@ -1,0 +1,2 @@
+/* ---- shared keyframes (used by both #win and #themePicker) ---- */
+@keyframes winIn{from{opacity:0}to{opacity:1}}

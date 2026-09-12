@@ -1,0 +1,26 @@
+/* ---- theme picker ---- */
+#themePicker{position:fixed; inset:0; z-index:70; display:none; flex-direction:column;
+  align-items:center; justify-content:center; gap:clamp(16px,4vh,32px); padding:24px;
+  background:linear-gradient(160deg,#FFE1A8 0%,#FFB3C1 45%,#B8E1FF 100%); cursor:default;}
+#themePicker.show{display:flex; animation:winIn .4s ease;}
+#themePicker h1{font-size:clamp(28px,8vw,58px); font-weight:700; color:var(--ink); margin:0; text-align:center;}
+.pick-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:clamp(14px,4vw,26px);}
+.pick{font-family:var(--font); border:none; cursor:pointer;
+  width:clamp(110px,33vw,180px); height:clamp(110px,33vw,180px);
+  border-radius:clamp(22px,6vw,34px); font-size:clamp(52px,16vw,92px); line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  transition:transform .06s ease, box-shadow .06s ease;}
+.pick:active{transform:translateY(6px);}
+.pick[data-theme="classic"]{background:#FF8A5B; color:#fff; box-shadow:0 10px 0 #E36A3B;}
+.pick[data-theme="nature"]{background:#2E7D32; color:#fff; box-shadow:0 10px 0 #1B5E20;}
+.pick[data-theme="space"]{background:#fff; color:#7A1466; box-shadow:0 10px 0 #C99BC2;}
+.pick[data-theme="animal"]{background:#C6402F; color:#fff; box-shadow:0 10px 0 #8E2A1E;}
+.pick .lbl{display:inline-block;}
+.pick[data-theme="classic"] .lbl{animation:jump .8s ease-in-out infinite;}
+.pick[data-theme="nature"] .lbl{transform-origin:bottom center; animation:treeShake 1.2s ease-in-out infinite;}
+.pick[data-theme="space"] .lbl{animation:rocketBounce .9s ease-in-out infinite;}
+.pick[data-theme="animal"] .lbl{animation:chickenShake .7s ease-in-out infinite;}
+@keyframes jump{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+@keyframes treeShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+@keyframes rocketBounce{0%,100%{transform:translateY(0) scale(1)}30%{transform:translateY(-22px) scale(1.05)}52%{transform:translateY(0) scale(.95)}72%{transform:translateY(-9px)}}
+@keyframes chickenShake{0%,100%{transform:translate(0,0) rotate(0)}20%{transform:translate(-3px,0) rotate(-9deg)}40%{transform:translate(3px,0) rotate(9deg)}60%{transform:translate(-2px,0) rotate(-5deg)}80%{transform:translate(2px,0) rotate(5deg)}}

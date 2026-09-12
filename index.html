@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Add it up!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="bg">
+    <div class="sun"></div>
+    <div class="cloud c1">☁️</div><div class="cloud c2">☁️</div><div class="cloud c3">☁️</div>
+    <div class="hills"><div class="hill h1"></div><div class="hill h2"></div></div>
+    <div class="stars-layer"></div>
+  </div>
+
+  <div id="app">
+    <div id="stars" aria-label="stars earned"></div>
+    <div id="stage">
+      <div id="card">
+        <div class="operand" id="opA"></div>
+        <div class="op">+</div>
+        <div class="operand" id="opB"></div>
+        <div class="op">=</div>
+        <div id="ans"><span id="caret"></span></div>
+      </div>
+    </div>
+    <div id="keypad"></div>
+  </div>
+
+  <div id="fx"></div>
+  <div id="flash"></div>
+
+  <div id="win">
+    <h1>Good job!</h1>
+    <div id="trophies"></div>
+    <p>Tap to play again</p>
+    <button id="playBtn" type="button">Play</button>
+    <div id="winfx"></div>
+  </div>
+
+  <div id="themePicker">
+    <h1>Pick a world!</h1>
+    <div class="pick-grid">
+      <button class="pick" data-theme="classic" aria-label="Classic"><span class="lbl">👦</span></button>
+      <button class="pick" data-theme="nature" aria-label="Nature"><span class="lbl">🌳</span></button>
+      <button class="pick" data-theme="space" aria-label="Space"><span class="lbl">🚀</span></button>
+      <button class="pick" data-theme="animal" aria-label="Animals"><span class="lbl">🐔</span></button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

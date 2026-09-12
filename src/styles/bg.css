@@ -1,0 +1,21 @@
+/* ---- decorative background layer ---- */
+#bg{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;}
+.sun,.cloud,.hills,.stars-layer{display:none;}
+.theme-nature .sun{display:block; position:absolute; top:6%; right:8%; width:16vmin; height:16vmin;
+  border-radius:50%; background:radial-gradient(circle,#FFE267 0 62%,#FFD23F 63% 100%);
+  box-shadow:0 0 6vmin rgba(255,214,64,.55);}
+.theme-nature .cloud{display:block; position:absolute; line-height:1; font-size:12vmin;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.08));}
+.cloud.c1{top:12%; left:6%; animation:drift1 26s ease-in-out infinite;}
+.cloud.c2{top:26%; left:62%; font-size:9vmin; animation:drift2 32s ease-in-out infinite;}
+.cloud.c3{top:44%; left:30%; font-size:10vmin; animation:drift1 30s ease-in-out infinite;}
+@keyframes drift1{0%,100%{transform:translateX(0)}50%{transform:translateX(3vmin)}}
+@keyframes drift2{0%,100%{transform:translateX(0)}50%{transform:translateX(-3vmin)}}
+.theme-animal .hills{display:block; position:absolute; inset:auto 0 0 0; height:40%;}
+.hill{position:absolute; bottom:0; border-radius:50% 50% 0 0;}
+.hill.h1{left:-12%; width:72%; height:100%; background:#5DBB57;}
+.hill.h2{right:-12%; width:78%; height:80%; background:#49A043;}
+.theme-space .stars-layer{display:block; position:absolute; inset:0;}
+.starDot{position:absolute; background:#fff; border-radius:50%; opacity:.85;
+  animation:twinkle 4s ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:.85}50%{opacity:.4}}
