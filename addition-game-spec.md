@@ -124,7 +124,7 @@ answer on screen, *then* trigger the celebration.
   - The re-ask is a **fresh attempt**: wrong-count resets, and a correct entry now **earns the
     star**. (If a twice-missed problem should never award a star, gate this — currently it does.)
   *(Prevents the child getting trapped on a fact they don't know; a light Phase-1 version of the
-  scaffolding in §11.)*
+  scaffolding in §12.2.)*
 
 ---
 
@@ -166,44 +166,70 @@ Sound is best-effort — the game must remain fully playable if audio is unavail
 
 ---
 
-## 10. Open items / future tweaks
+## 10. Themes
 
-- No backspace under auto-check (§5).
-- A **linear difficulty ramp** is now in Phase 1 (§3, sum 5→12); the **adaptive, fact-tracking**
-  version remains Phase 2 (§11.3).
+Before **every** game the player sees a **theme picker**: four big buttons, each an **animated
+emoji** that also previews that theme's button colors. Tapping one (or pressing **1–4**) starts a
+fresh game in that world. Button animations: **👦 jumps** (classic), **🌳 sways** (nature),
+**🚀 bounces** (space), **🐔 shakes** (animal).
+
+A theme changes the **background**, the **keypad + Play button colors**, the three **streak-reward
+visuals**, and the **key-press sound**. The **problem card stays white with navy numbers** in every
+theme for legibility; the **prize badges** (§7) use each theme's own reward emojis; on dark themes
+the empty-star colour is lightened for contrast. Background/button motion is minimised under
+`prefers-reduced-motion`.
+
+| Theme | Background | Keys (bg / text, contrast) | Streak 3 / 6 / 9 | Key sound |
+|-------|-----------|----------------------------|------------------|-----------|
+| **Classic** 👦 | sky→mint gradient | tangerine `#FF8A5B` / white | candy rain / spaceship (diagonal) / bubbles up | click |
+| **Nature** 🌳 | blue sky, sun, drifting clouds | dark green `#2E7D32` / white (~5:1) | leaves fall / bird across the sky / birds up | click |
+| **Space** 🚀 | dark-magenta sky, gently flickering stars | white / magenta `#7A1466` (~7:1) | stars fall / rocket (diagonal) / volcanoes up | ding |
+| **Animal** 🐔 | blue sky, green hills | barn red `#C6402F` / white (~4.7:1) | apples fall / tractor (along the ground) / chickens up | squeak |
+
+"Flies by" direction: the rocket launches **diagonally**; the bird crosses the **sky** and the
+tractor drives along the **ground** (both horizontal) so each faces its travel direction.
 
 ---
 
-## 11. Phase 2 — Learning design (deferred, do not build now)
+## 11. Open items / future tweaks
+
+- No backspace under auto-check (§5).
+- A **linear difficulty ramp** is now in Phase 1 (§3, sum 5→12); the **adaptive, fact-tracking**
+  version remains Phase 2 (§12.3).
+
+---
+
+## 12. Phase 2 — Learning design (deferred, do not build now)
 
 Upgrades to make the math *emerge from play* rather than be a toll paid to reach a reward.
 Ordered by leverage toward that goal; each is paired with the theory it draws on.
 
-### 11.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage*
+### 12.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage*
 The Phase 1 game is a **drill with juice**: solve the sum → get the fireworks. The math is
 the toll, not the play. Convert it to an **endogenous** design where manipulating numbers
 *is* the fun act — e.g. feed a creature exactly N berries, build a tower to a target height,
 fill a jar to a line. The addition becomes something you *do to get what you want*.
 *(Malone & Lepper; Habgood & Ainsworth, intrinsic integration.)*
 
-### 11.2 Scaffold the second wrong attempt — *highest safety priority*
+### 12.2 Scaffold the second wrong attempt — *highest safety priority*
 Phase 1 re-shows the identical problem until correct, with no teaching — a recipe for math
 anxiety and learned helplessness when the child genuinely doesn't know the fact. Keep the
 never-skip rule, but on the **second** miss, *help*: reveal pips under the digits, animate a
 count-up, show a number line, or decompose (`8 + 7 → 8 + 2 = 10, then +5`). Reframe errors as
 information, not verdicts. *(Dweck, growth mindset; Seligman, learned helplessness.)*
 
-### 11.3 Adaptivity + fact-memory
+### 12.3 Adaptivity + fact-memory
 Flat random difficulty prevents flow and a felt sense of progress. Track which addend pairs
 the child misses, resurface them (spaced retrieval / testing effect), and let difficulty drift
 upward as accuracy and speed rise. *(Csikszentmihalyi, flow; Roediger, testing effect.)*
 
-### 11.4 Surface competence + one autonomy choice
+### 12.4 Surface competence + one autonomy choice
 Give a visible mastery signal beyond a single session (levels, cumulative progress) and at
-least one real choice (pick the theme/world, or choose between two problems). *(Deci & Ryan,
-Self-Determination Theory — competence + autonomy.)*
+least one real choice (choose between two problems, or a sub-mode). *(Deci & Ryan,
+Self-Determination Theory — competence + autonomy.)* *(World/theme selection already landed in
+Phase 1, §10; this is about deeper in-game autonomy.)*
 
-### 11.5 Sequence the representations (don't randomize blindly)
+### 12.5 Sequence the representations (don't randomize blindly)
 The three formats are concrete → abstract (pips/emoji → digits) and map onto how number sense
 develops. Instead of random order, **lead concrete and fade toward abstract** as fluency on a
 fact grows. *(Concrete–Representational–Abstract; Clements & Sarama, subitizing.)*
