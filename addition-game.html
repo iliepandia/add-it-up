@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Add it up!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#AEE0FF; --sky-bot:#CFF5DE;
+    --surface:#FFFFFF; --ink:#2E3A59; --muted:#B7C3DE;
+    --hero:#FF8A5B; --hero-dark:#E36A3B;
+    --gold:#FFC53D; --grape:#8E6BFF; --good:#37B26B;
+    --font:"Fredoka","Baloo 2","Nunito",ui-rounded,"Segoe UI Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:var(--font); color:var(--ink);
+    background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bot) 100%);
+    background-attachment:fixed;
+    user-select:none;-webkit-user-select:none; overflow:hidden; touch-action:manipulation;
+  }
+  #app{
+    position:relative; height:100dvh; min-height:100dvh;
+    display:flex; flex-direction:column; align-items:center;
+    padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));
+  }
+
+  /* star crown */
+  #stars{
+    display:flex; gap:clamp(2px,1.2vw,10px); justify-content:center; align-items:center;
+    font-size:clamp(20px,6.2vw,40px); line-height:1; padding:6px 4px;
+    filter:drop-shadow(0 2px 2px rgba(46,58,89,.12)); flex-wrap:nowrap;
+  }
+  .star{
+    position:relative; width:1.2em; height:1.2em; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--muted); transition:color .15s ease; will-change:transform;
+  }
+  .star.filled{color:var(--gold);}
+  .star.streak{background:radial-gradient(circle closest-side, #FF3B3B 0 86%, transparent 90%);}
+  @keyframes starSmash{
+    0%{transform:scale(1.9) rotate(-14deg)} 55%{transform:scale(.78) rotate(6deg)} 100%{transform:scale(1) rotate(0)}
+  }
+  .star.smash{animation:starSmash .45s cubic-bezier(.34,1.56,.64,1);}
+
+  /* stage / problem */
+  #stage{flex:1 1 auto; display:flex; align-items:center; justify-content:center; width:100%;}
+  #card{
+    background:var(--surface); border-radius:clamp(24px,6vw,40px);
+    box-shadow:0 18px 40px rgba(46,58,89,.16), 0 3px 0 rgba(46,58,89,.04);
+    padding:clamp(18px,5vw,44px) clamp(16px,5vw,52px);
+    max-width:min(720px,94vw); width:100%;
+    display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+    gap:clamp(8px,2.4vw,22px); min-height:clamp(160px,34vh,300px);
+  }
+  #card.enter{animation:cardIn .5s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes cardIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+  #card.shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97);}
+  @keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-9px)}40%,60%{transform:translateX(9px)}}
+
+  .operand{display:flex; align-items:center; justify-content:center; flex-wrap:wrap;}
+  .num{font-size:clamp(48px,15vw,120px); font-weight:700; line-height:.9; color:var(--ink);}
+  .op{font-size:clamp(34px,9vw,72px); font-weight:600; color:var(--muted); padding:0 2px;}
+
+  .emoji-group{
+    display:flex; flex-wrap:wrap; gap:clamp(2px,1.2vw,8px);
+    max-width:clamp(120px,34vw,300px); justify-content:center; align-items:center;
+  }
+  .emoji-group span{font-size:clamp(22px,7vw,52px); line-height:1;}
+
+  .pip-card{
+    display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+    gap:8%; width:clamp(60px,17vw,120px); height:clamp(60px,17vw,120px);
+    padding:12%; border-radius:22%;
+  }
+  .pip-card.dice{background:#FFFFFF; border:3px solid #E7ECF6; box-shadow:inset 0 -4px 0 rgba(46,58,89,.06);}
+  .pip-card.domino{background:#FFF7E6; border:3px solid #F0E0B8; box-shadow:inset 0 -4px 0 rgba(150,120,40,.10);}
+  .pip{border-radius:50%; align-self:center; justify-self:center; width:100%; aspect-ratio:1;}
+  .pip.on{background:var(--ink);}
+  .pip-card.domino .pip.on{background:#B4791E;}
+  .pip.off{background:transparent;}
+
+  /* answer — inline, no input-box look */
+  #ans{
+    display:flex; align-items:center; justify-content:center;
+    min-width:clamp(50px,12vw,92px); min-height:clamp(56px,15vw,110px);
+  }
+  #ans .num{color:var(--grape);}
+  #ans .num.reveal{color:var(--good);}
+  #ans .num.tada{transform-origin:center; animation:revealTada .9s cubic-bezier(.2,.7,.3,1) forwards;}
+  @keyframes revealTada{
+    0%{transform:scale(.2) rotate(-8deg);opacity:0}
+    28%{transform:scale(1.35) rotate(5deg);opacity:1}
+    44%{transform:scale(1.02) rotate(-5deg)}
+    60%{transform:scale(1.22) rotate(4deg)}
+    76%{transform:scale(1.06) rotate(-2deg)}
+    100%{transform:scale(1.12) rotate(0)}
+  }
+  #caret{
+    display:inline-block; width:.12em; height:.86em; border-radius:6px;
+    background:var(--grape); font-size:clamp(48px,15vw,120px);
+    animation:blink 1.06s step-end infinite;
+  }
+  @keyframes blink{0%,49%{opacity:1} 50%,100%{opacity:0}}
+
+  /* keypad */
+  #keypad{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(8px,2.4vw,16px);
+    width:100%; max-width:min(420px,92vw); margin-top:clamp(10px,2vh,20px);
+  }
+  .key{
+    font-family:var(--font); font-weight:700; font-size:clamp(28px,8vw,44px); color:#fff;
+    background:var(--hero); border:none; border-radius:clamp(16px,4vw,24px);
+    height:clamp(58px,14vw,84px);
+    box-shadow:0 6px 0 var(--hero-dark), 0 10px 14px rgba(227,106,59,.28);
+    cursor:pointer; transition:transform .05s ease, box-shadow .05s ease, filter .12s ease;
+    -webkit-user-select:none; user-select:none;
+  }
+  .key:hover{filter:brightness(1.04);}
+  .key.press,.key:active{transform:translateY(6px); box-shadow:0 0 0 var(--hero-dark), 0 3px 8px rgba(227,106,59,.24);}
+  .key.zero{grid-column:2;}
+  .key.hint{
+    box-shadow:0 0 0 5px rgba(142,107,255,.9), 0 8px 0 var(--hero-dark), 0 12px 20px rgba(142,107,255,.5);
+    filter:brightness(1.12); z-index:1;
+    animation:keyHint .55s ease;
+  }
+  @keyframes keyHint{0%,100%{transform:translateY(0) scale(1)} 35%{transform:translateY(-8px) scale(1.09)}}
+
+  /* particle fx */
+  #fx{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:40;}
+  .particle{position:absolute; will-change:transform,opacity; font-size:34px; line-height:1;}
+  .flyby{position:fixed; top:0; left:0; z-index:46; pointer-events:none; line-height:1;
+    filter:drop-shadow(0 10px 18px rgba(46,58,89,.30));}
+
+  /* mega star (fly + smash) */
+  .mega-star{
+    position:fixed; top:0; left:0; z-index:45; pointer-events:none;
+    color:var(--gold); line-height:1;
+    text-shadow:0 0 30px rgba(255,197,61,.65), 0 10px 30px rgba(227,106,59,.25);
+  }
+  .ring{
+    position:fixed; z-index:44; pointer-events:none; border-radius:50%;
+    border:8px solid var(--gold); transform:translate(-50%,-50%);
+  }
+
+  /* wrong flash */
+  #flash{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    pointer-events:none; z-index:50; opacity:0; font-size:clamp(120px,40vw,300px);
+  }
+  #flash.show{animation:flash 1s ease forwards;}
+  @keyframes flash{0%{opacity:0;transform:scale(.3) rotate(-8deg)}25%{opacity:1;transform:scale(1.1) rotate(4deg)}70%{opacity:1;transform:scale(1) rotate(0)}100%{opacity:0;transform:scale(1.05)}}
+
+  /* win screen */
+  #win{
+    position:fixed; inset:0; z-index:60; display:none; flex-direction:column;
+    align-items:center; justify-content:center; gap:clamp(8px,2vh,20px);
+    background:linear-gradient(180deg, rgba(174,224,255,.96), rgba(207,245,222,.98));
+    text-align:center; padding:24px; cursor:pointer;
+  }
+  #win.show{display:flex; animation:winIn .5s ease;}
+  @keyframes winIn{from{opacity:0}to{opacity:1}}
+  #cow{font-size:clamp(120px,42vw,300px); line-height:1; animation:bob 2.2s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+  #win h1{font-size:clamp(40px,12vw,88px); font-weight:700; color:var(--ink); margin:0;}
+  #win p{font-size:clamp(18px,5vw,28px); font-weight:500; color:var(--grape); margin:0;}
+  #playBtn{
+    font-family:var(--font); font-weight:700; color:#fff; background:var(--hero); border:none;
+    border-radius:clamp(16px,4vw,26px); font-size:clamp(26px,7vw,44px);
+    padding:clamp(12px,3vw,20px) clamp(44px,14vw,96px); margin-top:clamp(8px,2vh,18px);
+    box-shadow:0 8px 0 var(--hero-dark), 0 14px 22px rgba(227,106,59,.38); cursor:pointer;
+    transition:transform .05s ease, box-shadow .05s ease;
+  }
+  #playBtn:active{transform:translateY(6px); box-shadow:0 2px 0 var(--hero-dark);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important;}
+    #caret{animation:none; opacity:1;}
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <div id="stars" aria-label="stars earned"></div>
+    <div id="stage">
+      <div id="card">
+        <div class="operand" id="opA"></div>
+        <div class="op">+</div>
+        <div class="operand" id="opB"></div>
+        <div class="op">=</div>
+        <div id="ans"><span id="caret"></span></div>
+      </div>
+    </div>
+    <div id="keypad"></div>
+  </div>
+
+  <div id="fx"></div>
+  <div id="flash"></div>
+  <div id="win">
+    <div id="cow">🐄</div>
+    <h1>Good job!</h1>
+    <p>Tap to play again</p>
+    <button id="playBtn" type="button">Play</button>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  // config
+  const GOAL = 10;
+  const SUM_START=5, SUM_MIN=5, SUM_MAX_CAP=12;   // difficulty ramp: start, floor, ceiling
+  const SEE_RESULT = 200;     // show typed number before celebrating
+  const STAR_FLY   = 1050;    // mega-star fly duration
+  const IMPACT_AT  = 0.82;    // fraction of STAR_FLY where the smash lands
+  const POST_HOLD  = 1200;    // dwell after impact before next problem
+  const WIN_HOLD   = 1400;    // dwell after final impact before the win screen
+  const WRONG_HOLD = 1000;    // shake + flash for a single wrong
+  const REVEAL_FLASH = 700;   // 🤔/❓ flash before revealing the answer (2nd wrong)
+  const REVEAL_TO_FLASH = 500;// answer stays on screen this long before the key demo
+  const FLASH_REPEATS = 2;    // times the correct-key sequence is demoed
+  const KEY_FLASH_ON = 550;   // each key-hint highlight duration
+  const KEY_FLASH_GAP= 250;   // gap between sequential key hints
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const EMOJI = {
+    animals:["🐶","🐱","🐰","🐼","🐸","🐷","🐵","🐨","🦁","🐯","🐮","🐔","🐴","🐹"],
+    fruit:["🍎","🍌","🍓","🍇","🍊","🍉","🍑","🍍","🥝","🍒","🥭","🍐"],
+    nature:["🌸","🌻","🌼","🌈","🌟","🍀","🌿","🌴","🌷","🍁","🌵","🌺"],
+    birds:["🐦","🐤","🦜","🦉","🦆","🦅","🐧","🦩","🐓"],
+    household:["🏠","🪑","🧸","🎈","🎀","🔔","🧺","🎁","🪀","⏰"]
+  };
+  const CATS = Object.keys(EMOJI);
+  const HAPPY = ["❤️","🎁","😄","⭐","🎉","🌈","🥳","🌟","💖","🎈","🦄","🍭","😍","🎊"];
+  const WRONG_FACES = ["🤔","❓"];
+  const WIN_END = ["🐄","🚀","🦖","🚲","🚗","🎂"];
+  const PIPS = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+
+  const $ = s => document.querySelector(s);
+  const starsEl=$("#stars"), opA=$("#opA"), opB=$("#opB"), ansEl=$("#ans"),
+        card=$("#card"), keypad=$("#keypad"), fx=$("#fx"), flash=$("#flash"),
+        win=$("#win"), cowEl=$("#cow");
+
+  let a=0,b=0,answer=0,presentation="digits",pipStyle="dice",entry="";
+  let starCount=0, wrongCount=0, locked=true;
+  let sumMax=SUM_START, streak=0;
+  const keyByDigit={};
+
+  const rnd = n => Math.floor(Math.random()*n);
+  const pick = arr => arr[rnd(arr.length)];
+
+  // audio (synthesized, best-effort)
+  let ac=null;
+  function audio(){ if(ac){ if(ac.state==="suspended") ac.resume(); return ac; }
+    try{ ac=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ ac=null; } return ac; }
+  function tone(freq,start,dur,type="sine",gain=0.14){
+    const c=audio(); if(!c) return; const t=c.currentTime+start;
+    const o=c.createOscillator(), g=c.createGain();
+    o.type=type; o.frequency.setValueAtTime(freq,t);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(gain,t+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+  }
+  const sClick = () => tone(700+rnd(120),0,0.07,"triangle",0.10);
+  function sParty(){ [523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,i*0.09,0.28,"triangle",0.13)); }
+  function sError(){ tone(392,0,0.16,"sine",0.14); tone(392,0.18,0.16,"sine",0.14); }
+  const sStar = () => { tone(1318.5,0,0.18,"sine",0.13); tone(1975.5,0.02,0.16,"sine",0.06); };
+  function sTada(){
+    tone(392,0,0.12,"triangle",0.12);                                  // "ta"
+    [523.25,659.25,783.99].forEach(f=>tone(f,0.12,0.66,"triangle",0.11)); // "daa" chord
+    tone(1046.5,0.12,0.66,"sine",0.05);                                 // sparkle top
+  }
+
+  // problem
+  function newProblem(){
+    presentation = pick(["digits","emoji","pips"]);
+    do{ a=1+rnd(9); b=1+rnd(9); }
+    while(a+b>sumMax || (presentation==="pips" && (a>6||b>6)));
+    answer=a+b; entry=""; wrongCount=0; render();
+  }
+  function pipCard(v){
+    const el=document.createElement("div"); el.className="pip-card "+pipStyle;
+    const on=new Set(PIPS[v]);
+    for(let i=0;i<9;i++){ const d=document.createElement("div"); d.className="pip "+(on.has(i)?"on":"off"); el.appendChild(d); }
+    return el;
+  }
+  function emojiGroup(v,glyph){
+    const g=document.createElement("div"); g.className="emoji-group";
+    for(let i=0;i<v;i++){ const s=document.createElement("span"); s.textContent=glyph; g.appendChild(s); }
+    return g;
+  }
+  function numEl(v,cls){ const s=document.createElement("div"); s.className="num"+(cls?" "+cls:""); s.textContent=v; return s; }
+  function render(){
+    opA.innerHTML=""; opB.innerHTML="";
+    if(presentation==="digits"){ opA.appendChild(numEl(a)); opB.appendChild(numEl(b)); }
+    else if(presentation==="emoji"){ const glyph=pick(EMOJI[pick(CATS)]); opA.appendChild(emojiGroup(a,glyph)); opB.appendChild(emojiGroup(b,glyph)); }
+    else{ pipStyle=Math.random()<0.5?"dice":"domino"; opA.appendChild(pipCard(a)); opB.appendChild(pipCard(b)); }
+    renderAns();
+  }
+  function renderAns(reveal){
+    ansEl.innerHTML="";
+    if(entry===""){ const c=document.createElement("span"); c.id="caret"; ansEl.appendChild(c); }
+    else ansEl.appendChild(numEl(entry, reveal?"reveal tada":null));
+  }
+
+  // stars
+  function buildStars(){
+    starsEl.innerHTML="";
+    for(let i=0;i<GOAL;i++){ const s=document.createElement("span"); s.className="star"; s.textContent="☆"; starsEl.appendChild(s); }
+  }
+  function fillStar(i){
+    const s=starsEl.children[i]; if(!s) return;
+    s.textContent="★"; s.classList.add("filled","smash");
+    s.addEventListener("animationend",()=>s.classList.remove("smash"),{once:true});
+    sStar();
+  }
+  function updateStreakDisks(){    // red disk under every star in the current streak
+    for(let i=0;i<GOAL;i++){
+      starsEl.children[i].classList.toggle("streak", i<starCount && i>=starCount-streak);
+    }
+  }
+
+  // input
+  function handleDigit(d){
+    if(locked) return;
+    sClick(); entry+=String(d); renderAns();
+    const val=parseInt(entry,10);
+    if(val===answer) correct();
+    else if(entry==="1" && answer>=10){ /* teen: wait for 2nd digit */ }
+    else wrong();
+  }
+
+  // correct -> dramatic star, then explosion
+  function correct(){
+    locked=true;
+    setTimeout(()=>{
+      sumMax=Math.min(SUM_MAX_CAP, sumMax+1);   // ramp up
+      streak++;
+      starCount++;
+      const idx=starCount-1, won=starCount>=GOAL;
+      const onImpact=()=>{ fillStar(idx); updateStreakDisks(); celebrate(); checkStreak(); };
+      if(reduceMotion){
+        onImpact();
+        setTimeout(()=> won?showWin():(newProblem(),unlockEnter()), won?WIN_HOLD:POST_HOLD);
+      }else{
+        flyStar(idx,onImpact);
+        const afterImpact = STAR_FLY*IMPACT_AT;
+        setTimeout(()=> won?showWin():(newProblem(),unlockEnter()),
+                   afterImpact + (won?WIN_HOLD:POST_HOLD));
+      }
+    }, SEE_RESULT);
+  }
+
+  function flyStar(index,onImpact){
+    const target=starsEl.children[index];
+    const tr=target.getBoundingClientRect();
+    const tx=tr.left+tr.width/2, ty=tr.top+tr.height/2;
+    const cx=innerWidth/2, cy=innerHeight*0.42;
+    const targetPx=parseFloat(getComputedStyle(target).fontSize)||30;
+    const BIG=Math.min(innerWidth,innerHeight)*0.6;
+    const smallScale=targetPx/BIG;
+
+    const mega=document.createElement("div");
+    mega.className="mega-star"; mega.textContent="★"; mega.style.fontSize=BIG+"px";
+    document.body.appendChild(mega);
+    const base="translate(-50%,-50%)";
+    mega.animate([
+      {transform:`translate(${cx}px,${cy}px) ${base} scale(1) rotate(-22deg)`, opacity:1, offset:0, easing:"ease-out"},
+      {transform:`translate(${cx}px,${cy}px) ${base} scale(1) rotate(-12deg)`, opacity:1, offset:0.26, easing:"cubic-bezier(.55,0,.85,.5)"},
+      {transform:`translate(${tx}px,${ty}px) ${base} scale(${smallScale}) rotate(6deg)`, opacity:1, offset:IMPACT_AT}
+    ], {duration:STAR_FLY, fill:"forwards"});
+
+    setTimeout(()=>{ onImpact(); impactRing(tx,ty); mega.remove(); }, STAR_FLY*IMPACT_AT);
+  }
+  function impactRing(x,y){
+    const r=document.createElement("div"); r.className="ring";
+    const sz=Math.min(innerWidth,innerHeight)*0.10;
+    r.style.left=x+"px"; r.style.top=y+"px"; r.style.width=sz+"px"; r.style.height=sz+"px";
+    document.body.appendChild(r);
+    r.animate([{transform:"translate(-50%,-50%) scale(.3)",opacity:.85},{transform:"translate(-50%,-50%) scale(2.6)",opacity:0}],
+              {duration:520, easing:"ease-out", fill:"forwards"});
+    setTimeout(()=>r.remove(),560);
+  }
+
+  function celebrate(){
+    const glyph=pick(HAPPY);
+    const n=reduceMotion?8:26;
+    const cx=innerWidth/2, cy=innerHeight*0.42;
+    for(let i=0;i<n;i++) spawnParticle(glyph,cx,cy,78,78);   // large (~3x) burst
+    sParty();
+  }
+  function tadaSparkles(){
+    if(reduceMotion) return;
+    const r=ansEl.getBoundingClientRect();
+    const cx=r.left+r.width/2, cy=r.top+r.height/2;
+    for(let i=0;i<10;i++) spawnParticle("✨",cx,cy,26,22);   // small twinkles
+  }
+  function spawnParticle(glyph,cx,cy,base,rng){
+    const p=document.createElement("div"); p.className="particle"; p.textContent=glyph;
+    p.style.fontSize=(base+rnd(rng))+"px"; fx.appendChild(p);
+    const ang=Math.random()*Math.PI*2, speed=6+Math.random()*9;
+    let vx=Math.cos(ang)*speed, vy=Math.sin(ang)*speed-(7+Math.random()*5);
+    let x=cx,y=cy,rot=rnd(360),vr=(Math.random()-0.5)*24;
+    const g=0.45, life=1000+rnd(500), t0=performance.now();
+    (function step(now){
+      const dt=Math.min(32,now-(step.last||now)); step.last=now; const k=dt/16;
+      vy+=g*k; x+=vx*k; y+=vy*k; rot+=vr*k; const age=now-t0;
+      p.style.transform=`translate(${x}px,${y}px) rotate(${rot}deg)`;
+      p.style.opacity = age>life*0.7 ? String(1-(age-life*0.7)/(life*0.3)) : "1";
+      if(age<life && y<innerHeight+80) requestAnimationFrame(step); else p.remove();
+    })(t0);
+  }
+
+  // streak rewards (consecutive correct; reset on any wrong)
+  function checkStreak(){
+    if(streak===3) candyRain();
+    else if(streak===6) spaceship();
+    else if(streak===9) bubbles();
+  }
+  function candyRain(){
+    if(reduceMotion) return;
+    const CANDY=["🍬","🍭","🧁","🍫","🍩","🍪","🍡"];
+    for(let i=0;i<40;i++) setTimeout(()=>{
+      const p=document.createElement("div"); p.className="particle"; p.textContent=pick(CANDY);
+      p.style.fontSize=((30+rnd(26))*2)+"px"; fx.appendChild(p);           // 2x bigger
+      let x=rnd(innerWidth), y=-70, vy=2.5+Math.random()*2.5, vx=(Math.random()-0.5)*2,
+          rot=rnd(360), vr=(Math.random()-0.5)*10; const g=0.15, t0=performance.now(), life=3400;
+      (function step(now){
+        const dt=Math.min(32,now-(step.last||now)); step.last=now; const k=dt/16;
+        vy+=g*k; y+=vy*k; x+=vx*k; rot+=vr*k; const age=now-t0;
+        p.style.transform=`translate(${x}px,${y}px) rotate(${rot}deg)`;
+        if(y<innerHeight+80 && age<life) requestAnimationFrame(step); else p.remove();
+      })(t0);
+    }, rnd(3000));                                                        // rain lasts ~3s
+  }
+  function spaceship(){
+    if(reduceMotion) return;
+    const s=document.createElement("div"); s.className="flyby"; s.textContent="🚀";
+    const size=Math.min(innerWidth,innerHeight)*0.63; s.style.fontSize=size+"px";  // 1.5x bigger
+    document.body.appendChild(s);
+    s.animate([
+      {transform:`translate(${-size}px,${innerHeight+size*0.3}px)`, opacity:1},
+      {transform:`translate(${innerWidth+size}px,${-size*0.6}px)`, opacity:1}
+    ], {duration:3800, easing:"cubic-bezier(.4,0,.6,1)", fill:"forwards"});         // 0.5x speed
+    setTimeout(()=>s.remove(),3900);
+  }
+  function bubbles(){
+    if(reduceMotion) return;
+    for(let i=0;i<40;i++) setTimeout(()=>{                                // more bubbles
+      const p=document.createElement("div"); p.className="particle"; p.textContent="🫧";
+      p.style.fontSize=(36+rnd(60))+"px"; fx.appendChild(p);              // bigger
+      let y=innerHeight+50, vy=-(2+Math.random()*2.5), x0=rnd(innerWidth),
+          sway=24+rnd(34), phase=Math.random()*6.28; const t0=performance.now(), life=3400;
+      (function step(now){
+        const age=now-t0, dt=Math.min(32,now-(step.last||now)); step.last=now; const k=dt/16;
+        y+=vy*k; const x=x0+Math.sin(age/300+phase)*sway;
+        p.style.transform=`translate(${x}px,${y}px)`;
+        p.style.opacity = age>life*0.6 ? String(0.9*(1-(age-life*0.6)/(life*0.4))) : "0.9";
+        if(y>-70 && age<life) requestAnimationFrame(step); else p.remove();
+      })(t0);
+    }, rnd(3000));                                                        // lasts ~3s
+  }
+
+  // wrong -> shake/flash; 2nd wrong reveals the answer then advances
+  function wrong(){
+    locked=true; sError();
+    sumMax=Math.max(SUM_MIN, sumMax-2);          // ramp down
+    streak=0;                                     // break the streak
+    updateStreakDisks();                          // remove the red disks
+    if(!reduceMotion){ card.classList.add("shake"); card.addEventListener("animationend",()=>card.classList.remove("shake"),{once:true}); }
+    flash.textContent=pick(WRONG_FACES);
+    flash.classList.remove("show"); void flash.offsetWidth; flash.classList.add("show");
+    wrongCount++;
+    if(wrongCount>=2){
+      setTimeout(revealAnswer, REVEAL_FLASH);
+    }else{
+      setTimeout(()=>{ entry=""; renderAns(); locked=false; }, WRONG_HOLD);
+    }
+  }
+  function revealAnswer(){                    // answer stays on screen through the key demo
+    entry=String(answer); renderAns(true); sTada(); tadaSparkles();
+    setTimeout(()=>flashKeys(String(answer), FLASH_REPEATS, reAskSame), REVEAL_TO_FLASH);
+  }
+  function flashKeys(digits, repeats, done){
+    const seq=[];
+    for(let r=0;r<repeats;r++) for(const d of digits) seq.push(d);
+    let i=0;
+    (function step(){
+      if(i>=seq.length){ setTimeout(done, 300); return; }
+      pulseKey(seq[i++]);
+      setTimeout(step, KEY_FLASH_ON+KEY_FLASH_GAP);
+    })();
+  }
+  function pulseKey(d){
+    const btn=keyByDigit[d]; if(!btn) return;
+    btn.classList.remove("hint"); void btn.offsetWidth; btn.classList.add("hint");
+    sClick();
+    setTimeout(()=>btn.classList.remove("hint"), KEY_FLASH_ON);
+  }
+  function reAskSame(){                        // reset exercise — same problem, child types it
+    entry=""; wrongCount=0; renderAns(); locked=false;
+  }
+
+  // win / restart
+  function showWin(){ cowEl.textContent=pick(WIN_END); win.classList.add("show"); locked=true; sParty(); }
+  function restart(){ win.classList.remove("show"); starCount=0; sumMax=SUM_START; streak=0; buildStars(); newProblem(); unlockEnter(); }
+  function unlockEnter(){
+    locked=false;
+    if(!reduceMotion){ card.classList.remove("enter"); void card.offsetWidth; card.classList.add("enter"); }
+  }
+
+  // wiring
+  function buildKeypad(){
+    [1,2,3,4,5,6,7,8,9,0].forEach(d=>{
+      const btn=document.createElement("button");
+      btn.className="key"+(d===0?" zero":""); btn.textContent=d; btn.type="button";
+      btn.addEventListener("pointerdown",e=>{ e.preventDefault(); audio(); btn.classList.add("press"); handleDigit(d); });
+      const up=()=>{ btn.classList.remove("press"); btn.blur(); };
+      btn.addEventListener("pointerup",up); btn.addEventListener("pointerleave",up); btn.addEventListener("pointercancel",up);
+      keyByDigit[String(d)]=btn;
+      keypad.appendChild(btn);
+    });
+  }
+  window.addEventListener("keydown",e=>{
+    if(win.classList.contains("show")){ audio(); restart(); return; }
+    if(e.key>="0" && e.key<="9"){ audio(); handleDigit(parseInt(e.key,10)); }
+  });
+  win.addEventListener("pointerdown",e=>{ e.preventDefault(); audio(); restart(); });
+
+  // boot
+  buildStars(); buildKeypad(); newProblem(); unlockEnter();
+})();
+</script>
+</body>
+</html>
