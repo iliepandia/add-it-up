@@ -3,7 +3,7 @@ Game for Kids to practice addition in a fun way
 
 # Play the game
 
-[Open the game](https://iliepandia.github.io/add-it-up/addition-game.html?ver=11)
+[Open the game](https://iliepandia.github.io/add-it-up/addition-game.html?ver=13)
 
 # Development
 
@@ -26,6 +26,8 @@ src/
   fx.js         generic particle/animation primitives ("animations")
   win.js        trophy reveal + closing screen ("end screen")
   picker.js     "pick a world" screen ("intro")
+  stats.js      local play-stats storage (sessions, scores, mistakes) — localStorage only, no network
+  statsScreen.js  stats screen UI (tiles, charts, mistakes list)
   styles/       CSS split to match the modules above
 index.html      dev entry point (Vite serves this)
 ```

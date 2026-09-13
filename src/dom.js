@@ -15,3 +15,15 @@ export const trophiesEl = $("#trophies");
 export const winfxEl = $("#winfx");
 export const picker = $("#themePicker");
 export const starfieldLayer = $(".stars-layer");
+
+export const statsLink = $("#statsLink");
+export const statsScreen = $("#statsScreen");
+export const statsGrid = $("#statsGrid");
+export const chartGames = $("#chartGames");
+export const chartMonth = $("#chartMonth");
+export const mistakesList = $("#mistakesList");
+export const statsClose = $("#statsClose");
+export const statsResetBtn = $("#statsResetBtn");
+export const resetConfirm = $("#resetConfirm");
+export const resetCancel = $("#resetCancel");
+export const resetConfirmBtn = $("#resetConfirmBtn");

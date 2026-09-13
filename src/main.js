@@ -7,6 +7,7 @@ import "./styles/fx.css";
 import "./styles/win.css";
 import "./styles/picker.css";
 import "./styles/animations.css";
+import "./styles/stats.css";
 
 import {
   GOAL, SUM_START, SUM_MIN, SUM_MAX_CAP, SEE_RESULT, STAR_FLY, IMPACT_AT,
@@ -14,7 +15,7 @@ import {
   REVEAL_FLASH, REVEAL_TO_FLASH, FLASH_REPEATS, KEY_FLASH_ON, KEY_FLASH_GAP, reduceMotion,
   WRONG_FACES, pick
 } from "./config.js";
-import { card, keypad, flash, win, picker } from "./dom.js";
+import { card, keypad, flash, win, picker, statsLink, statsScreen } from "./dom.js";
 import { audio, sTada, sError } from "./audio.js";
 import { applyTheme, themeState, checkStreak } from "./themes.js";
 import { newProblem, renderAns } from "./problem.js";
@@ -23,6 +24,8 @@ import { celebrate, tadaSparkles, flyStar } from "./fx.js";
 import { showWin } from "./win.js";
 import { showPicker, wirePicker } from "./picker.js";
 import { state, keyByDigit } from "./state.js";
+import { initStats, startSession, recordGame, recordMistake } from "./stats.js";
+import { showStats, wireStats } from "./statsScreen.js";
 
 // ---- input ----
 function handleDigit(d){
@@ -43,6 +46,7 @@ function correct(){
     state.starCount++;
     const idx=state.starCount-1, won=state.starCount>=GOAL;
     const onImpact=()=>{ fillStar(idx); refreshStars(); celebrate(); checkStreak(); };
+    if(won) recordGame({ wrongCount: state.gameWrongTotal, theme: themeState.name, streak: state.maxStreak });
     if(reduceMotion){
       onImpact();
       setTimeout(()=> won?showWin():(newProblem(),unlockEnter()), won?WIN_HOLD:POST_HOLD);
@@ -57,7 +61,8 @@ function correct(){
 // ---- wrong ----
 function wrong(){
   state.locked=true; sError();
-  state.sumMax=Math.max(SUM_MIN, state.sumMax-2); state.streak=0; refreshStars();
+  state.sumMax=Math.max(SUM_MIN, state.sumMax-2); state.streak=0; state.gameWrongTotal++; refreshStars();
+  recordMistake(state.a, state.b);
   if(!reduceMotion){ card.classList.add("shake"); card.addEventListener("animationend",()=>card.classList.remove("shake"),{once:true}); }
   flash.textContent=pick(WRONG_FACES);
   flash.classList.remove("show"); void flash.offsetWidth; flash.classList.add("show");
@@ -87,7 +92,8 @@ function reAskSame(){ state.entry=""; state.wrongCount=0; renderAns(); state.loc
 // ---- start / restart ----
 function startGame(){
   picker.classList.remove("show"); win.classList.remove("show");
-  state.starCount=0; state.sumMax=SUM_START; state.streak=0; state.maxStreak=0;
+  startSession();
+  state.starCount=0; state.sumMax=SUM_START; state.streak=0; state.maxStreak=0; state.gameWrongTotal=0;
   buildStars(); refreshStars(); newProblem(); unlockEnter();
 }
 function unlockEnter(){
@@ -107,6 +113,7 @@ function buildKeypad(){
   });
 }
 window.addEventListener("keydown",e=>{
+  if(statsScreen.classList.contains("show")) return;
   if(picker.classList.contains("show")){
     const map={"1":"classic","2":"nature","3":"space","4":"animal"};
     if(map[e.key]){ audio(); applyTheme(map[e.key]); themeState.current.click(); startGame(); }
@@ -116,9 +123,12 @@ window.addEventListener("keydown",e=>{
   if(e.key>="0" && e.key<="9"){ audio(); handleDigit(parseInt(e.key,10)); }
 });
 win.addEventListener("pointerdown",e=>{ e.preventDefault(); audio(); showPicker(); });
+statsLink.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); audio(); showStats(); });
 
 // ---- boot ----
 buildKeypad();
 wirePicker(name=>{ applyTheme(name); themeState.current.click(); startGame(); });
+wireStats();
+initStats();
 showPicker();
 document.querySelector("#buildVer").textContent = `ver: ${__BUILD_VERSION__}`;

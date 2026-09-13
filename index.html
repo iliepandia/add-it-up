@@ -50,6 +50,43 @@
       <button class="pick" data-theme="animal" aria-label="Animals"><span class="lbl">🐔</span></button>
     </div>
     <p id="buildVer" class="build-ver"></p>
+    <button id="statsLink" type="button" class="stats-link">📊 Stats</button>
+  </div>
+
+  <div id="statsScreen">
+    <div class="stats-scroll">
+      <h1>Your stats</h1>
+      <div id="statsGrid" class="stats-grid"></div>
+
+      <section class="stats-chart-section">
+        <h2>Last 30 games</h2>
+        <div id="chartGames" class="stats-chart"></div>
+      </section>
+
+      <section class="stats-chart-section">
+        <h2>Last 30 days</h2>
+        <div id="chartMonth" class="stats-chart"></div>
+      </section>
+
+      <section class="stats-chart-section">
+        <h2>Trickiest problems</h2>
+        <ol id="mistakesList" class="mistakes-list"></ol>
+      </section>
+    </div>
+
+    <div class="stats-actions">
+      <button id="statsClose" type="button" class="stats-close-btn">Close</button>
+      <div class="reset-area">
+        <button id="statsResetBtn" type="button" class="stats-reset-btn">Reset stats</button>
+        <div id="resetConfirm" class="reset-confirm" hidden>
+          <p>Delete all stats? This can't be undone.</p>
+          <div class="reset-confirm-btns">
+            <button id="resetCancel" type="button">Cancel</button>
+            <button id="resetConfirmBtn" type="button" class="danger">Yes, delete everything</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="/src/main.js"></script>

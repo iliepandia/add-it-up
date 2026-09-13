@@ -2,9 +2,9 @@
 
 **Purpose:** A web game that helps a 7-year-old practice single-digit addition.
 **Status:** Clarified and locked, ready to build.
-**Last updated:** 2026-09-11
+**Last updated:** 2026-09-12
 
-> **Scope:** Sections 1–10 are **Phase 1 — build now**. Section 11 is **Phase 2 — deferred, do not build now** (learning-design upgrades captured for a later version).
+> **Scope:** Sections 1–12 are **Phase 1 — build now**. Section 13 is **Phase 2 — deferred, do not build now** (learning-design upgrades captured for a later version).
 
 ---
 
@@ -44,10 +44,19 @@ Each problem picks **one of three presentations at random**:
 
 1. **Digits** — `2 + 3 =`
 2. **Emoji groups** — one repeated emoji per operand, e.g. 😄😄😄😄 + 😄😄 =
-   - Emoji drawn from a set of: animals, fruit, nature, birds, household items.
+   - **Emoji category matches the active theme (§10)**, so the pictures feel like they belong
+     to that world instead of being generic:
+     - **Nature** 🌳 draws only from the nature set (flowers, leaves, butterflies…).
+     - **Animal** 🐔 draws from fruit + animals + birds.
+     - **Space** 🚀 draws from a dedicated space set (rocket, planets, moon, alien…).
+     - **Classic** 👦 draws from the full pool (animals, fruit, nature, birds, household items) —
+       it has no strong theme, so it keeps the original variety.
 3. **Pips** — dice faces or domino tiles, e.g. `.` + `..` =
    - **Cap: 6 pips per operand.** If either operand is > 6, re-roll the pair for this
      problem (pip presentation only).
+   - Groups are laid out on a small grid that never wraps past **2 rows**, with the glyph
+     size shrinking as the count grows — so even a 9-item group can't push the keypad off
+     the bottom of the screen on a narrow phone.
 
 > **Note:** the pip cap (6 per operand) allows sums up to `6 + 6 = 12`, which matches the ramp's
 > top. So **all three presentations cover the full 2–12 range** at max difficulty.
@@ -100,7 +109,9 @@ answer on screen, *then* trigger the celebration.
   breaks the streak.
 - **Streak rewards** fire after the star is awarded, layered on the celebration:
   - **3 in a row:** a **rain of candy** (large candy, ~3 s).
-  - **6 in a row:** a **giant spaceship** flies slowly across the screen (~3.8 s).
+  - **6 in a row:** a **giant spaceship** flies slowly across the screen (~3.8 s), always along
+    a fixed **diagonal bottom-left → top-right** path that crosses the exact centre of the
+    screen regardless of phone or desktop aspect ratio.
   - **9 in a row:** lots of **big bubbles** float up (~3 s).
 - **Prize badges:** each not-yet-earned milestone shows a small badge on the star whose fill will
   complete it — 🍬 for the next 3-streak, 🚀 for 6, 🫧 for 9 — so the child sees how far to the next
@@ -124,7 +135,7 @@ answer on screen, *then* trigger the celebration.
   - The re-ask is a **fresh attempt**: wrong-count resets, and a correct entry now **earns the
     star**. (If a twice-missed problem should never award a star, gate this — currently it does.)
   *(Prevents the child getting trapped on a fact they don't know; a light Phase-1 version of the
-  scaffolding in §12.2.)*
+  scaffolding in §13.2.)*
 
 ---
 
@@ -162,7 +173,7 @@ Sound is best-effort — the game must remain fully playable if audio is unavail
   finishes (the sound is over), a **star explosion** bursts over the screen.
 - Also show the hint **"Tap to play again"** and a **big orange "Play" button**.
 - **Restart:** the Play button **or any tap/key** starts a new session (stars, difficulty, and
-  longest-streak all reset).
+  longest-streak all reset), returning first to the theme picker (§10).
 
 ---
 
@@ -174,64 +185,110 @@ fresh game in that world. Button animations: **👦 jumps** (classic), **🌳 sw
 **🚀 bounces** (space), **🐔 shakes** (animal).
 
 A theme changes the **background**, the **keypad + Play button colors**, the three **streak-reward
-visuals**, and the **key-press sound**. The **problem card stays white with navy numbers** in every
-theme for legibility; the **prize badges** (§7) use each theme's own reward emojis; on dark themes
-the empty-star colour is lightened for contrast. Background/button motion is minimised under
-`prefers-reduced-motion`.
+visuals**, the **emoji-presentation category** (§4), and the **key-press sound**. The **problem
+card stays white with navy numbers** in every theme for legibility; the **prize badges** (§7) use
+each theme's own reward emojis; on dark themes the empty-star colour is lightened for contrast.
+Background/button motion is minimised under `prefers-reduced-motion`.
 
 | Theme | Background | Keys (bg / text, contrast) | Streak 3 / 6 / 9 | Key sound |
 |-------|-----------|----------------------------|------------------|-----------|
 | **Classic** 👦 | sky→mint gradient | tangerine `#FF8A5B` / white | candy rain / spaceship (diagonal) / bubbles up | click |
 | **Nature** 🌳 | blue sky, sun, drifting clouds | dark green `#2E7D32` / white (~5:1) | leaves fall / bird across the sky / ice cream up | click |
-| **Space** 🚀 | dark-magenta sky, gently flickering stars | white / magenta `#7A1466` (~7:1) | stars fall / rocket (diagonal) / volcanoes up | ding |
+| **Space** 🚀 | dark-magenta sky, quick-flickering starfield | white / magenta `#7A1466` (~7:1) | stars fall / rocket (diagonal) / volcanoes up | ding |
 | **Animal** 🐔 | blue sky, green hills | barn red `#C6402F` / white (~4.7:1) | apples fall / tractor (across the middle) / bees up | squeak |
 
 "Flies by" direction: the rocket launches **diagonally**; the bird crosses the upper **sky** and
 the tractor crosses the **middle** of the screen (both horizontal) so each faces its travel
 direction. The streak-6 fly-by also carries a **matching sound** — rocket **zoom**, bird
-**chirp**, or tractor **rumble**.
+**chirp**, or tractor **rumble** — each stretched to span the **full ~3.8 s** of the flight.
 
 ---
 
-## 11. Open items / future tweaks
+## 11. Local stats & history
+
+Reachable via a small **"📊 Stats"** link in the bottom-right corner of the theme-picker screen
+(§10). Everything is stored **locally on-device only** (browser `localStorage`) — there is no
+server and no data ever leaves the device.
+
+**Play-time definition:** a "session" is **active gameplay only**. The clock starts the instant
+a theme is picked and stops the instant the player returns to the theme picker — including via
+the win screen's "tap to play again" (§9). Time spent browsing the theme picker or the stats
+screen itself is **never** counted as play time. A session longer than **15 minutes** is treated
+as **abandoned** and excluded from the time stats (the day still counts toward "days played").
+
+**Score:** each completed game (reaching the 10th star, §9) is scored **out of 10** — start at
+10, **−1 per wrong submission** across the whole game, floor of **0**.
+
+**Tracked stats:**
+
+| Stat | Notes |
+|------|-------|
+| Games played | all-time count |
+| Average score | all-time, out of 10 |
+| Best score | all-time max, out of 10 |
+| Accuracy | correct ÷ (correct + wrong) across all games |
+| Longest streak | best consecutive-correct streak ever reached |
+| Total play time | sum of finalized sessions (see definition above) |
+| Average / shortest / longest session | over finalized sessions |
+| Days played | distinct calendar days with at least one session (today counts the moment a game starts, without waiting for the session to end) |
+| Favorite world | theme played most often |
+
+**Charts** (hand-drawn inline SVG, no charting library):
+- **Last 30 games** — bar chart of the most recent games' scores.
+- **Last 30 days** — line chart of each day's average score across the last 30 calendar days
+  (a day with no games leaves a gap in the line).
+
+**Trickiest problems:** the top 10 most-missed `a + b` combinations, each with a mistake
+counter, sorted by frequency. A wrong *submission* counts as a mistake, so missing the same
+problem twice before getting it counts as two.
+
+**Reset:** a small, de-emphasized "Reset stats" link sits well below the Close button — spaced
+apart deliberately to avoid an accidental tap — and opens an inline **confirm / cancel** prompt.
+Nothing is deleted until the destructive option is explicitly confirmed.
+
+---
+
+## 12. Open items / future tweaks
 
 - No backspace under auto-check (§5).
 - A **linear difficulty ramp** is now in Phase 1 (§3, sum 5→12); the **adaptive, fact-tracking**
-  version remains Phase 2 (§12.3).
+  version remains Phase 2 (§13.3).
 
 ---
 
-## 12. Phase 2 — Learning design (deferred, do not build now)
+## 13. Phase 2 — Learning design (deferred, do not build now)
 
 Upgrades to make the math *emerge from play* rather than be a toll paid to reach a reward.
 Ordered by leverage toward that goal; each is paired with the theory it draws on.
 
-### 12.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage*
+### 13.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage*
 The Phase 1 game is a **drill with juice**: solve the sum → get the fireworks. The math is
 the toll, not the play. Convert it to an **endogenous** design where manipulating numbers
 *is* the fun act — e.g. feed a creature exactly N berries, build a tower to a target height,
 fill a jar to a line. The addition becomes something you *do to get what you want*.
 *(Malone & Lepper; Habgood & Ainsworth, intrinsic integration.)*
 
-### 12.2 Scaffold the second wrong attempt — *highest safety priority*
+### 13.2 Scaffold the second wrong attempt — *highest safety priority*
 Phase 1 re-shows the identical problem until correct, with no teaching — a recipe for math
 anxiety and learned helplessness when the child genuinely doesn't know the fact. Keep the
 never-skip rule, but on the **second** miss, *help*: reveal pips under the digits, animate a
 count-up, show a number line, or decompose (`8 + 7 → 8 + 2 = 10, then +5`). Reframe errors as
 information, not verdicts. *(Dweck, growth mindset; Seligman, learned helplessness.)*
 
-### 12.3 Adaptivity + fact-memory
+### 13.3 Adaptivity + fact-memory
 Flat random difficulty prevents flow and a felt sense of progress. Track which addend pairs
 the child misses, resurface them (spaced retrieval / testing effect), and let difficulty drift
-upward as accuracy and speed rise. *(Csikszentmihalyi, flow; Roediger, testing effect.)*
+upward as accuracy and speed rise. *(Csikszentmihalyi, flow; Roediger, testing effect.)* The
+mistake-frequency tracking already shipped in §11 is the raw data this would build on.
 
-### 12.4 Surface competence + one autonomy choice
+### 13.4 Surface competence + one autonomy choice
 Give a visible mastery signal beyond a single session (levels, cumulative progress) and at
 least one real choice (choose between two problems, or a sub-mode). *(Deci & Ryan,
 Self-Determination Theory — competence + autonomy.)* *(World/theme selection already landed in
-Phase 1, §10; this is about deeper in-game autonomy.)*
+Phase 1, §10, and the stats screen in §11 already gives a persistent competence signal; this
+item is about deeper in-game autonomy.)*
 
-### 12.5 Sequence the representations (don't randomize blindly)
+### 13.5 Sequence the representations (don't randomize blindly)
 The three formats are concrete → abstract (pips/emoji → digits) and map onto how number sense
 develops. Instead of random order, **lead concrete and fade toward abstract** as fluency on a
 fact grows. *(Concrete–Representational–Abstract; Clements & Sarama, subitizing.)*
@@ -239,4 +296,4 @@ fact grows. *(Concrete–Representational–Abstract; Clements & Sarama, subitiz
 ### Strengths to preserve from Phase 1
 Multiple representations of quantity (symbolic / set-based / subitizable pips), immediate
 feedback (200 ms), multimodal input, low cognitive load, and the never-skip principle
-(once scaffolded per 11.2).
+(once scaffolded per 13.2).

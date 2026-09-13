@@ -18,12 +18,14 @@ export const THEMES = {
     r3:()=>rainDown(["🍎"]), r6:()=>{flyAcross("🚜","ground"); sRumble();}, r9:()=>floatUp("🐝")}
 };
 
-export const themeState = { current: THEMES.classic };
+export const themeState = { current: THEMES.classic, name: "classic" };
 
 export function applyTheme(name){
-  themeState.current = THEMES[name] || THEMES.classic;
+  const key = THEMES[name] ? name : "classic";
+  themeState.current = THEMES[key];
+  themeState.name = key;
   document.body.className = themeState.current.cls;
-  if(name==="space") buildStarfield(); else clearStarfield();
+  if(key==="space") buildStarfield(); else clearStarfield();
 }
 
 function buildStarfield(){
