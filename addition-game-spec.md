@@ -171,9 +171,13 @@ Sound is best-effort — the game must remain fully playable if audio is unavail
   and household objects) **repeated once per point of the longest streak** reached this game.
 - The copies **reveal one at a time**, each with a **rising musical note**; when the reveal
   finishes (the sound is over), a **star explosion** bursts over the screen.
+- **Trophies become tappable** once the reveal finishes: tapping one bursts it into **30 stars**
+  at its position and removes it. The **last remaining trophy** bursts bigger instead — **~60**
+  larger stars plus a brief **screen shake** — as a small finale (skipped under
+  `prefers-reduced-motion`, which still keeps a smaller star burst).
 - Also show the hint **"Tap to play again"** and a **big orange "Play" button**.
-- **Restart:** the Play button **or any tap/key** starts a new session (stars, difficulty, and
-  longest-streak all reset), returning first to the theme picker (§10).
+- **Restart:** the Play button **or any tap/key not on a trophy** starts a new session (stars,
+  difficulty, and longest-streak all reset), returning first to the theme picker (§10).
 
 ---
 
@@ -231,7 +235,7 @@ as **abandoned** and excluded from the time stats (the day still counts toward "
 | Total play time | sum of finalized sessions (see definition above) |
 | Average / shortest / longest session | over finalized sessions |
 | Days played | distinct calendar days with at least one session (today counts the moment a game starts, without waiting for the session to end) |
-| Favorite world | theme played most often |
+| Favorite this week | theme played most in the **last 7 days** (not an all-time tally, so it tracks current taste rather than getting stuck on whichever theme had an early lead) |
 
 **Charts** (hand-drawn inline SVG, no charting library):
 - **Last 30 games** — bar chart of the most recent games' scores.

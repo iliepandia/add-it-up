@@ -6,6 +6,11 @@
 #trophies{display:flex; flex-wrap:wrap; gap:clamp(6px,2vw,16px); justify-content:center; align-items:center; max-width:92vw;}
 .trophy{font-size:clamp(40px,12vw,86px); line-height:1; animation:trophyPop .4s cubic-bezier(.34,1.56,.64,1);}
 @keyframes trophyPop{0%{transform:scale(0) rotate(-12deg);opacity:0}70%{transform:scale(1.25) rotate(6deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.trophy.tap-ready{cursor:pointer; transition:transform .1s ease;}
+.trophy.tap-ready:active{transform:scale(.85);}
+body.mega-shake{animation:megaShake .5s cubic-bezier(.36,.07,.19,.97);}
+@keyframes megaShake{10%,90%{transform:translate(-3px,2px)}20%,80%{transform:translate(6px,-4px)}
+  30%,50%,70%{transform:translate(-14px,9px)}40%,60%{transform:translate(14px,-9px)}}
 #winfx{position:absolute; inset:0; pointer-events:none; overflow:hidden;}
 #win h1{font-size:clamp(40px,12vw,88px); font-weight:700; color:var(--ink); margin:0;}
 #win p{font-size:clamp(18px,5vw,28px); font-weight:500; color:var(--grape); margin:0;}
