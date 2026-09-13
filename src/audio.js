@@ -1,6 +1,6 @@
 // Synthesized sound effects (no audio files) via the Web Audio API.
 
-import { FLYBY_DURATION } from "./config.js";
+import { FLYBY_DURATION, REWARD_SHOWER_DURATION } from "./config.js";
 
 let ac = null;
 export function audio(){
@@ -81,4 +81,110 @@ export function sChirp(){   // bird passing tweets, repeated in bursts across th
       o.connect(g).connect(c.destination); o.start(start); o.stop(start+0.16);
     });
   }
+}
+
+// ---- streak 3 / streak 9 reward sounds (one per theme, see main.js summary) ----
+// The rainDown/floatUp particle showers run up to REWARD_SHOWER_DURATION (particles
+// spawn staggered over ~3s, each living ~3.4s) — these sounds are stretched or
+// repeated to match instead of cutting out while particles are still falling/rising.
+
+export function sCandyChime(){   // classic r3: candy rain — bright arpeggio, repeating as candy keeps falling
+  const notes=[987.77,1174.66,1318.51,1567.98];
+  const span=REWARD_SHOWER_DURATION/1000, reps=6, gap=span/reps;
+  for(let r=0;r<reps;r++){
+    const base=r*gap;
+    notes.forEach((f,i)=>tone(f,base+i*0.09,0.32,"triangle",0.10));
+  }
+}
+
+export function sBubbles(){   // classic r9: bubbles float up — soft rising bloops, in staggered bursts
+  const c=audio(); if(!c) return; const t=c.currentTime;
+  const span=REWARD_SHOWER_DURATION/1000, bursts=7, gap=span/bursts;
+  for(let b=0;b<bursts;b++){
+    const bt=b*gap;
+    [0,0.14,0.28,0.42].forEach((off,i)=>{
+      const o=c.createOscillator(), g=c.createGain(); o.type="sine"; const f=300+i*70;
+      const start=t+bt+off;
+      o.frequency.setValueAtTime(f,start);
+      o.frequency.exponentialRampToValueAtTime(f*2.2,start+0.18);
+      g.gain.setValueAtTime(0.0001,start); g.gain.linearRampToValueAtTime(0.10,start+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,start+0.2);
+      o.connect(g).connect(c.destination); o.start(start); o.stop(start+0.22);
+    });
+  }
+}
+
+export function sRustle(){   // nature r3: leaves fall — continuous wind-through-leaves rustle for the whole shower
+  const c=audio(); if(!c) return; const t=c.currentTime, dur=REWARD_SHOWER_DURATION/1000, buf=noiseBuffer(dur); if(!buf) return;
+  const src=c.createBufferSource(); src.buffer=buf;
+  const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=0.7;
+  bp.frequency.setValueAtTime(1800,t); bp.frequency.linearRampToValueAtTime(2600,t+dur);
+  const trem=c.createOscillator(); trem.type="sine"; trem.frequency.value=2.2;
+  const tremGain=c.createGain(); tremGain.gain.value=0.03;
+  const g=c.createGain(); g.gain.setValueAtTime(0.0001,t);
+  g.gain.linearRampToValueAtTime(0.075,t+0.3); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  trem.connect(tremGain).connect(g.gain);
+  src.connect(bp).connect(g).connect(c.destination);
+  src.start(t); src.stop(t+dur); trem.start(t); trem.stop(t+dur);
+}
+
+export function sJingle(){   // nature r9: ice cream floats up — cheerful truck-jingle tune, looping like a real one
+  const melody=[783.99,987.77,1046.5,1318.51];
+  const span=REWARD_SHOWER_DURATION/1000, reps=4, gap=span/reps;
+  for(let r=0;r<reps;r++){
+    const base=r*gap;
+    melody.forEach((f,i)=>tone(f,base+i*0.14,0.3,"triangle",0.10));
+  }
+}
+
+export function sTwinkleCascade(){   // space r3: stars fall — glittering cascade across the whole shower
+  const span=REWARD_SHOWER_DURATION/1000, count=26;
+  for(let i=0;i<count;i++) tone(1600+Math.random()*900, Math.random()*span, 0.22, "sine", 0.07);
+}
+
+export function sLavaBubble(){   // space r9: volcanoes float up — low bubbling rumble, repeating as they keep rising
+  const c=audio(); if(!c) return; const t=c.currentTime;
+  const span=REWARD_SHOWER_DURATION/1000, reps=7, gap=span/reps;
+  for(let r=0;r<reps;r++){
+    const base=r*gap;
+    [0,0.22,0.46].forEach((off,i)=>{
+      const o=c.createOscillator(), g=c.createGain(); o.type="sawtooth"; const f=90-i*10;
+      const start=t+base+off;
+      o.frequency.setValueAtTime(f,start);
+      o.frequency.exponentialRampToValueAtTime(f*0.6,start+0.3);
+      const lp=c.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=220;
+      g.gain.setValueAtTime(0.0001,start); g.gain.linearRampToValueAtTime(0.12,start+0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001,start+0.32);
+      o.connect(lp).connect(g).connect(c.destination); o.start(start); o.stop(start+0.34);
+    });
+  }
+}
+
+export function sAppleThud(){   // animal r3: apples rain — plunky thuds, continuing as apples keep dropping
+  const c=audio(); if(!c) return; const t=c.currentTime;
+  const span=REWARD_SHOWER_DURATION/1000, hits=16;
+  for(let i=0;i<hits;i++){
+    const start=t+Math.random()*span;
+    const o=c.createOscillator(), g=c.createGain(); o.type="triangle"; const f=160+Math.random()*40;
+    o.frequency.setValueAtTime(f,start);
+    o.frequency.exponentialRampToValueAtTime(f*0.6,start+0.1);
+    g.gain.setValueAtTime(0.0001,start); g.gain.linearRampToValueAtTime(0.13,start+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,start+0.12);
+    o.connect(g).connect(c.destination); o.start(start); o.stop(start+0.14);
+  }
+}
+
+export function sBeeBuzz(){   // animal r9: bees float up — buzzing tremolo, sustained the whole time they rise
+  const c=audio(); if(!c) return; const t=c.currentTime, dur=REWARD_SHOWER_DURATION/1000;
+  const o=c.createOscillator(); o.type="sawtooth";
+  o.frequency.setValueAtTime(180,t); o.frequency.linearRampToValueAtTime(320,t+dur);
+  const trem=c.createOscillator(); trem.type="sine"; trem.frequency.value=26;
+  const tremGain=c.createGain(); tremGain.gain.value=0.04;
+  const mainGain=c.createGain(); mainGain.gain.setValueAtTime(0.0001,t);
+  mainGain.gain.linearRampToValueAtTime(0.07,t+0.15);
+  mainGain.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  trem.connect(tremGain).connect(mainGain.gain);
+  o.connect(mainGain).connect(c.destination);
+  o.start(t); o.stop(t+dur+0.05);
+  trem.start(t); trem.stop(t+dur+0.05);
 }

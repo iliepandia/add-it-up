@@ -2,20 +2,31 @@
 // and the currently-active theme.
 
 import { rnd, CATS } from "./config.js";
-import { sClick, sDing, sSqueak, sZoom, sRumble, sChirp } from "./audio.js";
+import {
+  sClick, sDing, sSqueak, sZoom, sRumble, sChirp,
+  sCandyChime, sBubbles, sRustle, sJingle, sTwinkleCascade, sLavaBubble, sAppleThud, sBeeBuzz
+} from "./audio.js";
 import { rainDown, flyAcross, floatUp } from "./rewards.js";
 import { starfieldLayer } from "./dom.js";
 import { state } from "./state.js";
 
 export const THEMES = {
   classic:{cls:"theme-classic", click:sClick, badges:["🍬","🚀","🫧"], emojiCats:CATS,
-    r3:()=>rainDown(["🍬","🍭","🧁","🍫","🍩","🍪","🍡"]), r6:()=>{flyAcross("🚀","diagonal"); sZoom();}, r9:()=>floatUp("🫧")},
+    r3:()=>{rainDown(["🍬","🍭","🧁","🍫","🍩","🍪","🍡"]); sCandyChime();},
+    r6:()=>{flyAcross("🚀","diagonal"); sZoom();},
+    r9:()=>{floatUp("🫧"); sBubbles();}},
   nature:{cls:"theme-nature", click:sClick, badges:["🍂","🐦","🍦"], emojiCats:["nature"],
-    r3:()=>rainDown(["🍂","🍁"]), r6:()=>{flyAcross("🐦","sky"); sChirp();}, r9:()=>floatUp("🍦")},
+    r3:()=>{rainDown(["🍂","🍁"]); sRustle();},
+    r6:()=>{flyAcross("🐦","sky"); sChirp();},
+    r9:()=>{floatUp("🍦"); sJingle();}},
   space:{cls:"theme-space", click:sDing, badges:["⭐","🚀","🌋"], emojiCats:["space"],
-    r3:()=>rainDown(["⭐","🌟"]), r6:()=>{flyAcross("🚀","diagonal"); sZoom();}, r9:()=>floatUp("🌋")},
+    r3:()=>{rainDown(["⭐","🌟"]); sTwinkleCascade();},
+    r6:()=>{flyAcross("🚀","diagonal"); sZoom();},
+    r9:()=>{floatUp("🌋"); sLavaBubble();}},
   animal:{cls:"theme-animal", click:sSqueak, badges:["🍎","🚜","🐝"], emojiCats:["fruit","animals","birds"],
-    r3:()=>rainDown(["🍎"]), r6:()=>{flyAcross("🚜","ground"); sRumble();}, r9:()=>floatUp("🐝")}
+    r3:()=>{rainDown(["🍎"]); sAppleThud();},
+    r6:()=>{flyAcross("🚜","ground"); sRumble();},
+    r9:()=>{floatUp("🐝"); sBeeBuzz();}}
 };
 
 export const themeState = { current: THEMES.classic, name: "classic" };

@@ -53,7 +53,7 @@ function renderTiles(){
     ["Longest session", formatDuration(s.longestSessionMs)],
     ["Days played", s.daysPlayed || "—"]
   ];
-  if(s.favoriteTheme) rows.push(["Favorite world", THEME_LABEL[s.favoriteTheme] || s.favoriteTheme]);
+  if(s.favoriteTheme) rows.push(["Favorite this week", THEME_LABEL[s.favoriteTheme] || s.favoriteTheme]);
   rows.forEach(([label, value]) => statsGrid.appendChild(tile(label, value)));
 }
 

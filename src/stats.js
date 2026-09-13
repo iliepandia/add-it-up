@@ -18,7 +18,6 @@ function blank(){
     games: { totalScore: 0, count: 0, bestScore: 0, bestStreak: 0, totalCorrect: 0, totalWrong: 0, history: [] },
     mistakes: {},
     days: {},
-    themeCounts: {},
     active: null
   };
 }
@@ -34,8 +33,7 @@ function load(){
       session: { ...b.session, ...data.session },
       games: { ...b.games, ...data.games, history: Array.isArray(data.games?.history) ? data.games.history : [] },
       mistakes: data.mistakes || {},
-      days: data.days || {},
-      themeCounts: data.themeCounts || {}
+      days: data.days || {}
     };
   }catch(e){ return blank(); }
 }
@@ -106,7 +104,6 @@ export function recordGame({ wrongCount, theme, streak }){
   g.totalWrong += wrongCount;
   g.history.push({ t: Date.now(), score, theme });
   if(g.history.length > MAX_GAME_HISTORY) g.history.splice(0, g.history.length - MAX_GAME_HISTORY);
-  data.themeCounts[theme] = (data.themeCounts[theme] || 0) + 1;
   save(data);
 }
 
@@ -119,15 +116,23 @@ export function recordMistake(a, b){
 
 export function getSummary(){
   const data = load();
-  const { session, games, days, themeCounts, active } = data;
+  const { session, games, days, active } = data;
   const daysPlayed = new Set(Object.keys(days));
   if(active) daysPlayed.add(dayKey(active.start)); // today counts even before this session finalizes
   const avgSessionMs = session.count ? session.totalMs / session.count : 0;
   const avgScore = games.count ? games.totalScore / games.count : 0;
   const totalAnswers = games.totalCorrect + games.totalWrong;
   const accuracy = totalAnswers ? games.totalCorrect / totalAnswers : null;
+
+  // "Favorite" reflects recent taste, not a fixed all-time lead one theme
+  // could never be dislodged from — so tally only the last 7 days.
+  const sevenDaysAgo = Date.now() - 7 * 86400000;
+  const recentCounts = {};
+  for(const g of games.history){
+    if(g.t >= sevenDaysAgo) recentCounts[g.theme] = (recentCounts[g.theme] || 0) + 1;
+  }
   let favoriteTheme = null, favCount = 0;
-  for(const [name, count] of Object.entries(themeCounts)){ if(count > favCount){ favCount = count; favoriteTheme = name; } }
+  for(const [name, count] of Object.entries(recentCounts)){ if(count > favCount){ favCount = count; favoriteTheme = name; } }
   return {
     totalPlayMs: session.totalMs,
     avgSessionMs,
