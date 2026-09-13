@@ -1,4 +1,8 @@
 :root{
+  /* The game paints its own worlds (incl. a dark Space theme) — opting out of
+     the OS/browser's automatic dark-mode repaint keeps those colors exactly
+     as designed instead of getting auto-inverted on dark-mode phones. */
+  color-scheme: light;
   --surface:#FFFFFF; --ink:#2E3A59; --muted:#B7C3DE;
   --hero:#FF8A5B; --hero-dark:#E36A3B; --gold:#FFC53D; --grape:#8E6BFF; --good:#37B26B;
   --font:"Fredoka","Baloo 2","Nunito",ui-rounded,"Segoe UI Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
