@@ -36,22 +36,15 @@ export function addPrize(emoji, score){
   save(list);
 }
 
-// Flat list of prize tiles to render, same-emoji prizes clustered together
-// (in the order each type was first won) so wins collected in random order
-// still group on screen instead of scattering by win date. Each tile carries
-// its own display scale, derived from that game's score.
+// Flat list of prize tiles to render, in the order they were earned (storage
+// is already append-only chronological, so this is just a straight map).
+// Each tile carries its own display scale, derived from that game's score.
 export function getPrizeTiles(){
   const list = load();
-  const order = [];
-  const groups = {};
-  for(const entry of list){
+  return list.map(entry => {
     // Old storage format was a plain emoji string, with no score recorded.
     const emoji = typeof entry === "string" ? entry : entry.emoji;
     const score = typeof entry === "string" ? null : entry.score;
-    if(!(emoji in groups)){ groups[emoji] = []; order.push(emoji); }
-    groups[emoji].push({ emoji, scale: sizeScaleForScore(score) });
-  }
-  const tiles = [];
-  for(const emoji of order) tiles.push(...groups[emoji]);
-  return tiles;
+    return { emoji, scale: sizeScaleForScore(score) };
+  });
 }
