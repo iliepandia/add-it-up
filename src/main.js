@@ -8,6 +8,8 @@ import "./styles/win.css";
 import "./styles/picker.css";
 import "./styles/animations.css";
 import "./styles/stats.css";
+import "./styles/rotate.css";
+import "./styles/prizeBox.css";
 
 import {
   GOAL, SUM_START, SUM_MIN, SUM_MAX_CAP, SEE_RESULT, STAR_FLY, IMPACT_AT,
@@ -15,7 +17,7 @@ import {
   REVEAL_FLASH, REVEAL_TO_FLASH, FLASH_REPEATS, KEY_FLASH_ON, KEY_FLASH_GAP, reduceMotion,
   WRONG_FACES, pick
 } from "./config.js";
-import { card, keypad, flash, win, picker, statsLink, statsScreen } from "./dom.js";
+import { card, keypad, flash, win, picker, statsLink, statsScreen, prizeBoxLink, prizeBox } from "./dom.js";
 import { audio, sTada, sError } from "./audio.js";
 import { applyTheme, themeState, checkStreak } from "./themes.js";
 import { newProblem, renderAns } from "./problem.js";
@@ -26,6 +28,7 @@ import { showPicker, wirePicker } from "./picker.js";
 import { state, keyByDigit } from "./state.js";
 import { initStats, startSession, recordGame, recordMistake } from "./stats.js";
 import { showStats, wireStats } from "./statsScreen.js";
+import { showPrizeBox, wirePrizeBox } from "./prizeBox.js";
 
 // ---- input ----
 function handleDigit(d){
@@ -114,6 +117,7 @@ function buildKeypad(){
 }
 window.addEventListener("keydown",e=>{
   if(statsScreen.classList.contains("show")) return;
+  if(prizeBox.classList.contains("show")) return;
   if(picker.classList.contains("show")){
     const map={"1":"classic","2":"nature","3":"space","4":"animal"};
     if(map[e.key]){ audio(); applyTheme(map[e.key]); themeState.current.click(); startGame(); }
@@ -124,11 +128,13 @@ window.addEventListener("keydown",e=>{
 });
 win.addEventListener("pointerdown",e=>{ e.preventDefault(); audio(); showPicker(); });
 statsLink.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); audio(); showStats(); });
+prizeBoxLink.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); audio(); showPrizeBox(); });
 
 // ---- boot ----
 buildKeypad();
 wirePicker(name=>{ applyTheme(name); themeState.current.click(); startGame(); });
 wireStats();
+wirePrizeBox();
 initStats();
 showPicker();
 document.querySelector("#buildVer").textContent = `ver: ${__BUILD_VERSION__}`;

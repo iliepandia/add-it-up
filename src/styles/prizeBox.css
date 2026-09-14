@@ -1,0 +1,96 @@
+/* ---- prize box screen ---- */
+#prizeBox{position:fixed; inset:0; z-index:75; display:none; flex-direction:column;
+  background:
+    radial-gradient(circle at 15% 22%, rgba(0,0,0,.06) 0%, transparent 6%),
+    radial-gradient(circle at 82% 60%, rgba(0,0,0,.05) 0%, transparent 5%),
+    radial-gradient(circle at 45% 88%, rgba(0,0,0,.04) 0%, transparent 4%),
+    radial-gradient(circle at 65% 12%, rgba(0,0,0,.03) 0%, transparent 4%),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 1px, transparent 1px 19px, rgba(255,255,255,.12) 19px 20px, transparent 20px 42px),
+    linear-gradient(180deg,#FAE7C7 0%,#F3D6A5 55%,#EAC488 100%);
+  color:#4A2E12; padding:max(16px,env(safe-area-inset-top)) 0 max(16px,env(safe-area-inset-bottom)); cursor:default;}
+#prizeBox.show{display:flex; animation:winIn .35s ease;}
+#prizeBox h1{font-family:var(--font); font-weight:700; font-size:clamp(24px,6vw,34px);
+  margin:4px 0 18px; text-align:center; color:#4A2E12; text-shadow:0 2px 0 rgba(255,255,255,.35);}
+
+.prize-back-btn{position:absolute; left:max(12px,env(safe-area-inset-left));
+  top:max(12px,env(safe-area-inset-top)); z-index:1;
+  width:44px; height:44px; border-radius:50%; border:none; cursor:pointer;
+  background:rgba(74,46,18,.78); color:#fff; font-size:22px; line-height:1; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  transition:transform .05s ease;}
+.prize-back-btn:active{transform:scale(.88);}
+
+.prize-scroll-wrap{flex:1 1 auto; min-height:0; overflow-x:auto; overflow-y:hidden;
+  -webkit-overflow-scrolling:touch; touch-action:pan-x; display:flex; align-items:center;
+  padding:8px clamp(16px,6vw,40px);}
+.prize-strip{display:flex; align-items:center; gap:14px; margin:0 auto;}
+.prize-tile{flex:0 0 auto; width:clamp(72px,20vw,104px); height:clamp(72px,20vw,104px);
+  border-radius:18px; background:rgba(255,247,230,.92);
+  box-shadow:0 6px 0 rgba(0,0,0,.22), inset 0 0 0 3px rgba(255,255,255,.5);
+  display:flex; align-items:center; justify-content:center;
+  font-size:clamp(38px,11vw,58px); cursor:pointer; transform-origin:center;}
+.prize-empty{margin:0 auto; padding:0 24px; text-align:center; font-size:16px; font-weight:600;
+  color:rgba(74,46,18,.75); max-width:280px;}
+
+/* ---- prize tile tap reactions: a random one of these plays per tap (see prizeBox.js) ---- */
+@keyframes tap-tada{
+  0%{transform:scale(1) rotate(0)}
+  10%,20%{transform:scale(.9) rotate(-6deg)}
+  30%,50%,70%,90%{transform:scale(1.15) rotate(6deg)}
+  40%,60%,80%{transform:scale(1.15) rotate(-6deg)}
+  100%{transform:scale(1) rotate(0)}
+}
+@keyframes tap-shake{
+  0%,100%{transform:translateX(0)}
+  10%,30%,50%,70%,90%{transform:translateX(-10px)}
+  20%,40%,60%,80%{transform:translateX(10px)}
+}
+@keyframes tap-jump{
+  0%,100%{transform:translateY(0)}
+  30%{transform:translateY(-26px)}
+  50%{transform:translateY(0)}
+  65%{transform:translateY(-10px)}
+  80%{transform:translateY(0)}
+}
+@keyframes tap-rotate{
+  0%{transform:rotate(0)}
+  100%{transform:rotate(360deg)}
+}
+@keyframes tap-wobble{
+  0%,100%{transform:translateX(0) rotate(0)}
+  15%{transform:translateX(-14px) rotate(-8deg)}
+  30%{transform:translateX(10px) rotate(6deg)}
+  45%{transform:translateX(-8px) rotate(-4deg)}
+  60%{transform:translateX(6px) rotate(3deg)}
+  75%{transform:translateX(-3px) rotate(-1deg)}
+}
+@keyframes tap-bounce{
+  0%,100%{transform:translateY(0)}
+  20%{transform:translateY(-30px)}
+  40%{transform:translateY(0)}
+  55%{transform:translateY(-16px)}
+  70%{transform:translateY(0)}
+  85%{transform:translateY(-6px)}
+}
+@keyframes tap-pulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.28)}
+}
+@keyframes tap-flip{
+  0%{transform:perspective(400px) rotateY(0)}
+  100%{transform:perspective(400px) rotateY(360deg)}
+}
+@keyframes tap-swing{
+  0%,100%{transform:rotate(0)}
+  20%{transform:rotate(16deg)}
+  40%{transform:rotate(-12deg)}
+  60%{transform:rotate(8deg)}
+  80%{transform:rotate(-4deg)}
+}
+@keyframes tap-heartbeat{
+  0%,100%{transform:scale(1)}
+  14%{transform:scale(1.22)}
+  28%{transform:scale(1)}
+  42%{transform:scale(1.22)}
+  70%{transform:scale(1)}
+}

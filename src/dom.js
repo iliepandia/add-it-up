@@ -27,3 +27,8 @@ export const statsResetBtn = $("#statsResetBtn");
 export const resetConfirm = $("#resetConfirm");
 export const resetCancel = $("#resetCancel");
 export const resetConfirmBtn = $("#resetConfirmBtn");
+
+export const prizeBoxLink = $("#prizeBoxLink");
+export const prizeBox = $("#prizeBox");
+export const prizeBoxBack = $("#prizeBoxBack");
+export const prizeStrip = $("#prizeStrip");

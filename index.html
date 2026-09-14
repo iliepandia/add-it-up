@@ -10,6 +10,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  <div id="rotateOverlay">
+    <div class="rotate-icon">📱</div>
+    <p>Please rotate your device to portrait to play</p>
+  </div>
+
   <div id="bg">
     <div class="sun"></div>
     <div class="cloud c1">☁️</div><div class="cloud c2">☁️</div><div class="cloud c3">☁️</div>
@@ -50,8 +55,17 @@
       <button class="pick" data-theme="space" aria-label="Space"><span class="lbl">🚀</span></button>
       <button class="pick" data-theme="animal" aria-label="Animals"><span class="lbl">🐔</span></button>
     </div>
+    <button id="prizeBoxLink" type="button" class="prize-box-link" aria-label="Prize box"><span class="lbl">📦</span></button>
     <p id="buildVer" class="build-ver"></p>
     <button id="statsLink" type="button" class="stats-link">📊 Stats</button>
+  </div>
+
+  <div id="prizeBox">
+    <button id="prizeBoxBack" type="button" class="prize-back-btn" aria-label="Back">←</button>
+    <h1>Prize Box</h1>
+    <div class="prize-scroll-wrap">
+      <div id="prizeStrip" class="prize-strip"></div>
+    </div>
   </div>
 
   <div id="statsScreen">

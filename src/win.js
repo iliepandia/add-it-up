@@ -5,6 +5,7 @@ import { win, trophiesEl, winfxEl } from "./dom.js";
 import { tone, sParty, sStar, sTada } from "./audio.js";
 import { spawnParticle } from "./fx.js";
 import { state } from "./state.js";
+import { addPrize } from "./prizes.js";
 
 function starExplosion(){
   const n=reduceMotion?10:34, cx=innerWidth/2, cy=innerHeight*0.5;
@@ -54,5 +55,7 @@ function revealTrophies(glyph,count){
 export function showWin(){
   win.classList.add("show");
   state.locked=true;
-  revealTrophies(pick(WIN_END), Math.max(1,state.maxStreak));
+  const glyph=pick(WIN_END);
+  addPrize(glyph); // exactly one prize per finished game, into the persistent prize box
+  revealTrophies(glyph, Math.max(1,state.maxStreak));
 }
