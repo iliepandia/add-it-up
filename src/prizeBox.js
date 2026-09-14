@@ -38,10 +38,11 @@ function renderPrizes(){
     prizeStrip.appendChild(p);
     return;
   }
-  tiles.forEach(emoji => {
+  tiles.forEach(({ emoji, scale }) => {
     const d = document.createElement("div");
     d.className = "prize-tile";
     d.textContent = emoji;
+    d.style.setProperty("--scale", scale);
     d.style.animation = "trophyPop .4s cubic-bezier(.34,1.56,.64,1)";
     d.addEventListener("animationend", () => { d.style.animation = ""; }, { once: true });
     d.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); audio(); playTapAnim(d); });

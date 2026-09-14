@@ -24,11 +24,12 @@
   -webkit-overflow-scrolling:touch; touch-action:pan-x; display:flex; align-items:center;
   padding:8px clamp(16px,6vw,40px);}
 .prize-strip{display:flex; align-items:center; gap:14px; margin:0 auto;}
-.prize-tile{flex:0 0 auto; width:clamp(72px,20vw,104px); height:clamp(72px,20vw,104px);
+.prize-tile{--scale:1; flex:0 0 auto;
+  width:calc(clamp(72px,20vw,104px) * var(--scale)); height:calc(clamp(72px,20vw,104px) * var(--scale));
   border-radius:18px; background:rgba(255,247,230,.92);
   box-shadow:0 6px 0 rgba(0,0,0,.22), inset 0 0 0 3px rgba(255,255,255,.5);
   display:flex; align-items:center; justify-content:center;
-  font-size:clamp(38px,11vw,58px); cursor:pointer; transform-origin:center;}
+  font-size:calc(clamp(38px,11vw,58px) * var(--scale)); cursor:pointer; transform-origin:center;}
 .prize-empty{margin:0 auto; padding:0 24px; text-align:center; font-size:16px; font-weight:600;
   color:rgba(74,46,18,.75); max-width:280px;}
 

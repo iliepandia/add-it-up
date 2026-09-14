@@ -56,6 +56,7 @@ export function showWin(){
   win.classList.add("show");
   state.locked=true;
   const glyph=pick(WIN_END);
-  addPrize(glyph); // exactly one prize per finished game, into the persistent prize box
+  const score=Math.max(0,10-state.gameWrongTotal);
+  addPrize(glyph,score); // exactly one prize per finished game, into the persistent prize box
   revealTrophies(glyph, Math.max(1,state.maxStreak));
 }
