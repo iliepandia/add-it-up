@@ -25,14 +25,30 @@
   padding:8px clamp(16px,6vw,40px);}
 .prize-strip{display:flex; flex-wrap:wrap; align-content:flex-start; align-items:center;
   justify-content:center; gap:14px;}
-.prize-tile{--scale:1; flex:0 0 auto;
+/* Stable grid cell: fixed size/position, never itself animated. */
+.prize-tile{--scale:1; position:relative; flex:0 0 auto;
   width:calc(clamp(72px,20vw,104px) * var(--scale)); height:calc(clamp(72px,20vw,104px) * var(--scale));
   border-radius:18px; background:rgba(255,247,230,.92);
   box-shadow:0 6px 0 rgba(0,0,0,.22), inset 0 0 0 3px rgba(255,255,255,.5);
   display:flex; align-items:center; justify-content:center;
-  font-size:calc(clamp(38px,11vw,58px) * var(--scale)); cursor:pointer; transform-origin:center;}
+  cursor:pointer;}
+/* Animated face: everything that pops/scales/reacts lives here, inside the
+   fixed-size cell, so neighboring cells never shift. */
+.prize-emoji{display:flex; align-items:center; justify-content:center;
+  width:100%; height:100%; font-size:calc(clamp(38px,11vw,58px) * var(--scale)); transform-origin:center;}
 .prize-empty{margin:0 auto; padding:0 24px; text-align:center; font-size:16px; font-weight:600;
   color:rgba(74,46,18,.75); max-width:280px;}
+
+/* Perfect game (no mistakes): the tile gets a rainbow ring whose colors
+   cycle in place — the ring itself never rotates/moves, only its hue does. */
+.prize-tile.prize-perfect::before{
+  content:""; position:absolute; inset:-5px; border-radius:23px; padding:4px;
+  background:conic-gradient(from 0deg, #FF3B3B, #FF9A3B, #FFE23B, #3BFF6B, #3BB8FF, #7A3BFF, #FF3BE0, #FF3B3B);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  animation:rainbowHue 1.5s linear infinite; pointer-events:none; z-index:-1;
+}
+@keyframes rainbowHue{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
 
 /* ---- prize tile tap reactions: a random one of these plays per tap (see prizeBox.js) ---- */
 @keyframes tap-tada{

@@ -9,10 +9,11 @@ const STORAGE_KEY = "addItUpPrizes";
 // score out of 10. Entries saved before this feature existed are plain emoji
 // strings with no score attached — those render at the normal 1x size
 // (see sizeScaleForScore) rather than being guessed at retroactively.
-const SMALL_SCALE = 0.75, NORMAL_SCALE = 1, BIG_SCALE = 1.25;
+const SMALL_SCALE = 0.75, NORMAL_SCALE = 1, BIG_SCALE = 1.25, PERFECT_SCALE = 1.5;
 
 function sizeScaleForScore(score){
   if(score == null) return NORMAL_SCALE;
+  if(score >= 10) return PERFECT_SCALE;
   if(score <= 3) return SMALL_SCALE;
   if(score >= 8) return BIG_SCALE;
   return NORMAL_SCALE;
@@ -45,6 +46,6 @@ export function getPrizeTiles(){
     // Old storage format was a plain emoji string, with no score recorded.
     const emoji = typeof entry === "string" ? entry : entry.emoji;
     const score = typeof entry === "string" ? null : entry.score;
-    return { emoji, scale: sizeScaleForScore(score) };
+    return { emoji, scale: sizeScaleForScore(score), perfect: score === 10 };
   });
 }

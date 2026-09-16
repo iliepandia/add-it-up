@@ -38,15 +38,23 @@ function renderPrizes(){
     prizeStrip.appendChild(p);
     return;
   }
-  tiles.forEach(({ emoji, scale }) => {
-    const d = document.createElement("div");
-    d.className = "prize-tile";
-    d.textContent = emoji;
-    d.style.setProperty("--scale", scale);
-    d.style.animation = "trophyPop .4s cubic-bezier(.34,1.56,.64,1)";
-    d.addEventListener("animationend", () => { d.style.animation = ""; }, { once: true });
-    d.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); audio(); playTapAnim(d); });
-    prizeStrip.appendChild(d);
+  tiles.forEach(({ emoji, scale, perfect }) => {
+    // Two layers on purpose: the outer box is a stable grid cell that never
+    // animates or moves, so its neighbors keep their position no matter what
+    // happens to the emoji inside — only the inner face pops/scales/reacts.
+    const cell = document.createElement("div");
+    cell.className = "prize-tile" + (perfect ? " prize-perfect" : "");
+    cell.style.setProperty("--scale", scale);
+
+    const face = document.createElement("div");
+    face.className = "prize-emoji";
+    face.textContent = emoji;
+    face.style.animation = "trophyPop .4s cubic-bezier(.34,1.56,.64,1)";
+    face.addEventListener("animationend", () => { face.style.animation = ""; }, { once: true });
+    cell.appendChild(face);
+
+    cell.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); audio(); playTapAnim(face); });
+    prizeStrip.appendChild(cell);
   });
 }
 

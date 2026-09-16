@@ -1,0 +1,114 @@
+// Retro crawling snake shown on the end screen after a perfect game (no
+// mistakes). Purely decorative — sits behind every other win-screen element
+// (see #snakeLayer's z-index:-1 in styles/snake.css) and never intercepts
+// taps. Moves on a fixed grid, one cell per tick, always turning before it
+// would run off-screen or into its own body. After a while it shrinks away
+// tail-first and vanishes, rather than crawling forever.
+
+import { snakeLayer } from "./dom.js";
+import { reduceMotion } from "./config.js";
+
+const CELL = 26;      // px per grid cell
+const LENGTH = 8;      // body blocks, including the head, before it starts shrinking
+const TICK_MS = 150;   // ms per grid step
+const TURN_CHANCE = 0.35; // odds of an unforced sharp turn on any given tick
+const SHRINK_AFTER_MS = 20000; // how long the snake crawls at full length first
+const SHRINK_STEP_MS = 400;    // how long each tail segment takes to disappear once shrinking starts
+
+const DIRS = [[1,0], [-1,0], [0,1], [0,-1]];
+
+let timer = null;
+let segEls = [];
+let cols = 0, rows = 0;
+let head = { x: 0, y: 0 };
+let dir = DIRS[0];
+let body = []; // positions, index 0 = head
+let startedAt = 0;
+let capLength = LENGTH; // current max length; counts down once shrinking begins
+let onStep = null; // optional callback(segmentRects) fired after every tick
+
+function inBounds(x, y){ return x >= 0 && x < cols && y >= 0 && y < rows; }
+function sameDir(a, b){ return a[0] === b[0] && a[1] === b[1]; }
+function opposite(d){ return [-d[0], -d[1]]; }
+
+// The current tail cell vacates on this same step (once the snake has
+// reached its cap length, every step pops it) — so it's never an obstacle.
+function isBodyCell(x, y){
+  const blocked = body.length >= capLength ? body.slice(0, -1) : body;
+  return blocked.some(p => p.x === x && p.y === y);
+}
+function safeCell(x, y){ return inBounds(x, y) && !isBodyCell(x, y); }
+
+function nextDirection(){
+  const straightOk = safeCell(head.x + dir[0], head.y + dir[1]);
+  const turnCandidates = DIRS.filter(d =>
+    !sameDir(d, dir) && !sameDir(d, opposite(dir)) && safeCell(head.x + d[0], head.y + d[1])
+  );
+  if(!straightOk && turnCandidates.length) return turnCandidates[Math.floor(Math.random() * turnCandidates.length)];
+  if(straightOk && turnCandidates.length && Math.random() < TURN_CHANCE) return turnCandidates[Math.floor(Math.random() * turnCandidates.length)];
+  if(straightOk) return dir;
+  return opposite(dir); // walled in by bounds/itself on every side — last resort
+}
+
+function layout(){
+  cols = Math.max(4, Math.floor(innerWidth / CELL));
+  rows = Math.max(4, Math.floor(innerHeight / CELL));
+}
+
+function buildSegs(){
+  snakeLayer.innerHTML = "";
+  segEls = [];
+  for(let i = 0; i < LENGTH; i++){
+    const s = document.createElement("div");
+    s.className = "snake-seg" + (i === 0 ? " snake-head" : "");
+    snakeLayer.appendChild(s);
+    segEls.push(s);
+  }
+}
+
+function place(){
+  segEls.forEach((el, i) => {
+    const p = body[i] || body[body.length - 1];
+    el.style.transform = `translate(${p.x * CELL}px, ${p.y * CELL}px)`;
+  });
+}
+
+function tick(){
+  dir = nextDirection();
+  head = { x: head.x + dir[0], y: head.y + dir[1] };
+  body.unshift(head);
+
+  const shrinkFor = performance.now() - startedAt - SHRINK_AFTER_MS;
+  capLength = shrinkFor > 0 ? Math.max(0, LENGTH - 1 - Math.floor(shrinkFor / SHRINK_STEP_MS)) : LENGTH;
+
+  while(segEls.length > capLength){ const seg = segEls.pop(); if(seg) seg.remove(); }
+  if(capLength <= 0){ stopSnake(); return; }
+  if(body.length > capLength) body.length = capLength; // drop the oldest (tail) cells
+
+  place();
+  if(onStep) onStep(body.map(p => ({ x: p.x * CELL, y: p.y * CELL, w: CELL, h: CELL })));
+}
+
+/** onStepCb(segmentRects), if given, fires after every tick with each
+ *  current body segment's viewport-pixel rect ({x,y,w,h}) — lets a caller
+ *  (e.g. the win screen) react to the snake touching something on screen. */
+export function startSnake(onStepCb){
+  stopSnake();
+  if(reduceMotion || !snakeLayer) return;
+  layout();
+  head = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+  dir = DIRS[Math.floor(Math.random() * DIRS.length)];
+  body = [head];
+  capLength = LENGTH;
+  startedAt = performance.now();
+  onStep = onStepCb || null;
+  buildSegs();
+  place();
+  timer = setInterval(tick, TICK_MS);
+}
+
+export function stopSnake(){
+  if(timer){ clearInterval(timer); timer = null; }
+  if(snakeLayer) snakeLayer.innerHTML = "";
+  onStep = null;
+}

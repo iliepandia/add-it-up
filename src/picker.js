@@ -4,12 +4,14 @@ import { win, picker } from "./dom.js";
 import { audio } from "./audio.js";
 import { state } from "./state.js";
 import { endSession } from "./stats.js";
+import { stopSnake } from "./snake.js";
 
 export function showPicker(){
   win.classList.remove("show");
   picker.classList.add("show");
   state.locked=true;
   endSession(); // browsing the picker (or stats, reached from here) is never play time
+  stopSnake();
 }
 
 /** onPick(themeName) is invoked when the player taps/presses a world. */

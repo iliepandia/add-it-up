@@ -10,6 +10,7 @@ import "./styles/animations.css";
 import "./styles/stats.css";
 import "./styles/rotate.css";
 import "./styles/prizeBox.css";
+import "./styles/snake.css";
 
 import {
   GOAL, SUM_START, SUM_MIN, SUM_MAX_CAP, SEE_RESULT, STAR_FLY, IMPACT_AT,

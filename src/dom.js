@@ -13,6 +13,7 @@ export const flash = $("#flash");
 export const win = $("#win");
 export const trophiesEl = $("#trophies");
 export const winfxEl = $("#winfx");
+export const snakeLayer = $("#snakeLayer");
 export const picker = $("#themePicker");
 export const starfieldLayer = $(".stars-layer");
 

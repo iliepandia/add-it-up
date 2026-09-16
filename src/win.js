@@ -6,6 +6,7 @@ import { tone, sParty, sStar, sTada } from "./audio.js";
 import { spawnParticle } from "./fx.js";
 import { state } from "./state.js";
 import { addPrize } from "./prizes.js";
+import { startSnake } from "./snake.js";
 
 function starExplosion(){
   const n=reduceMotion?10:34, cx=innerWidth/2, cy=innerHeight*0.5;
@@ -16,7 +17,7 @@ function starExplosion(){
 function popTrophy(el){
   el.removeEventListener("pointerdown", el._popHandler);
   const r=el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
-  const isLast = trophiesEl.children.length<=1;
+  const isLast = trophiesEl.querySelectorAll(".trophy").length<=1;
   if(isLast){
     if(!reduceMotion){
       const body=document.body;
@@ -34,6 +35,39 @@ function popTrophy(el){
   el.remove();
 }
 
+// A trophy the snake crawls into just shrinks away — no explosion/sound,
+// distinct from the tap-to-pop celebration above.
+function vanishTrophy(el){
+  if(el.dataset.vanishing) return;
+  el.dataset.vanishing="1";
+  el.removeEventListener("pointerdown", el._popHandler);
+  el.style.transition="transform .25s ease-in";
+  el.style.transform="scale(0)";
+  el.addEventListener("transitionend",()=>el.remove(),{once:true});
+}
+
+// Freezes every trophy's current on-screen position as absolute top/left, so
+// removing one later (tap or snake touch) never reflows the rest — they'd
+// otherwise re-pack via the flex-wrap layout used for the initial reveal.
+function freezeTrophyLayout(){
+  const rect=trophiesEl.getBoundingClientRect();
+  const trophies=[...trophiesEl.querySelectorAll(".trophy")];
+  // Read every trophy's position first, *then* write — freezing one to
+  // position:absolute pulls it out of the flex-wrap flow immediately, which
+  // would reflow (and bunch up) any trophy read afterward.
+  const rects=trophies.map(el=>el.getBoundingClientRect());
+  trophiesEl.style.position="relative";
+  trophiesEl.style.width=rect.width+"px";
+  trophiesEl.style.height=rect.height+"px";
+  trophies.forEach((el,i)=>{
+    const r=rects[i];
+    el.style.position="absolute";
+    el.style.left=(r.left-rect.left)+"px";
+    el.style.top=(r.top-rect.top)+"px";
+    el.style.margin="0";
+  });
+}
+
 function makeTrophiesClickable(){
   trophiesEl.querySelectorAll(".trophy").forEach(el=>{
     el.classList.add("tap-ready");
@@ -43,20 +77,36 @@ function makeTrophiesClickable(){
 }
 
 function revealTrophies(glyph,count){
+  trophiesEl.style.cssText="";
   trophiesEl.innerHTML="";
   const STEP=260, PENTA=[0,2,4,7,9,12,14,16,19,21];
   for(let i=0;i<count;i++) setTimeout(()=>{
     const e=document.createElement("span"); e.className="trophy"; e.textContent=glyph; trophiesEl.appendChild(e);
     const semi=PENTA[Math.min(i,PENTA.length-1)]; tone(523.25*Math.pow(2,semi/12),0,0.22,"triangle",0.14);
   }, i*STEP);
-  setTimeout(()=>{ starExplosion(); makeTrophiesClickable(); }, count*STEP+250);
+  setTimeout(()=>{ starExplosion(); freezeTrophyLayout(); makeTrophiesClickable(); trophiesReady=true; }, count*STEP+250);
+}
+
+// The snake reports its current segments (viewport-pixel rects) on every
+// step; a trophy it overlaps vanishes. Only armed once trophies are frozen
+// in place (see freezeTrophyLayout), so a touch never fights the reveal.
+let trophiesReady=false;
+function onSnakeStep(segments){
+  if(!trophiesReady) return;
+  trophiesEl.querySelectorAll(".trophy:not([data-vanishing])").forEach(el=>{
+    const r=el.getBoundingClientRect();
+    const hit=segments.some(s => s.x<r.right && s.x+s.w>r.left && s.y<r.bottom && s.y+s.h>r.top);
+    if(hit) vanishTrophy(el);
+  });
 }
 
 export function showWin(){
   win.classList.add("show");
   state.locked=true;
+  trophiesReady=false;
   const glyph=pick(WIN_END);
   const score=Math.max(0,10-state.gameWrongTotal);
   addPrize(glyph,score); // exactly one prize per finished game, into the persistent prize box
+  if(score>=10) startSnake(onSnakeStep); // perfect game: crawling snake easter egg behind the trophies
   revealTrophies(glyph, Math.max(1,state.maxStreak));
 }

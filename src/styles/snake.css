@@ -1,0 +1,15 @@
+/* ---- perfect-game win-screen snake ---- */
+/* Sits behind #win's own (non-positioned, in-flow) children: a negative
+   z-index paints below normal-flow siblings within #win's stacking context,
+   above #win's own background. See snake.js for the movement logic. */
+#snakeLayer{position:absolute; inset:0; z-index:-1; overflow:hidden; pointer-events:none;}
+
+.snake-seg{position:absolute; top:0; left:0; width:26px; height:26px;
+  background:#3DBE4A; border:2px solid #2E8F39; border-radius:5px;
+  box-shadow:inset 0 0 0 3px rgba(0,0,0,.08);
+  transition:transform 150ms linear;}
+.snake-head{background:#5BE86A; border-color:#2E8F39; z-index:1;}
+.snake-head::before, .snake-head::after{content:""; position:absolute; top:7px;
+  width:4px; height:4px; border-radius:50%; background:#1B3A1E;}
+.snake-head::before{left:6px;}
+.snake-head::after{right:6px;}
