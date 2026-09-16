@@ -1,8 +1,8 @@
 // End screen: trophy reveal + closing star explosion.
 
-import { pick, reduceMotion, WIN_END } from "./config.js";
+import { pick, rnd, reduceMotion, WIN_END } from "./config.js";
 import { win, trophiesEl, winfxEl } from "./dom.js";
-import { tone, sParty, sStar, sTada } from "./audio.js";
+import { tone, sParty, sStar, sTada, sDing } from "./audio.js";
 import { spawnParticle } from "./fx.js";
 import { state } from "./state.js";
 import { addPrize } from "./prizes.js";
@@ -35,13 +35,14 @@ function popTrophy(el){
   el.remove();
 }
 
-// A trophy the snake crawls into just shrinks away — no explosion/sound,
+// A trophy the snake crawls into just shrinks away with a little "ding",
 // distinct from the tap-to-pop celebration above.
 function vanishTrophy(el){
   if(el.dataset.vanishing) return;
   el.dataset.vanishing="1";
   el.removeEventListener("pointerdown", el._popHandler);
-  el.style.transition="transform .25s ease-in";
+  sDing();
+  el.style.transition="transform .125s ease-in";
   el.style.transform="scale(0)";
   el.addEventListener("transitionend",()=>el.remove(),{once:true});
 }
@@ -107,6 +108,6 @@ export function showWin(){
   const glyph=pick(WIN_END);
   const score=Math.max(0,10-state.gameWrongTotal);
   addPrize(glyph,score); // exactly one prize per finished game, into the persistent prize box
-  if(score>=10) startSnake(onSnakeStep); // perfect game: crawling snake easter egg behind the trophies
+  if(score>=10 && rnd(3)===0) startSnake(onSnakeStep); // perfect game: 1-in-3 chance of the crawling snake easter egg
   revealTrophies(glyph, Math.max(1,state.maxStreak));
 }

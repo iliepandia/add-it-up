@@ -2,9 +2,9 @@
 
 **Purpose:** A web game that helps a 7-year-old practice single-digit addition.
 **Status:** Clarified and locked, ready to build.
-**Last updated:** 2026-09-12
+**Last updated:** 2026-09-16
 
-> **Scope:** Sections 1–12 are **Phase 1 — build now**. Section 13 is **Phase 2 — deferred, do not build now** (learning-design upgrades captured for a later version).
+> **Scope:** Sections 1–14 are **Phase 1 — build now**. Section 15 is **Phase 2 — deferred, do not build now** (learning-design upgrades captured for a later version).
 
 ---
 
@@ -21,6 +21,11 @@ correct answers** — one star per correct answer — then shows a win screen (s
 - Single web page.
 - Must work on **desktop and mobile** (touch and keyboard).
 - No external asset files required (sounds are synthesized in-browser; see §8).
+- **Portrait lock (mobile/tablet):** the page is plain HTML with no native wrapper (no
+  Capacitor/Cordova), so there's no OS-level orientation lock available. Instead, a full-screen
+  **"please rotate your device" overlay** covers the game whenever a touch device
+  (`pointer: coarse`) is held in landscape, blocking play until it's turned back to portrait.
+  Desktop browser windows are unaffected (`pointer: fine` is exempt).
 
 ---
 
@@ -135,7 +140,7 @@ answer on screen, *then* trigger the celebration.
   - The re-ask is a **fresh attempt**: wrong-count resets, and a correct entry now **earns the
     star**. (If a twice-missed problem should never award a star, gate this — currently it does.)
   *(Prevents the child getting trapped on a fact they don't know; a light Phase-1 version of the
-  scaffolding in §13.2.)*
+  scaffolding in §15.2.)*
 
 ---
 
@@ -148,6 +153,7 @@ Synthesized in-browser (Web Audio), unlocked on the first user tap (mobile autop
 | Key / tray press | click |
 | Correct explosion | pop / party |
 | Wrong answer | ding-ding |
+| A snake-easter-egg trophy touch (§13) | ding (same two-tone chime as the Space theme's key press) |
 
 Sound is best-effort — the game must remain fully playable if audio is unavailable.
 
@@ -167,17 +173,25 @@ Sound is best-effort — the game must remain fully playable if audio is unavail
 
 **Win condition:**
 - When the **10th** star fills, the session **ends** — no new problem is generated.
-- Show **"Good job!"**, then a **randomly chosen emoji** (from a set of **26** — happy, nature,
-  and household objects) **repeated once per point of the longest streak** reached this game.
+- Show **"Good job!"**, then a **randomly chosen emoji** (from a pool of **60** — animals,
+  nature, treats, vehicles, and household objects) **repeated once per point of the longest
+  streak** reached this game. That same emoji is also the game's **prize** — see §12.
 - The copies **reveal one at a time**, each with a **rising musical note**; when the reveal
   finishes (the sound is over), a **star explosion** bursts over the screen.
-- **Trophies become tappable** once the reveal finishes: tapping one bursts it into **30 stars**
+- **Layout freeze:** the instant the reveal finishes, every trophy's on-screen position is
+  captured and pinned (`position: absolute`, explicit `left`/`top`) instead of staying in the
+  flex-wrap layout used to lay them out. This is what lets trophies be removed one at a time
+  (by tap, or by the snake easter egg in §13) **without the rest re-packing/shifting** —
+  positions are read for every trophy *before* any of them is pinned, so pinning an early one
+  can't reflow (and bunch up) the ones read after it.
+- **Trophies become tappable** once the layout is frozen: tapping one bursts it into **30 stars**
   at its position and removes it. The **last remaining trophy** bursts bigger instead — **~60**
   larger stars plus a brief **screen shake** — as a small finale (skipped under
   `prefers-reduced-motion`, which still keeps a smaller star burst).
 - Also show the hint **"Tap to play again"** and a **big orange "Play" button**.
 - **Restart:** the Play button **or any tap/key not on a trophy** starts a new session (stars,
-  difficulty, and longest-streak all reset), returning first to the theme picker (§10).
+  difficulty, and longest-streak all reset), returning first to the theme picker (§10) — which
+  also stops the snake easter egg (§13) if one is running.
 
 ---
 
@@ -252,47 +266,117 @@ Nothing is deleted until the destructive option is explicitly confirmed.
 
 ---
 
-## 12. Open items / future tweaks
+## 12. Prize box & collectible prizes
 
-- No backspace under auto-check (§5).
-- A **linear difficulty ramp** is now in Phase 1 (§3, sum 5→12); the **adaptive, fact-tracking**
-  version remains Phase 2 (§13.3).
+Reachable via a **📦 button** on the theme-picker screen (§10), below the world-select grid.
+Stored **locally on-device only** (its own `localStorage` key, separate from stats — §11's
+"Reset stats" never touches it), so prizes are permanent unless a dedicated reset is added later.
+
+**Earning a prize:**
+- **Every finished game** (10th star, §9) adds **exactly one prize** to the box: the same random
+  emoji chosen for that game's trophies (drawn from the 60-emoji pool, §9).
+- **Prize size reflects that game's score** (§11's out-of-10 score), rewarding a strong run
+  rather than just finishing:
+
+  | Score | Tile size |
+  |-------|-----------|
+  | 0–3 | 0.75× |
+  | 4–7 | 1× (normal) |
+  | 8–9 | 1.25× |
+  | 10 (perfect — no mistakes) | **1.5×**, plus a **rainbow ring** around the tile whose colors cycle in place (the ring itself never moves — only its hue animates) |
+
+  Prizes earned before this sizing existed have no recorded score and render at the normal 1×
+  size — history is never re-guessed retroactively.
+
+**Box screen:**
+- Background is a **light wood-grain pattern** (CSS gradients — no image asset).
+- Prizes lay out as a **wrapping grid** (left-to-right, wrapping to the next row), the whole
+  screen **scrolling vertically** once there are more than fit on one page.
+- Prizes appear **in the order they were earned** (not grouped by type) — chronological, since
+  storage is append-only.
+- Each prize is two nested elements: a **fixed-size outer cell** (its grid slot — never itself
+  animated or moved) containing an **inner emoji face** that plays the entrance pop and tap
+  reactions below. Keeping the two separate means a tile reacting to a tap never shifts its
+  neighbors.
+- **Tapping a prize** plays one random reaction from a set of ten (tada, shake, jump, rotate,
+  wobble, bounce, pulse, flip, swing, heartbeat) plus a tap sound — just a fun, replayable touch,
+  no game effect.
+- A **← back button** (top-left) returns to the theme picker.
+- **Empty state:** "Finish a game to win your first prize!" if none are collected yet.
 
 ---
 
-## 13. Phase 2 — Learning design (deferred, do not build now)
+## 13. Win-screen snake easter egg
+
+A **retro, block-based snake** (green segments + a head, reminiscent of classic console Snake)
+occasionally crawls across the win screen (§9).
+
+- **Trigger:** only after a **perfect game** (score 10, §11) — and even then, only a **1-in-3**
+  chance, so it's a rare surprise rather than an expected reward.
+- **Rendering:** lives in a dedicated layer that is the **first child of the win screen**, given
+  a **negative `z-index`** so it paints behind every other win-screen element (trophies, "Good
+  job!", the Play button) and above only the win screen's own background. It never intercepts
+  taps.
+- **Movement:** an 8-block worm advancing one grid cell (~26px) every 150ms, making **sharp 90°
+  turns** — never a 180° reversal — either at random or whenever it's forced to (about to run off
+  the edge of the screen, or into its own body). It **always turns before hitting a wall or
+  itself**, so it stays fully on screen and never self-collides.
+- **Starting position:** a **random** grid cell (not the screen center).
+- **Eating trophies:** on every step, the snake reports its current segments' positions; any
+  trophy a segment overlaps **shrinks to scale 0 over ~0.125s with a "ding"** and is removed —
+  distinct from (and simpler than) the tap-to-pop celebration in §9. This can only happen once
+  the win screen's trophy layout has been frozen (§9), so it never fights the staggered reveal.
+- **Shrinking away:** after crawling at full length for **20s**, the snake starts shedding one
+  tail block roughly every 400ms until it's gone (~3s to fully vanish) — it doesn't crawl
+  forever.
+- **Stopping:** leaving the win screen (Play button, or any tap/key that returns to the theme
+  picker, §9) stops the snake immediately, wherever it is.
+- Skipped entirely under `prefers-reduced-motion`, consistent with the other particle-effect
+  rewards (§7).
+
+---
+
+## 14. Open items / future tweaks
+
+- No backspace under auto-check (§5).
+- A **linear difficulty ramp** is now in Phase 1 (§3, sum 5→12); the **adaptive, fact-tracking**
+  version remains Phase 2 (§15.3).
+
+---
+
+## 15. Phase 2 — Learning design (deferred, do not build now)
 
 Upgrades to make the math *emerge from play* rather than be a toll paid to reach a reward.
 Ordered by leverage toward that goal; each is paired with the theory it draws on.
 
-### 13.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage*
+### 15.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage*
 The Phase 1 game is a **drill with juice**: solve the sum → get the fireworks. The math is
 the toll, not the play. Convert it to an **endogenous** design where manipulating numbers
 *is* the fun act — e.g. feed a creature exactly N berries, build a tower to a target height,
 fill a jar to a line. The addition becomes something you *do to get what you want*.
 *(Malone & Lepper; Habgood & Ainsworth, intrinsic integration.)*
 
-### 13.2 Scaffold the second wrong attempt — *highest safety priority*
+### 15.2 Scaffold the second wrong attempt — *highest safety priority*
 Phase 1 re-shows the identical problem until correct, with no teaching — a recipe for math
 anxiety and learned helplessness when the child genuinely doesn't know the fact. Keep the
 never-skip rule, but on the **second** miss, *help*: reveal pips under the digits, animate a
 count-up, show a number line, or decompose (`8 + 7 → 8 + 2 = 10, then +5`). Reframe errors as
 information, not verdicts. *(Dweck, growth mindset; Seligman, learned helplessness.)*
 
-### 13.3 Adaptivity + fact-memory
+### 15.3 Adaptivity + fact-memory
 Flat random difficulty prevents flow and a felt sense of progress. Track which addend pairs
 the child misses, resurface them (spaced retrieval / testing effect), and let difficulty drift
 upward as accuracy and speed rise. *(Csikszentmihalyi, flow; Roediger, testing effect.)* The
 mistake-frequency tracking already shipped in §11 is the raw data this would build on.
 
-### 13.4 Surface competence + one autonomy choice
+### 15.4 Surface competence + one autonomy choice
 Give a visible mastery signal beyond a single session (levels, cumulative progress) and at
 least one real choice (choose between two problems, or a sub-mode). *(Deci & Ryan,
 Self-Determination Theory — competence + autonomy.)* *(World/theme selection already landed in
 Phase 1, §10, and the stats screen in §11 already gives a persistent competence signal; this
 item is about deeper in-game autonomy.)*
 
-### 13.5 Sequence the representations (don't randomize blindly)
+### 15.5 Sequence the representations (don't randomize blindly)
 The three formats are concrete → abstract (pips/emoji → digits) and map onto how number sense
 develops. Instead of random order, **lead concrete and fade toward abstract** as fluency on a
 fact grows. *(Concrete–Representational–Abstract; Clements & Sarama, subitizing.)*
@@ -300,4 +384,4 @@ fact grows. *(Concrete–Representational–Abstract; Clements & Sarama, subitiz
 ### Strengths to preserve from Phase 1
 Multiple representations of quantity (symbolic / set-based / subitizable pips), immediate
 feedback (200 ms), multimodal input, low cognitive load, and the never-skip principle
-(once scaffolded per 13.2).
+(once scaffolded per 15.2).
