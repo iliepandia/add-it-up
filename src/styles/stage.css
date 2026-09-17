@@ -70,6 +70,14 @@
   50%{opacity:1; transform:scale(1.2);}
 }
 
+/* The ✓ glyph itself pulses in step with the glow behind it. */
+.submit-check{display:inline-block;}
+.key.key-submit:not(:disabled) .submit-check{animation:submitCheckPulse .43s ease-in-out infinite;}
+@keyframes submitCheckPulse{
+  0%,100%{transform:scale(.8);}
+  50%{transform:scale(1.1);}
+}
+
 /* Dimmed (nothing to clear/submit yet): shrink as well as fade, so the
    inactive state reads clearly at a glance. */
 .key:disabled{opacity:.4; transform:scale(.75); pointer-events:none;}

@@ -144,7 +144,8 @@ function buildKeypad(){
 
   const submitBtn=document.createElement("button");
   submitBtn.id="submitKey"; submitBtn.className="key key-submit"; submitBtn.type="button";
-  submitBtn.textContent="✓"; submitBtn.setAttribute("aria-label","Submit"); submitBtn.disabled=true;
+  submitBtn.innerHTML='<span class="submit-check">✓</span>';
+  submitBtn.setAttribute("aria-label","Submit"); submitBtn.disabled=true;
   wireKey(submitBtn, submitEntry);
   keypad.appendChild(submitBtn);
 }
