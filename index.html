@@ -56,7 +56,16 @@
       <button class="pick" data-theme="space" aria-label="Space"><span class="lbl">🚀</span></button>
       <button class="pick" data-theme="animal" aria-label="Animals"><span class="lbl">🐔</span></button>
     </div>
-    <button id="prizeBoxLink" type="button" class="prize-box-link" aria-label="Prize box"><span class="lbl">📦</span></button>
+    <div class="picker-extras">
+      <button id="prizeBoxLink" type="button" class="prize-box-link" aria-label="Prize box"><span class="lbl">📦</span></button>
+      <div id="masteryBadge" class="mastery-badge" aria-label="7-day mastery badge">
+        <svg class="mastery-ring" viewBox="0 0 100 100">
+          <circle class="mastery-ring-bg" cx="50" cy="50" r="44"></circle>
+          <circle id="masteryArc" class="mastery-ring-fg" cx="50" cy="50" r="44"></circle>
+        </svg>
+        <div id="masteryEmoji" class="mastery-emoji">🐌</div>
+      </div>
+    </div>
     <p id="buildVer" class="build-ver"></p>
     <button id="statsLink" type="button" class="stats-link">📊 Stats</button>
   </div>

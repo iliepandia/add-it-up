@@ -5,6 +5,7 @@ import { audio } from "./audio.js";
 import { state } from "./state.js";
 import { endSession } from "./stats.js";
 import { stopSnake } from "./snake.js";
+import { renderMasteryBadge } from "./mastery.js";
 
 export function showPicker(){
   win.classList.remove("show");
@@ -12,6 +13,7 @@ export function showPicker(){
   state.locked=true;
   endSession(); // browsing the picker (or stats, reached from here) is never play time
   stopSnake();
+  renderMasteryBadge();
 }
 
 /** onPick(themeName) is invoked when the player taps/presses a world. */

@@ -11,6 +11,7 @@ import "./styles/stats.css";
 import "./styles/rotate.css";
 import "./styles/prizeBox.css";
 import "./styles/snake.css";
+import "./styles/mastery.css";
 
 import {
   GOAL, SUM_START, SUM_MIN, SUM_MAX_CAP, SEE_RESULT, STAR_FLY, IMPACT_AT,
@@ -30,6 +31,7 @@ import { state, keyByDigit } from "./state.js";
 import { initStats, startSession, recordGame, recordMistake } from "./stats.js";
 import { showStats, wireStats } from "./statsScreen.js";
 import { showPrizeBox, wirePrizeBox } from "./prizeBox.js";
+import { handlePickerKeydown } from "./mastery.js";
 
 // ---- input ----
 function handleDigit(d){
@@ -120,6 +122,7 @@ window.addEventListener("keydown",e=>{
   if(statsScreen.classList.contains("show")) return;
   if(prizeBox.classList.contains("show")) return;
   if(picker.classList.contains("show")){
+    if(handlePickerKeydown(e)) return;
     const map={"1":"classic","2":"nature","3":"space","4":"animal"};
     if(map[e.key]){ audio(); applyTheme(map[e.key]); themeState.current.click(); startGame(); }
     return;

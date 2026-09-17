@@ -179,6 +179,19 @@ export function getTopMistakes(limit = 10){
     .map(([key, count]) => ({ key, count }));
 }
 
+// 7-day accuracy for the mastery badge (§12-adjacent feature) — same
+// correct/(correct+wrong) formula as the all-time Accuracy stat above, just
+// scoped to games finished in the last 7 days instead of all-time.
+export function getPrecision7d(){
+  const data = load();
+  const sevenDaysAgo = Date.now() - 7 * 86400000;
+  const recent = data.games.history.filter(g => g.t >= sevenDaysAgo);
+  if(!recent.length) return { hasData: false, precision: 0, correctTotal: 0, wrongTotal: 0 };
+  let correctTotal = 0, wrongTotal = 0;
+  for(const g of recent){ correctTotal += 10; wrongTotal += Math.max(0, 10 - g.score); }
+  return { hasData: true, precision: correctTotal / (correctTotal + wrongTotal) * 100, correctTotal, wrongTotal };
+}
+
 export function resetStats(){
   const data = load();
   const fresh = blank();

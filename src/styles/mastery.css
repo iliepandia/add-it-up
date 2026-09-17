@@ -1,0 +1,25 @@
+/* ---- 7-day mastery badge (theme picker) ---- */
+.picker-extras{display:flex; align-items:center; justify-content:center; gap:clamp(14px,4vw,22px);}
+
+.mastery-badge{--scale:1; position:relative;
+  width:clamp(64px,18vw,88px); height:clamp(64px,18vw,88px);
+  border-radius:50%; background:#fff; box-shadow:0 8px 0 rgba(46,58,89,.18);}
+.mastery-ring{position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg);}
+.mastery-ring-bg{fill:none; stroke:rgba(46,58,89,.14); stroke-width:8;}
+.mastery-ring-fg{fill:none; stroke:var(--gold); stroke-width:8; stroke-linecap:round;
+  transition:stroke-dashoffset .3s ease;}
+.mastery-emoji{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:calc(clamp(26px,7vw,36px) * var(--scale)); line-height:1; transition:font-size .3s ease;}
+
+/* The trophy tier (exact 100% over the last 7 days) swaps the plain gold
+   arc for a spinning rainbow ring — colors cycle in place, the ring itself
+   never rotates/moves — echoing the perfect-game prize-box ring. */
+.mastery-badge.mastery-perfect .mastery-ring-fg{opacity:0;}
+.mastery-badge.mastery-perfect::before{
+  content:""; position:absolute; inset:-5px; border-radius:50%; padding:4px;
+  background:conic-gradient(from 0deg, #FF3B3B, #FF9A3B, #FFE23B, #3BFF6B, #3BB8FF, #7A3BFF, #FF3BE0, #FF3B3B);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  animation:mastery-rainbow 1.5s linear infinite; pointer-events:none;
+}
+@keyframes mastery-rainbow{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
