@@ -27,6 +27,13 @@ function emojiGroup(v,glyph){
 }
 function numEl(v,cls){ const s=document.createElement("div"); s.className="num"+(cls?" "+cls:""); s.textContent=v; return s; }
 
+// A "tada" overshoot pop, played once whenever a key flips from dimmed to active.
+function popKey(el){
+  el.classList.remove("key-pop"); void el.offsetWidth; // restart cleanly if it's already mid-pop
+  el.classList.add("key-pop");
+  el.addEventListener("animationend", () => el.classList.remove("key-pop"), { once: true });
+}
+
 function render(){
   opA.innerHTML=""; opB.innerHTML="";
   if(state.presentation==="digits"){ opA.appendChild(numEl(state.a)); opB.appendChild(numEl(state.b)); }
@@ -39,6 +46,15 @@ export function renderAns(reveal){
   ansEl.innerHTML="";
   if(state.entry===""){ const c=document.createElement("span"); c.id="caret"; ansEl.appendChild(c); }
   else ansEl.appendChild(numEl(state.entry, reveal?"reveal tada":null));
+  // The clear (✕) and submit (✓) keys are built dynamically in main.js, so
+  // they aren't in dom.js's static cache — looked up by id here, the one
+  // place entry-vs-empty is decided, and both dim together when there's
+  // nothing to clear or submit.
+  const empty = state.entry==="";
+  const submitKey = document.getElementById("submitKey");
+  if(submitKey){ const becameActive = submitKey.disabled && !empty; submitKey.disabled = empty; if(becameActive) popKey(submitKey); }
+  const clearKey = document.getElementById("clearKey");
+  if(clearKey){ const becameActive = clearKey.disabled && !empty; clearKey.disabled = empty; if(becameActive) popKey(clearKey); }
 }
 
 export function newProblem(){

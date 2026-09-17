@@ -34,12 +34,22 @@ import { showPrizeBox, wirePrizeBox } from "./prizeBox.js";
 import { handlePickerKeydown, wireMasteryBadge } from "./mastery.js";
 
 // ---- input ----
+// Typing never auto-submits (fat-finger taps used to instantly count as a
+// wrong answer) — the child types up to 2 digits, then confirms with the
+// green checkmark or clears with the red X.
 function handleDigit(d){
   if(state.locked) return;
+  if(state.entry.length>=2) return; // at most 2 digits; extra taps are ignored
   themeState.current.click(); state.entry+=String(d); renderAns();
+}
+function clearEntry(){
+  if(state.locked || state.entry==="") return;
+  themeState.current.click(); state.entry=""; renderAns();
+}
+function submitEntry(){
+  if(state.locked || state.entry==="") return;
   const val=parseInt(state.entry,10);
   if(val===state.answer) correct();
-  else if(state.entry==="1" && state.answer>=10){ /* teen: wait for 2nd digit */ }
   else wrong();
 }
 
@@ -108,15 +118,35 @@ function unlockEnter(){
 }
 
 // ---- wiring ----
+function wireKey(btn, onTap){
+  btn.addEventListener("pointerdown", e=>{ e.preventDefault(); audio(); btn.classList.add("press"); onTap(); });
+  const up=()=>{ btn.classList.remove("press"); btn.blur(); };
+  btn.addEventListener("pointerup",up); btn.addEventListener("pointerleave",up); btn.addEventListener("pointercancel",up);
+}
 function buildKeypad(){
-  [1,2,3,4,5,6,7,8,9,0].forEach(d=>{
+  [1,2,3,4,5,6,7,8,9].forEach(d=>{
     const btn=document.createElement("button");
-    btn.className="key"+(d===0?" zero":""); btn.textContent=d; btn.type="button";
-    btn.addEventListener("pointerdown",e=>{ e.preventDefault(); audio(); btn.classList.add("press"); handleDigit(d); });
-    const up=()=>{ btn.classList.remove("press"); btn.blur(); };
-    btn.addEventListener("pointerup",up); btn.addEventListener("pointerleave",up); btn.addEventListener("pointercancel",up);
+    btn.className="key"; btn.textContent=d; btn.type="button";
+    wireKey(btn, ()=>handleDigit(d));
     keyByDigit[String(d)]=btn; keypad.appendChild(btn);
   });
+
+  const clearBtn=document.createElement("button");
+  clearBtn.id="clearKey"; clearBtn.className="key key-clear"; clearBtn.type="button"; clearBtn.textContent="✕";
+  clearBtn.setAttribute("aria-label","Clear"); clearBtn.disabled=true;
+  wireKey(clearBtn, clearEntry);
+  keypad.appendChild(clearBtn);
+
+  const zeroBtn=document.createElement("button");
+  zeroBtn.className="key zero"; zeroBtn.type="button"; zeroBtn.textContent="0";
+  wireKey(zeroBtn, ()=>handleDigit(0));
+  keyByDigit["0"]=zeroBtn; keypad.appendChild(zeroBtn);
+
+  const submitBtn=document.createElement("button");
+  submitBtn.id="submitKey"; submitBtn.className="key key-submit"; submitBtn.type="button";
+  submitBtn.textContent="✓"; submitBtn.setAttribute("aria-label","Submit"); submitBtn.disabled=true;
+  wireKey(submitBtn, submitEntry);
+  keypad.appendChild(submitBtn);
 }
 window.addEventListener("keydown",e=>{
   if(statsScreen.classList.contains("show")) return;
@@ -128,7 +158,9 @@ window.addEventListener("keydown",e=>{
     return;
   }
   if(win.classList.contains("show")){ audio(); showPicker(); return; }
-  if(e.key>="0" && e.key<="9"){ audio(); handleDigit(parseInt(e.key,10)); }
+  if(e.key>="0" && e.key<="9"){ audio(); handleDigit(parseInt(e.key,10)); return; }
+  if(e.key==="Enter"){ audio(); submitEntry(); return; }
+  if(e.key==="Backspace" || e.key==="Escape" || e.key==="Delete"){ audio(); clearEntry(); }
 });
 win.addEventListener("pointerdown",e=>{ e.preventDefault(); audio(); showPicker(); });
 statsLink.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); audio(); showStats(); });
