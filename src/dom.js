@@ -37,3 +37,6 @@ export const prizeStrip = $("#prizeStrip");
 export const masteryBadge = $("#masteryBadge");
 export const masteryEmoji = $("#masteryEmoji");
 export const masteryArc = $("#masteryArc");
+export const masteryBalloon = $("#masteryBalloon");
+export const masteryBalloonEmoji = $("#masteryBalloonEmoji");
+export const masteryBalloonCaption = $("#masteryBalloonCaption");

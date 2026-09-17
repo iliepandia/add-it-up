@@ -1,7 +1,7 @@
 /* ---- 7-day mastery badge (theme picker) ---- */
 .picker-extras{display:flex; align-items:center; justify-content:center; gap:clamp(14px,4vw,22px);}
 
-.mastery-badge{--scale:1; position:relative;
+.mastery-badge{--scale:1; position:relative; cursor:pointer;
   width:clamp(64px,18vw,88px); height:clamp(64px,18vw,88px);
   border-radius:50%; background:#fff; box-shadow:0 8px 0 rgba(46,58,89,.18);}
 .mastery-ring{position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg);}
@@ -23,3 +23,31 @@
   animation:mastery-rainbow 1.5s linear infinite; pointer-events:none;
 }
 @keyframes mastery-rainbow{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
+
+/* ---- "next badge" balloon (tap the badge to preview, tap again or wait 3s to dismiss) ---- */
+.mastery-balloon{position:absolute; left:50%; bottom:calc(100% + 20px); z-index:5;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:15px 24px; border-radius:24px; background:#fff;
+  box-shadow:0 9px 0 rgba(46,58,89,.18); white-space:nowrap; pointer-events:none;
+  transform-origin:center bottom; opacity:0; transform:translateX(-50%) scale(0);}
+.mastery-balloon::after{content:""; position:absolute; top:100%; left:50%;
+  transform:translateX(-50%); border:12px solid transparent; border-top-color:#fff;}
+.mastery-balloon-emoji{font-size:45px; line-height:1;}
+.mastery-balloon-caption{font-family:var(--font); font-weight:600; font-size:18px; color:var(--ink);}
+
+/* Persistent visible state as a plain (non-animated) class, so the 3s dwell
+   never depends on an animation's fill-mode holding its last frame. */
+.mastery-balloon.balloon-open{ opacity:1; transform:translateX(-50%) scale(1); }
+.mastery-balloon.balloon-pop-in{ animation:balloonPopIn .45s cubic-bezier(.34,1.56,.64,1); }
+.mastery-balloon.balloon-pop-out{ animation:balloonPopOut .2s ease-in; }
+@keyframes balloonPopIn{
+  0%{transform:translateX(-50%) scale(0); opacity:0;}
+  60%{transform:translateX(-50%) scale(1.15); opacity:1;}
+  80%{transform:translateX(-50%) scale(.92);}
+  100%{transform:translateX(-50%) scale(1);}
+}
+@keyframes balloonPopOut{
+  0%{transform:translateX(-50%) scale(1); opacity:1;}
+  30%{transform:translateX(-50%) scale(1.08);}
+  100%{transform:translateX(-50%) scale(0); opacity:0;}
+}

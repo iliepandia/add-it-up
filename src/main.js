@@ -31,7 +31,7 @@ import { state, keyByDigit } from "./state.js";
 import { initStats, startSession, recordGame, recordMistake } from "./stats.js";
 import { showStats, wireStats } from "./statsScreen.js";
 import { showPrizeBox, wirePrizeBox } from "./prizeBox.js";
-import { handlePickerKeydown } from "./mastery.js";
+import { handlePickerKeydown, wireMasteryBadge } from "./mastery.js";
 
 // ---- input ----
 function handleDigit(d){
@@ -139,6 +139,7 @@ buildKeypad();
 wirePicker(name=>{ applyTheme(name); themeState.current.click(); startGame(); });
 wireStats();
 wirePrizeBox();
+wireMasteryBadge();
 initStats();
 showPicker();
 document.querySelector("#buildVer").textContent = `ver: ${__BUILD_VERSION__}`;
