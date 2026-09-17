@@ -29,6 +29,33 @@ function sweep(f0,f1,dur,type="sine",gain=0.14,delay=0){
   o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+0.02);
 }
 
+// A short filtered burst of noise — the "breath"/"chuff"/click component real
+// mouth- and mechanical sounds have that a pure oscillator can't fake.
+function noiseHit(dur,filterType,freq,freqEnd,Q,gain,delay=0){
+  const c=audio(); if(!c) return; const t=c.currentTime+delay, buf=noiseBuffer(dur); if(!buf) return;
+  const src=c.createBufferSource(); src.buffer=buf;
+  const filt=c.createBiquadFilter(); filt.type=filterType; filt.Q.value=Q;
+  filt.frequency.setValueAtTime(freq,t);
+  if(freqEnd!==freq) filt.frequency.exponentialRampToValueAtTime(freqEnd,t+dur);
+  const g=c.createGain(); g.gain.setValueAtTime(gain,t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  src.connect(filt).connect(g).connect(c.destination); src.start(t); src.stop(t+dur);
+}
+
+// A resonant-filtered, pitch-swept oscillator with a touch of noiseHit mixed
+// in for rasp/breath — the shared building block for realistic-ish animal
+// calls (bark, moo, oink, quack, neigh, roar, ribbit...), since those are
+// noisy/growly rather than pure tones.
+function growl(f0,f1,dur,filterFreq,type="sawtooth",gain=0.15,delay=0,Q=5){
+  const c=audio(); if(!c) return; const t=c.currentTime+delay;
+  const o=c.createOscillator(), filt=c.createBiquadFilter(), g=c.createGain();
+  o.type=type; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  filt.type="lowpass"; filt.frequency.value=filterFreq; filt.Q.value=Q;
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(gain,t+Math.min(0.02,dur*0.15));
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(filt).connect(g).connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+  noiseHit(Math.min(dur,0.1),"bandpass",filterFreq,filterFreq,1.2,gain*0.35,delay);
+}
+
 export const sClick = () => tone(700+Math.floor(Math.random()*120),0,0.07,"triangle",0.10);
 export const sDing = () => { tone(1245,0,0.35,"sine",0.14); tone(1868,0,0.30,"sine",0.05); };
 
@@ -206,20 +233,24 @@ export function sBeeBuzz(){   // animal r9: bees float up — buzzing tremolo, s
 // instead of a random blip — see PRIZE_SOUND in prizeBox.js for the mapping
 // from each of the 60 WIN_END emoji to one of these.
 
-export function tapMoo(){ sweep(180,90,0.5,"sawtooth",0.15); }
-export function tapBark(){ tone(300,0,0.09,"square",0.16); tone(260,0.11,0.09,"square",0.14); }
-export function tapMeow(){ sweep(500,780,0.11,"sine",0.13); sweep(780,480,0.13,"sine",0.11,0.12); }
-export function tapOink(){ tone(220,0,0.08,"sawtooth",0.15); tone(180,0.09,0.1,"sawtooth",0.15); }
-export function tapQuack(){ sweep(500,300,0.1,"sawtooth",0.14); sweep(460,260,0.09,"sawtooth",0.12,0.11); }
-export function tapNeigh(){ sweep(300,700,0.15,"sawtooth",0.13); sweep(700,350,0.25,"sawtooth",0.12,0.15); }
-export function tapRoar(){ sweep(140,70,0.45,"sawtooth",0.16); }
-export function tapRibbit(){ tone(220,0,0.06,"square",0.13); tone(180,0.07,0.09,"square",0.15); }
-export function tapHoot(){ tone(500,0,0.16,"sine",0.12); tone(420,0.2,0.2,"sine",0.11); }
+export function tapMoo(){ growl(180,90,0.55,320,"sawtooth",0.16,0,3); }
+export function tapBark(){ growl(480,260,0.09,900,"sawtooth",0.18,0,4); growl(440,240,0.1,850,"sawtooth",0.16,0.13,4); }
+export function tapMeow(){ growl(500,780,0.11,1400,"sawtooth",0.13,0,4); growl(780,480,0.13,1300,"sawtooth",0.11,0.12,4); }
+export function tapOink(){ growl(260,180,0.09,900,"sawtooth",0.17,0,5); growl(220,150,0.11,850,"sawtooth",0.16,0.1,5); }
+export function tapQuack(){ growl(600,300,0.09,1200,"square",0.15,0,6); growl(520,260,0.08,1100,"square",0.13,0.1,6); }
+export function tapNeigh(){
+  growl(350,750,0.14,1200,"sawtooth",0.15,0,4);
+  growl(600,300,0.28,1000,"sawtooth",0.13,0.14,4);
+  noiseHit(0.4,"bandpass",1100,800,1.5,0.05,0);
+}
+export function tapRoar(){ growl(150,70,0.5,300,"sawtooth",0.18,0,3); noiseHit(0.5,"lowpass",400,200,1,0.08,0.02); }
+export function tapRibbit(){ growl(160,100,0.07,500,"square",0.15,0,4); growl(140,90,0.09,450,"square",0.14,0.09,4); }
+export function tapHoot(){ tone(500,0,0.16,"sine",0.12); tone(420,0.22,0.22,"sine",0.11); noiseHit(0.1,"bandpass",500,500,3,0.03,0); noiseHit(0.12,"bandpass",420,420,3,0.03,0.22); }
 export function tapHop(){ sweep(600,900,0.08,"sine",0.12); sweep(900,600,0.08,"sine",0.10,0.09); }
-export function tapYip(){ sweep(700,1000,0.07,"triangle",0.13); sweep(1000,650,0.08,"triangle",0.11,0.08); }
+export function tapYip(){ growl(900,500,0.06,1500,"sawtooth",0.15,0,5); growl(850,450,0.07,1400,"sawtooth",0.13,0.08,5); }
 export function tapBoop(){ tone(500,0,0.12,"sine",0.12); tone(650,0.1,0.14,"sine",0.10); }
-export function tapPenguinHonk(){ tone(260,0,0.08,"square",0.14); tone(300,0.09,0.08,"square",0.13); }
-export function tapSquawk(){ sweep(900,500,0.13,"sawtooth",0.13); }
+export function tapPenguinHonk(){ growl(280,200,0.08,700,"square",0.15,0,5); growl(320,220,0.08,750,"square",0.13,0.09,5); }
+export function tapSquawk(){ growl(1000,500,0.13,1800,"sawtooth",0.14,0,4); }
 export function tapTurtleBlip(){ tone(300,0,0.18,"sine",0.10); }
 export function tapLadybugChirp(){ tone(1400,0,0.05,"sine",0.10); tone(1700,0.06,0.05,"sine",0.08); }
 export function tapDolphinClick(){ tone(2200,0,0.03,"sine",0.10); tone(2400,0.05,0.03,"sine",0.08); sweep(1200,2000,0.12,"sine",0.09,0.11); }
@@ -255,9 +286,32 @@ export function tapRocketWhoosh(){
   const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.15,t+dur*0.3); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   src.connect(bp).connect(g).connect(c.destination); src.start(t); src.stop(t+dur);
 }
-export function tapBikeBell(){ tone(1800,0,0.08,"sine",0.13); tone(1800,0.1,0.14,"sine",0.10); }
-export function tapCarHonk(){ tone(320,0,0.16,"square",0.14); tone(320,0.18,0.16,"square",0.14); }
-export function tapTrainChug(){ tone(140,0,0.09,"sawtooth",0.13); tone(140,0.12,0.09,"sawtooth",0.13); tone(700,0.24,0.22,"sine",0.10); }
+export function tapBikeBell(){   // two slightly-detuned tones beating against each other, like a real bell's ring
+  tone(1800,0,0.35,"sine",0.13); tone(1810,0,0.35,"sine",0.08);
+  tone(1800,0.14,0.28,"sine",0.09); tone(1810,0.14,0.28,"sine",0.06);
+}
+export function tapCarHonk(){   // real horns are two close pitches together (a "dyad"), buzzy from the sawtooth
+  const c=audio(); if(!c) return; const t=c.currentTime;
+  const honk=start=>[370,415].forEach(f=>{
+    const o=c.createOscillator(), g=c.createGain(); o.type="sawtooth"; o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,start); g.gain.linearRampToValueAtTime(0.11,start+0.02);
+    g.gain.setValueAtTime(0.11,start+0.13); g.gain.exponentialRampToValueAtTime(0.0001,start+0.16);
+    o.connect(g).connect(c.destination); o.start(start); o.stop(start+0.17);
+  });
+  honk(t); honk(t+0.2);
+}
+export function tapTrainChug(){   // rhythmic filtered "chuff" puffs of steam, then a receding whistle
+  const c=audio(); if(!c) return; const t=c.currentTime, chuffs=4, gap=0.11;
+  for(let i=0;i<chuffs;i++){
+    noiseHit(0.07,"lowpass",480-i*30,300-i*20,1,0.15,i*gap);
+    tone(85,i*gap,0.06,"sine",0.11);
+  }
+  const start=t+chuffs*gap+0.05;
+  const o=c.createOscillator(), g=c.createGain(); o.type="sine";
+  o.frequency.setValueAtTime(1000,start); o.frequency.exponentialRampToValueAtTime(1300,start+0.1); o.frequency.exponentialRampToValueAtTime(900,start+0.4);
+  g.gain.setValueAtTime(0.0001,start); g.gain.linearRampToValueAtTime(0.11,start+0.05); g.gain.exponentialRampToValueAtTime(0.0001,start+0.4);
+  o.connect(g).connect(c.destination); o.start(start); o.stop(start+0.42);
+}
 
 export function tapHeliWhir(){
   const c=audio(); if(!c) return; const t=c.currentTime;
