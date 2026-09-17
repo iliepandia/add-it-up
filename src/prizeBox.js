@@ -2,9 +2,45 @@
 // far. Reachable only from the theme-picker screen (see main.js wiring).
 
 import { prizeBox, prizeBoxBack, prizeStrip } from "./dom.js";
-import { audio } from "./audio.js";
+import {
+  audio,
+  tapMoo, tapBark, tapMeow, tapOink, tapQuack, tapNeigh, tapRoar, tapRibbit, tapHoot,
+  tapHop, tapYip, tapBoop, tapPenguinHonk, tapSquawk, tapTurtleBlip, tapLadybugChirp,
+  tapDolphinClick, tapWhaleCall, tapUnicornSparkle, tapFlutterBuzz, tapOctopusBlub,
+  tapRocketWhoosh, tapBikeBell, tapCarHonk, tapTrainChug, tapHeliWhir, tapSailWhoosh, tapUfoWarble,
+  tapBalloonSqueak, tapGiftRustle, tapTeddySqueak, tapConfettiPop, tapKiteFlutter, tapYoyoBoing, tapBallThump,
+  tapPaintSwish, tapCastleFanfare, tapCircusDrumroll, tapCarouselTinkle, tapFerrisChime,
+  tapCakeTada, tapIceCreamSwirl, tapMelonThud, tapBerryPop, tapLollipopTwinkle, tapDonutSquish,
+  tapCupcakeSparkle, tapCookieCrunch,
+  tapRainbowShimmer, tapSunGlow, tapBloomChime, tapMushroomBoop, tapTreeRustleTap
+} from "./audio.js";
 import { pick } from "./config.js";
 import { getPrizeTiles } from "./prizes.js";
+
+// Every prize emoji (see WIN_END in config.js) maps to a sound that matches
+// what it actually is, so a tap sounds like that prize instead of a random
+// blip. Closely related prizes intentionally share a family (all roaring
+// animals, all flowers, all "soft" critters, etc.) rather than each of the
+// 60 needing a fully bespoke sound.
+const PRIZE_SOUND = {
+  "🐄": tapMoo, "🚀": tapRocketWhoosh, "🦖": tapRoar, "🚲": tapBikeBell, "🚗": tapCarHonk, "🎂": tapCakeTada,
+  "🌈": tapRainbowShimmer, "🌞": tapSunGlow, "🌻": tapBloomChime, "🌸": tapBloomChime, "🌳": tapTreeRustleTap,
+  "🍄": tapMushroomBoop, "🦋": tapFlutterBuzz, "🐢": tapTurtleBlip, "🐝": tapFlutterBuzz, "🐬": tapDolphinClick,
+  "🎈": tapBalloonSqueak, "🎁": tapGiftRustle, "🧸": tapTeddySqueak, "🎉": tapConfettiPop, "🪁": tapKiteFlutter,
+  "🚂": tapTrainChug, "⚽": tapBallThump, "🏰": tapCastleFanfare, "🎨": tapPaintSwish, "🍦": tapIceCreamSwirl,
+  "🦄": tapUnicornSparkle, "🐙": tapOctopusBlub, "🐳": tapWhaleCall, "🦩": tapSquawk, "🦉": tapHoot,
+  "🐧": tapPenguinHonk, "🦁": tapRoar, "🐯": tapRoar, "🐼": tapBoop, "🐨": tapBoop,
+  "🦊": tapYip, "🐰": tapHop, "🐶": tapBark, "🐱": tapMeow, "🐸": tapRibbit,
+  "🦆": tapQuack, "🐴": tapNeigh, "🐷": tapOink, "🐞": tapLadybugChirp, "🌺": tapBloomChime,
+  "🌼": tapBloomChime, "🍉": tapMelonThud, "🍓": tapBerryPop, "🍭": tapLollipopTwinkle, "🍩": tapDonutSquish,
+  "🍪": tapCookieCrunch, "🧁": tapCupcakeSparkle, "🎪": tapCircusDrumroll, "🎠": tapCarouselTinkle, "🎡": tapFerrisChime,
+  "🚁": tapHeliWhir, "⛵": tapSailWhoosh, "🛸": tapUfoWarble, "🪀": tapYoyoBoing
+};
+
+function playPrizeSound(emoji){
+  const fn = PRIZE_SOUND[emoji];
+  if(fn) fn();
+}
 
 // A tap on a tile plays one of these at random, so the shelf feels alive
 // without every prize doing the same thing.
@@ -53,7 +89,7 @@ function renderPrizes(){
     face.addEventListener("animationend", () => { face.style.animation = ""; }, { once: true });
     cell.appendChild(face);
 
-    cell.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); audio(); playTapAnim(face); });
+    cell.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); audio(); playTapAnim(face); playPrizeSound(emoji); });
     prizeStrip.appendChild(cell);
   });
 }
