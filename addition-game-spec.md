@@ -2,9 +2,9 @@
 
 **Purpose:** A web game that helps a 7-year-old practice single-digit addition.
 **Status:** Clarified and locked, ready to build.
-**Last updated:** 2026-09-16
+**Last updated:** 2026-09-18
 
-> **Scope:** Sections 1–14 are **Phase 1 — build now**. Section 15 is **Phase 2 — deferred, do not build now** (learning-design upgrades captured for a later version).
+> **Scope:** Sections 1–16 are **Phase 1 — build now**. Section 17 is **Phase 2 — deferred, do not build now** (learning-design upgrades captured for a later version).
 
 ---
 
@@ -71,29 +71,40 @@ Each problem picks **one of three presentations at random**:
 ## 5. Input
 
 - **Digit tray 0–9** shown at the bottom, fully unrestricted (all ten keys always live).
-- **Keyboard digit keys** are also accepted — input is **global** (no field to focus).
+- **Two commit keys** flank the **0** key: a red **✕ (clear)** on the left, a green
+  **✓ (submit)** on the right — fixed red/green colors regardless of the active theme, since
+  they're commit-flow controls, not themed number keys.
+- **At most 2 digits** may be entered (the answer's max is 12, §3, so 2 digits always suffice);
+  a 3rd digit tap is silently ignored.
+- **Keyboard equivalents** are also accepted — input is **global** (no field to focus):
+  digit keys `0`–`9`, **Enter** to submit, **Backspace / Delete / Escape** to clear.
 - The answer appears **inline in the equation** (`3 + 5 = ▏`) with a **blinking caret** when
   empty — deliberately *not* styled as a text-input box.
-- **No submit button, no backspace** — answer is auto-checked (see §6).
-
-> **Known trade-off:** with no backspace, a mis-tap cannot be corrected — it resolves as
-> a wrong answer and the same problem is re-shown. Acceptable per current design; revisit
-> if fat-finger errors prove frustrating.
+- **Dimmed-until-ready:** both ✕ and ✓ start at **40% opacity and 0.75× size** (nothing to
+  clear or submit yet). The instant the first digit is typed, both **pop active** with a
+  "tada" overshoot (scale past **1.22×**, settle through **0.94×**, land at **1×**) instead of
+  just snapping to size. The ✓ additionally grows a **pulsing yellow glow** behind it and its
+  checkmark glyph pulses **0.8×–1.1×**, both at the same **~0.43s** cadence — drawing the eye
+  to the natural next action.
 
 ---
 
-## 6. Answer checking (auto-check with prefix logic)
+## 6. Answer checking (explicit commit)
 
-The entered value is evaluated against the **known** correct answer after **every tap**:
+Nothing is evaluated until the child **taps ✓ (or presses Enter)** — typing digits only fills
+the on-screen entry, it never auto-checks. On submit:
 
-- Entry **equals** the answer → **correct**.
-- Entry is **`1`** *and the correct answer is 10, 11, or 12* → wait for the second digit.
-- **Anything else → wrong immediately.**
+- Entry **equals** the correct answer → **correct**.
+- **Anything else → wrong.**
 
-This makes a wrong single-digit guess (e.g. entering `6` when the answer is `7`) fail
-instantly, instead of forcing a pointless second tap.
+**Why:** the original design auto-checked after every keystroke (see git history for the old
+prefix-logic rule), so a single fat-fingered tap on a wrong digit instantly resolved as a full
+wrong answer — even a tap meant to be corrected. Requiring an explicit ✓ (with ✕ to clear a
+mis-tap first) removes that noise: a recorded "wrong" now reliably means the child didn't know
+the fact, not that their thumb slipped — a cleaner signal for any future scaffolding/adaptivity
+work (§17.2, §17.3) to build on.
 
-**Correct path timing:** on a correct entry, wait **200 ms** so the child sees their
+**Correct path timing:** on a correct submission, wait **200 ms** so the child sees their
 answer on screen, *then* trigger the celebration.
 
 ---
@@ -140,7 +151,7 @@ answer on screen, *then* trigger the celebration.
   - The re-ask is a **fresh attempt**: wrong-count resets, and a correct entry now **earns the
     star**. (If a twice-missed problem should never award a star, gate this — currently it does.)
   *(Prevents the child getting trapped on a fact they don't know; a light Phase-1 version of the
-  scaffolding in §15.2.)*
+  scaffolding in §17.2.)*
 
 ---
 
@@ -153,7 +164,9 @@ Synthesized in-browser (Web Audio), unlocked on the first user tap (mobile autop
 | Key / tray press | click |
 | Correct explosion | pop / party |
 | Wrong answer | ding-ding |
-| A snake-easter-egg trophy touch (§13) | ding (same two-tone chime as the Space theme's key press) |
+| A snake-easter-egg trophy touch (§14) | ding (same two-tone chime as the Space theme's key press) |
+| Tapping a prize in the prize box (§12) | a sound matched to *that specific prize*, not random |
+| Tapping the mastery badge (§13) | ding |
 
 Sound is best-effort — the game must remain fully playable if audio is unavailable.
 
@@ -181,7 +194,7 @@ Sound is best-effort — the game must remain fully playable if audio is unavail
 - **Layout freeze:** the instant the reveal finishes, every trophy's on-screen position is
   captured and pinned (`position: absolute`, explicit `left`/`top`) instead of staying in the
   flex-wrap layout used to lay them out. This is what lets trophies be removed one at a time
-  (by tap, or by the snake easter egg in §13) **without the rest re-packing/shifting** —
+  (by tap, or by the snake easter egg in §14) **without the rest re-packing/shifting** —
   positions are read for every trophy *before* any of them is pinned, so pinning an early one
   can't reflow (and bunch up) the ones read after it.
 - **Trophies become tappable** once the layout is frozen: tapping one bursts it into **30 stars**
@@ -191,7 +204,7 @@ Sound is best-effort — the game must remain fully playable if audio is unavail
 - Also show the hint **"Tap to play again"** and a **big orange "Play" button**.
 - **Restart:** the Play button **or any tap/key not on a trophy** starts a new session (stars,
   difficulty, and longest-streak all reset), returning first to the theme picker (§10) — which
-  also stops the snake easter egg (§13) if one is running.
+  also stops the snake easter egg (§14) if one is running.
 
 ---
 
@@ -298,15 +311,55 @@ Stored **locally on-device only** (its own `localStorage` key, separate from sta
   animated or moved) containing an **inner emoji face** that plays the entrance pop and tap
   reactions below. Keeping the two separate means a tile reacting to a tap never shifts its
   neighbors.
-- **Tapping a prize** plays one random reaction from a set of ten (tada, shake, jump, rotate,
-  wobble, bounce, pulse, flip, swing, heartbeat) plus a tap sound — just a fun, replayable touch,
-  no game effect.
+- **Tapping a prize** plays one random visual reaction from a set of ten (tada, shake, jump,
+  rotate, wobble, bounce, pulse, flip, swing, heartbeat) — just a fun, replayable touch, no game
+  effect.
+- **Tap sounds are matched to the specific prize**, not random: all 60 win-pool emoji (§9) each
+  map to one of ~40 synthesized "sound families" — animal calls (bark, meow, moo, oink, quack,
+  neigh, roar, ribbit, hoot, …), vehicle noises (rocket whoosh, bike bell, car horn, train
+  chuff-chuff-whistle, helicopter whir, sailboat whoosh, UFO warble), food/sweets, toys/circus,
+  and nature/sky chimes — so tapping 🐶 barks, 🚀 whooshes, 🍪 crunches, etc. Closely related
+  prizes intentionally share a family (🦁/🐯/🦖 all roar, 🌻/🌸/🌺/🌼 all get the same bloom
+  chime) rather than every one of the 60 needing a fully bespoke sound. Every sound is
+  synthesized (Web Audio, no audio files, §8), built from two shared pieces: a short filtered
+  **noise burst** (the breath/mechanical texture a pure tone can't fake) and a resonant-filtered,
+  pitch-swept oscillator "**growl**" for animal calls — deliberately more elaborate than a bare
+  tone, though still stylized synthesis rather than real recordings (revisit with real sample
+  audio if truer realism is ever wanted — see trade-offs in §15).
 - A **← back button** (top-left) returns to the theme picker.
 - **Empty state:** "Finish a game to win your first prize!" if none are collected yet.
 
 ---
 
-## 13. Win-screen snake easter egg
+## 13. Mastery badge
+
+A round badge sits next to the 📦 button on the theme-picker screen (§10), showing a **7-day
+precision** (accuracy) signal that persists across sessions — a visible mastery signal beyond
+any single game (directly addresses §17.4's competence-signal recommendation).
+
+- **11 emoji tiers:** 🐌🐔🐢🐝🐷🐱🐶🐄🐻🦖, spanning **50%–100%** 7-day precision in even
+  **5-point bands** (below 50%, or no games in the trailing 7 days, shows the snail at 0%
+  fill), plus a bonus **🏆** reserved exclusively for an **exact** 100% — zero wrong submissions
+  in the window, not just rounding up to it.
+- **Precision** reuses the same correct ÷ (correct + wrong) formula as §11's all-time Accuracy
+  stat, scoped to games finished in the last 7 days.
+- **Arc:** a thin gold ring fills across each tier's own 5-point span, so every **0.5%** of
+  precision moves the arc a fixed **10%** (10 half-percent steps = one full tier).
+- **Emoji size** scales evenly from **1.0×** (snail) to **2.0×** (trophy) across the 11 tiers.
+- **Trophy tier** swaps the gold ring for a **spinning rainbow ring** — colors cycle in place,
+  the ring itself never rotates — the same technique as the perfect-game prize-tile ring (§12).
+- **Next-badge preview:** tapping the badge dings and pops up a speech-bubble balloon (bounce-in,
+  ~0.45s) showing the **next tier's emoji** and the precision needed to reach it (or "You're a
+  champion!" once at the trophy). A second tap, or **3 seconds** of no input, pops it back down
+  with a quick shrink-out. The "stay open" state is a plain CSS class rather than relying on an
+  animation's fill-mode to hold its last frame, so the 3-second dwell can't be silently cut short.
+- **Test mode:** a hidden developer shortcut for previewing every tier without grinding out real
+  games — see §15 for how to enable it and what it unlocks (including a fast path to testing
+  §14's snake).
+
+---
+
+## 14. Win-screen snake easter egg
 
 A **retro, block-based snake** (green segments + a head, reminiscent of classic console Snake)
 occasionally crawls across the win screen (§9).
@@ -323,9 +376,18 @@ occasionally crawls across the win screen (§9).
   itself**, so it stays fully on screen and never self-collides.
 - **Starting position:** a **random** grid cell (not the screen center).
 - **Eating trophies:** on every step, the snake reports its current segments' positions; any
-  trophy a segment overlaps **shrinks to scale 0 over ~0.125s with a "ding"** and is removed —
-  distinct from (and simpler than) the tap-to-pop celebration in §9. This can only happen once
-  the win screen's trophy layout has been frozen (§9), so it never fights the staggered reveal.
+  trophy a segment overlaps (any segment, not just the head) **shrinks to scale 0 over ~0.125s
+  with a "ding"** and is removed immediately — distinct from (and simpler than) the tap-to-pop
+  celebration in §9. This can only happen once the win screen's trophy layout has been frozen
+  (§9), so it never fights the staggered reveal.
+- **Eating animation:** each touch also queues an "eat" — the snake **stops moving** and plays a
+  bulge: the head **pops to ~4.3× its normal size** and opens a big dark **"O" mouth**, then the
+  pop **travels tail-ward through the body** (each segment popping to ~3.5×, staggered ~90ms
+  apart, ~0.26s per segment's own pop). **2 or more prizes touched at once** (easy with a dense
+  field of trophies) queue their eat animations and play them **one at a time**, snake frozen the
+  whole time — never overlapping. Movement (and new-touch detection) **resumes automatically**
+  once the queue empties. Implementation note: each body block is a positioning shell plus an
+  inner "face" div, so the pop's scale animation never fights the shell's movement transform.
 - **Shrinking away:** after crawling at full length for **20s**, the snake starts shedding one
   tail block roughly every 400ms until it's gone (~3s to fully vanish) — it doesn't crawl
   forever.
@@ -336,52 +398,98 @@ occasionally crawls across the win screen (§9).
 
 ---
 
-## 14. Open items / future tweaks
+## 15. Testing (developer/QA shortcuts)
 
-- No backspace under auto-check (§5).
-- A **linear difficulty ramp** is now in Phase 1 (§3, sum 5→12); the **adaptive, fact-tracking**
-  version remains Phase 2 (§15.3).
+Hidden keyboard shortcuts, live only on the **theme-picker screen** (§10), for previewing
+end-states without grinding out real games. They never touch real stats or the prize box.
+
+**Enable/disable:** type **T-E-S-T** (dings each time; typing it again toggles back off). Typing
+works anywhere on the picker screen — no field to focus, same as normal digit input (§5).
+
+**While test mode is on:**
+
+| Key(s) | Effect |
+|--------|--------|
+| **Up / Down** | Nudges the mastery badge's (§13) *displayed* 7-day precision by ±0.5%, without touching real stats — the fast way to step through all 11 tiers and watch the arc fill. |
+| **S** | Jumps straight to the win screen (§9) with a full **10 trophies** revealed and the snake (§14) **forced active** — bypassing the normal perfect-game-only + 1-in-3-lottery gates. The fast way to test the snake's crawl, its eat animation, and multi-prize queueing without needing to actually play (and win, flawlessly) a real game first. |
+
+**Note on S:** typing T-E-S-T a *second* time (to toggle test mode back off) also types an "s" as
+its 3rd letter. So **S only triggers the win-screen jump when pressed as a fresh keystroke** (not
+mid-way through retyping T-E-S-T) — otherwise every attempt to toggle test mode off would instead
+jump to the win screen.
+
+**Leaving:** the S jump's win screen behaves exactly like a real one — the Play button, or any
+tap/key not on a trophy, returns to the picker (§9) with test mode's on/off state unchanged.
 
 ---
 
-## 15. Phase 2 — Learning design (deferred, do not build now)
+## 16. Open items / future tweaks
+
+- A **linear difficulty ramp** is now in Phase 1 (§3, sum 5→12); the **adaptive, fact-tracking**
+  version remains Phase 2 (§17.3).
+- Prize-box and mastery-badge tap sounds (§12, §13) are stylized synthesis (Web Audio, no audio
+  files, §8) — meaningfully better than plain oscillator tones, but still a synth's approximation
+  of a bark or a train, not a real recording. Revisit with real sample audio if truer realism is
+  ever wanted; that would mean sourcing license-cleared clips and dropping the current
+  single-HTML-file build (§2), so it's a deliberate trade-off, not an oversight.
+
+---
+
+## 17. Phase 2 — Learning design (deferred, do not build now)
 
 Upgrades to make the math *emerge from play* rather than be a toll paid to reach a reward.
 Ordered by leverage toward that goal; each is paired with the theory it draws on.
 
-### 15.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage*
+> **Progress check (2026-09-17):** everything built since the last review — the input commit
+> mechanism (§5/§6), prize-box tap sounds matched to each emoji (§12), and the mastery badge
+> (§13) — is engagement/UX polish and information-signal quality, not learning design. Of the
+> five items below, only **17.4's competence half** has meaningfully landed: the mastery badge
+> is exactly the persistent, visible mastery-progress signal it calls for, on top of the
+> pre-existing stats screen (§11). Its **autonomy** half is still just theme selection; a
+> deeper in-game choice hasn't been built. **17.1** (intrinsic integration), **17.2**
+> (second-wrong scaffolding), **17.3** (adaptivity), and **17.5** (sequenced representations)
+> remain entirely unaddressed. One side-benefit worth noting for 17.2/17.3: §6's move to an
+> explicit commit-to-submit means a recorded "wrong" now reliably reflects the child not
+> knowing the fact rather than a mis-tap — a cleaner signal for either to build on when
+> they're eventually tackled. *(2026-09-18 update: the snake's eat animation, §14, and the §15
+> test shortcuts are the same kind of polish/tooling — no change to this assessment.)*
+
+### 17.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage*
 The Phase 1 game is a **drill with juice**: solve the sum → get the fireworks. The math is
 the toll, not the play. Convert it to an **endogenous** design where manipulating numbers
 *is* the fun act — e.g. feed a creature exactly N berries, build a tower to a target height,
 fill a jar to a line. The addition becomes something you *do to get what you want*.
 *(Malone & Lepper; Habgood & Ainsworth, intrinsic integration.)*
 
-### 15.2 Scaffold the second wrong attempt — *highest safety priority*
+### 17.2 Scaffold the second wrong attempt — *highest safety priority*
 Phase 1 re-shows the identical problem until correct, with no teaching — a recipe for math
 anxiety and learned helplessness when the child genuinely doesn't know the fact. Keep the
 never-skip rule, but on the **second** miss, *help*: reveal pips under the digits, animate a
 count-up, show a number line, or decompose (`8 + 7 → 8 + 2 = 10, then +5`). Reframe errors as
 information, not verdicts. *(Dweck, growth mindset; Seligman, learned helplessness.)*
 
-### 15.3 Adaptivity + fact-memory
+### 17.3 Adaptivity + fact-memory
 Flat random difficulty prevents flow and a felt sense of progress. Track which addend pairs
 the child misses, resurface them (spaced retrieval / testing effect), and let difficulty drift
 upward as accuracy and speed rise. *(Csikszentmihalyi, flow; Roediger, testing effect.)* The
 mistake-frequency tracking already shipped in §11 is the raw data this would build on.
 
-### 15.4 Surface competence + one autonomy choice
+### 17.4 Surface competence + one autonomy choice — *competence half now shipped*
 Give a visible mastery signal beyond a single session (levels, cumulative progress) and at
 least one real choice (choose between two problems, or a sub-mode). *(Deci & Ryan,
-Self-Determination Theory — competence + autonomy.)* *(World/theme selection already landed in
-Phase 1, §10, and the stats screen in §11 already gives a persistent competence signal; this
-item is about deeper in-game autonomy.)*
+Self-Determination Theory — competence + autonomy.)* The **competence** half is now addressed:
+the mastery badge (§13) is exactly this — an 11-tier, cross-session progress signal — layered
+on the stats screen's (§11) existing persistent numbers. World/theme selection (§10) still
+covers only the shallow end of **autonomy**; a deeper in-game choice (between two problems, or
+a sub-mode) remains unbuilt.
 
-### 15.5 Sequence the representations (don't randomize blindly)
+### 17.5 Sequence the representations (don't randomize blindly)
 The three formats are concrete → abstract (pips/emoji → digits) and map onto how number sense
 develops. Instead of random order, **lead concrete and fade toward abstract** as fluency on a
 fact grows. *(Concrete–Representational–Abstract; Clements & Sarama, subitizing.)*
 
 ### Strengths to preserve from Phase 1
 Multiple representations of quantity (symbolic / set-based / subitizable pips), immediate
-feedback (200 ms), multimodal input, low cognitive load, and the never-skip principle
-(once scaffolded per 15.2).
+feedback (200 ms), multimodal input, low cognitive load, an explicit two-step confirm (type
+then ✓, §5/§6) that keeps the wrong-answer signal clean of fat-finger noise, and the never-skip
+principle (once scaffolded per 17.2).

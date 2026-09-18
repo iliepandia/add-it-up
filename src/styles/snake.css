@@ -4,12 +4,43 @@
    above #win's own background. See snake.js for the movement logic. */
 #snakeLayer{position:absolute; inset:0; z-index:-1; overflow:hidden; pointer-events:none;}
 
+/* Outer shell: grid position only (translate, via snake.js's place()). Kept
+   separate from the inner face so the eat-pop scale animation below never
+   fights the movement transform on the same element. */
 .snake-seg{position:absolute; top:0; left:0; width:26px; height:26px;
-  background:#3DBE4A; border:2px solid #2E8F39; border-radius:5px;
-  box-shadow:inset 0 0 0 3px rgba(0,0,0,.08);
   transition:transform 150ms linear;}
-.snake-head{background:#5BE86A; border-color:#2E8F39; z-index:1;}
-.snake-head::before, .snake-head::after{content:""; position:absolute; top:7px;
+.snake-seg-face{position:relative; width:100%; height:100%; box-sizing:border-box;
+  background:#3DBE4A; border:2px solid #2E8F39; border-radius:5px;
+  box-shadow:inset 0 0 0 3px rgba(0,0,0,.08); transform-origin:center;}
+.snake-head .snake-seg-face{background:#5BE86A; border-color:#2E8F39; z-index:1;}
+.snake-head .snake-seg-face::before, .snake-head .snake-seg-face::after{content:""; position:absolute; top:7px;
   width:4px; height:4px; border-radius:50%; background:#1B3A1E;}
-.snake-head::before{left:6px;}
-.snake-head::after{right:6px;}
+.snake-head .snake-seg-face::before{left:6px;}
+.snake-head .snake-seg-face::after{right:6px;}
+
+/* Eating: a bulge pops through the body head-to-tail when the snake
+   swallows a prize (see snake.js's eatPrize) — biggest at the head, tapering
+   for the rest of the body. */
+.snake-seg-face.snake-eating{animation:eatBulge .26s ease-out; z-index:2;}
+.snake-head .snake-seg-face.snake-eating{animation:eatBulgeHead .26s ease-out;}
+@keyframes eatBulge{
+  0%{transform:scale(1);}
+  40%{transform:scale(3.49);}
+  100%{transform:scale(1);}
+}
+@keyframes eatBulgeHead{
+  0%{transform:scale(1);}
+  40%{transform:scale(4.28);}
+  100%{transform:scale(1);}
+}
+
+/* Big "O" mouth, hidden until the head pops open mid-bite. */
+.snake-mouth{position:absolute; left:50%; top:62%; width:60%; height:60%;
+  border-radius:50%; background:#7A2020; border:2px solid #4A1010;
+  transform:translate(-50%,-50%) scale(0); opacity:0;}
+.snake-head .snake-seg-face.snake-eating .snake-mouth{animation:mouthOpen .26s ease-out;}
+@keyframes mouthOpen{
+  0%{transform:translate(-50%,-50%) scale(0); opacity:0;}
+  35%{transform:translate(-50%,-50%) scale(1); opacity:1;}
+  100%{transform:translate(-50%,-50%) scale(0); opacity:0;}
+}

@@ -14,11 +14,14 @@ const TICK_MS = 150;   // ms per grid step
 const TURN_CHANCE = 0.35; // odds of an unforced sharp turn on any given tick
 const SHRINK_AFTER_MS = 20000; // how long the snake crawls at full length first
 const SHRINK_STEP_MS = 400;    // how long each tail segment takes to disappear once shrinking starts
+const EAT_STEP_MS = 90;   // stagger between each segment's pop starting, head to tail
+const EAT_POP_MS = 260;   // how long one segment's own pop animation lasts
 
 const DIRS = [[1,0], [-1,0], [0,1], [0,-1]];
 
 let timer = null;
-let segEls = [];
+let segEls = [];   // outer shells — carry grid position (translate) only
+let segFaces = [];   // inner faces — carry the eat-pop scale animation, so it never fights position
 let cols = 0, rows = 0;
 let head = { x: 0, y: 0 };
 let dir = DIRS[0];
@@ -26,6 +29,7 @@ let body = []; // positions, index 0 = head
 let startedAt = 0;
 let capLength = LENGTH; // current max length; counts down once shrinking begins
 let onStep = null; // optional callback(segmentRects) fired after every tick
+let eating = false; // true while an eat animation is playing — pauses movement/onStep
 
 function inBounds(x, y){ return x >= 0 && x < cols && y >= 0 && y < rows; }
 function sameDir(a, b){ return a[0] === b[0] && a[1] === b[1]; }
@@ -57,12 +61,20 @@ function layout(){
 
 function buildSegs(){
   snakeLayer.innerHTML = "";
-  segEls = [];
+  segEls = []; segFaces = [];
   for(let i = 0; i < LENGTH; i++){
     const s = document.createElement("div");
     s.className = "snake-seg" + (i === 0 ? " snake-head" : "");
+    const face = document.createElement("div");
+    face.className = "snake-seg-face";
+    if(i === 0){
+      const mouth = document.createElement("div");
+      mouth.className = "snake-mouth";
+      face.appendChild(mouth);
+    }
+    s.appendChild(face);
     snakeLayer.appendChild(s);
-    segEls.push(s);
+    segEls.push(s); segFaces.push(face);
   }
 }
 
@@ -74,6 +86,8 @@ function place(){
 }
 
 function tick(){
+  if(eating) return; // paused mid "eat" animation — see eatPrize()
+
   dir = nextDirection();
   head = { x: head.x + dir[0], y: head.y + dir[1] };
   body.unshift(head);
@@ -81,12 +95,33 @@ function tick(){
   const shrinkFor = performance.now() - startedAt - SHRINK_AFTER_MS;
   capLength = shrinkFor > 0 ? Math.max(0, LENGTH - 1 - Math.floor(shrinkFor / SHRINK_STEP_MS)) : LENGTH;
 
-  while(segEls.length > capLength){ const seg = segEls.pop(); if(seg) seg.remove(); }
+  while(segEls.length > capLength){ const seg = segEls.pop(); segFaces.pop(); if(seg) seg.remove(); }
   if(capLength <= 0){ stopSnake(); return; }
   if(body.length > capLength) body.length = capLength; // drop the oldest (tail) cells
 
   place();
   if(onStep) onStep(body.map(p => ({ x: p.x * CELL, y: p.y * CELL, w: CELL, h: CELL })));
+}
+
+/** Plays a bulge that pops the head bigger, then travels tail-ward through
+ *  the body — the visual of swallowing one prize. Pauses movement (and stops
+ *  new touches from being detected) for the duration, then calls onDone so a
+ *  caller can either resume play or immediately queue the next eat. */
+export function eatPrize(onDone){
+  eating = true;
+  if(!segFaces.length){ eating = false; if(onDone) onDone(); return; }
+  let i = 0;
+  (function step(){
+    const face = segFaces[i];
+    if(face){
+      face.classList.remove("snake-eating"); void face.offsetWidth; // restart cleanly if still mid-pop
+      face.classList.add("snake-eating");
+      face.addEventListener("animationend", () => face.classList.remove("snake-eating"), { once: true });
+    }
+    i++;
+    if(i < segFaces.length) setTimeout(step, EAT_STEP_MS);
+    else setTimeout(() => { eating = false; if(onDone) onDone(); }, EAT_POP_MS);
+  })();
 }
 
 /** onStepCb(segmentRects), if given, fires after every tick with each
@@ -110,5 +145,7 @@ export function startSnake(onStepCb){
 export function stopSnake(){
   if(timer){ clearInterval(timer); timer = null; }
   if(snakeLayer) snakeLayer.innerHTML = "";
+  segEls = []; segFaces = [];
   onStep = null;
+  eating = false;
 }

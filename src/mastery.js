@@ -13,6 +13,7 @@
 import { masteryBadge, masteryEmoji, masteryArc, masteryBalloon, masteryBalloonEmoji, masteryBalloonCaption } from "./dom.js";
 import { sDing } from "./audio.js";
 import { getPrecision7d } from "./stats.js";
+import { testJumpToWin } from "./win.js";
 
 const TIERS = ["🐌","🐔","🐢","🐝","🐷","🐱","🐶","🐄","🐻","🦖","🏆"];
 const TROPHY = TIERS.length - 1; // 10
@@ -118,13 +119,19 @@ function toggleTestMode(){
 
 /** Call from the picker's keydown handling; returns true if the key was
  *  consumed (typing T-E-S-T toggles test mode; while it's on, Up/Down move
- *  the badge's precision by ±0.5% for visual testing). */
+ *  the badge's precision by ±0.5% for visual testing, and S — pressed fresh,
+ *  not mid-way through retyping T-E-S-T to toggle off — jumps straight to a
+ *  fully-loaded win screen to test the snake's eat animation). */
 export function handlePickerKeydown(e){
   const k = e.key;
   if(k === "ArrowUp" || k === "ArrowDown"){
     if(!testMode) return false;
     testPrecision = Math.max(0, Math.min(100, testPrecision + (k === "ArrowUp" ? 0.5 : -0.5)));
     renderMasteryBadge();
+    return true;
+  }
+  if(testMode && keyBuf === "" && (k === "s" || k === "S")){
+    testJumpToWin();
     return true;
   }
   if(k.length === 1 && /[a-zA-Z]/.test(k)){

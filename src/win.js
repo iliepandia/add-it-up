@@ -1,12 +1,12 @@
 // End screen: trophy reveal + closing star explosion.
 
 import { pick, rnd, reduceMotion, WIN_END } from "./config.js";
-import { win, trophiesEl, winfxEl } from "./dom.js";
+import { win, picker, trophiesEl, winfxEl } from "./dom.js";
 import { tone, sParty, sStar, sTada, sDing } from "./audio.js";
 import { spawnParticle } from "./fx.js";
 import { state } from "./state.js";
 import { addPrize } from "./prizes.js";
-import { startSnake } from "./snake.js";
+import { startSnake, eatPrize } from "./snake.js";
 
 function starExplosion(){
   const n=reduceMotion?10:34, cx=innerWidth/2, cy=innerHeight*0.5;
@@ -89,25 +89,54 @@ function revealTrophies(glyph,count){
 }
 
 // The snake reports its current segments (viewport-pixel rects) on every
-// step; a trophy it overlaps vanishes. Only armed once trophies are frozen
-// in place (see freezeTrophyLayout), so a touch never fights the reveal.
+// step; a trophy it overlaps vanishes right away. Separately, each touch
+// queues one "eat" bulge animation (see snake.js's eatPrize) — the queue
+// plays them back-to-back, keeping the snake paused the whole time, so 2+
+// prizes touched at once (or in quick succession) are eaten one by one
+// instead of all at once. Only armed once trophies are frozen in place (see
+// freezeTrophyLayout), so a touch never fights the reveal.
 let trophiesReady=false;
+let eatPending=0, eatingQueue=false;
+function queueEat(){
+  eatPending++;
+  if(!eatingQueue) runEatQueue();
+}
+function runEatQueue(){
+  if(eatPending<=0){ eatingQueue=false; return; }
+  eatingQueue=true;
+  eatPending--;
+  eatPrize(runEatQueue);
+}
 function onSnakeStep(segments){
   if(!trophiesReady) return;
   trophiesEl.querySelectorAll(".trophy:not([data-vanishing])").forEach(el=>{
     const r=el.getBoundingClientRect();
     const hit=segments.some(s => s.x<r.right && s.x+s.w>r.left && s.y<r.bottom && s.y+s.h>r.top);
-    if(hit) vanishTrophy(el);
+    if(hit){ vanishTrophy(el); queueEat(); }
   });
 }
 
 export function showWin(){
   win.classList.add("show");
   state.locked=true;
-  trophiesReady=false;
+  trophiesReady=false; eatPending=0; eatingQueue=false;
   const glyph=pick(WIN_END);
   const score=Math.max(0,10-state.gameWrongTotal);
   addPrize(glyph,score); // exactly one prize per finished game, into the persistent prize box
   if(score>=10 && rnd(3)===0) startSnake(onSnakeStep); // perfect game: 1-in-3 chance of the crawling snake easter egg
   revealTrophies(glyph, Math.max(1,state.maxStreak));
+}
+
+// Test-mode shortcut (typing TEST then S on the theme picker, see mastery.js)
+// — jumps straight to the win screen with a full 10 trophies and the snake
+// forced active, to test the eat animation without playing a perfect game.
+// Doesn't touch real stats/prizes: no addPrize, no recordGame.
+export function testJumpToWin(){
+  picker.classList.remove("show");
+  win.classList.add("show");
+  state.locked=true;
+  trophiesReady=false; eatPending=0; eatingQueue=false;
+  const glyph=pick(WIN_END);
+  startSnake(onSnakeStep);
+  revealTrophies(glyph, 10);
 }
