@@ -437,8 +437,10 @@ tap/key not on a trophy, returns to the picker (§9) with test mode's on/off sta
 - **No latency/speed tracking exists yet.** Every stat and scoring rule (§6, §11) is purely
   correctness-based — nothing records how long an answer took, so a child who counts on fingers
   for 15s scores identically to one who answers instantly. This is the concrete prerequisite
-  every idea in §17.6 depends on, and is worth building (even just passively, to see how fast
-  games already are) before committing to any of that section's reward/mechanic changes.
+  every idea in §17.6 depends on — and it's a **two-step** prerequisite, not one: first measure
+  *this child's own* baseline with zero visible effect on the game, and only then decide what
+  "improvement" means relative to that baseline. Nothing in §17.6 should ever be built against a
+  guessed universal number (a flat "1.5 seconds," for instance) — see §17.6 for why.
 
 ---
 
@@ -462,7 +464,9 @@ Ordered by leverage toward that goal; each is paired with the theory it draws on
 > test shortcuts are the same kind of polish/tooling — no change to this assessment. Separately,
 > §17.1/17.3/17.5 below were revised the same day — this game's actual goal is fluency/speed for
 > a child who already understands addition, not concept-teaching, which the concrete-manipulative
-> framing those items originally borrowed was aimed at. See new §17.6.)*
+> framing those items originally borrowed was aimed at. See new §17.6 — since strengthened with a
+> non-negotiable constraint (baseline-first measurement, reward-only/never-punitive) after review
+> flagged the first pass as not protective enough of a 7-year-old's normal response time.)*
 
 ### 17.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage, revised*
 The Phase 1 game is a **drill with juice**: solve the sum → get the fireworks. The math is
@@ -472,8 +476,10 @@ conversation) — this game's target skill is **fast mental recall**, not concep
 and anything that invites counting objects works against that goal (§17.6). Instead, make the
 *fun mechanic's real-time responsiveness* run on how fast and accurately the child recalls the
 answer — e.g. a chase where speed of correct recall keeps a character ahead of something, a
-combo that only climbs under a time threshold, a rhythm the child keeps pace with. The addition
-becomes the thing the game's core tempo runs on, not a gate in front of an unrelated reward.
+combo that lights up extra under a (personally-calibrated, never guessed — §17.6) pace, a rhythm
+the child keeps pace with. The addition becomes the thing the game's core tempo runs on, not a
+gate in front of an unrelated reward — but the "not fast enough" outcome must stay strictly
+neutral, never a losing state (§17.6's constraint is non-negotiable here too).
 *(Malone & Lepper; Habgood & Ainsworth, intrinsic integration — note the concrete-manipulative
 examples common in this literature target concept acquisition, not fluency; §17.6 has the
 reasoning specific to this game.)*
@@ -491,8 +497,9 @@ child misses **or answers slowly**, resurface them (spaced retrieval / testing e
 difficulty drift upward as accuracy *and speed* rise — not accuracy alone.
 *(Csikszentmihalyi, flow; Roediger, testing effect.)* The mistake-frequency tracking already
 shipped in §11 (now 7-day-scoped) is the accuracy half of this data; the speed half needs the
-latency tracking called out in §16/§17.6 — a fact answered correctly but slowly is exactly as
-"not yet automatic" as one answered wrong, and today's data can't tell the two apart.
+latency tracking called out in §16/§17.6 — a fact answered correctly but slowly can be *treated*
+like a miss by the backend resurfacing logic (both mean "not yet automatic"), but never *shown*
+to the child that way — §17.6's constraint applies here too, not just to scoring.
 
 ### 17.4 Surface competence + one autonomy choice — *competence half now shipped*
 Give a visible mastery signal beyond a single session (levels, cumulative progress) and at
@@ -517,34 +524,56 @@ Representational–Abstract still applies to subitizing itself — recognizing "
 is its own representational skill — just not to the addition problem being solved here; Clements
 & Sarama, subitizing. See §17.6.)*
 
-### 17.6 Speed & instant recognition — *stated future direction, added 2026-09-18*
+### 17.6 Speed & instant recognition — *stated future direction, added 2026-09-18, safety-first revision*
 This game's actual target skill is **fast, automatic recall** — `3 + 4 = 7` retrieved instantly,
 not worked out. Phase 1 as built (and 17.1/17.3/17.5 as originally written) leaned on
 concept-teaching techniques aimed at a different problem — a child still learning what addition
-*is*. Reoriented around fluency:
+*is*. Reoriented around fluency — but every idea below is subordinate to one constraint:
 
-- **Measure speed, not just correctness.** Nothing today records how long an answer took —
-  score is purely `10 − wrong count` (§11), so a child who counts on fingers for 15s scores
-  identically to one who answers instantly. Per-answer latency (problem shown → ✓ tapped, §5/§6)
-  is the missing raw signal everything below depends on (§16).
-- **Reward fast-*and*-correct above merely correct.** A streak/combo/score bonus that only
-  climbs under a time threshold (e.g. answered within ~1.5s) rather than any-time-correct, so
-  "got there eventually" and "knew it cold" feel and score differently.
-- **Drive a core game mechanic off live recall speed**, not a discrete answer→reward cycle —
-  e.g. a chase where a character's speed is continuously set by answer latency (fast keeps you
-  ahead, slow lets the gap close), or a rhythm the child keeps pace with. The fluency-appropriate
-  version of 17.1's intrinsic integration: the mechanic's tempo *is* the skill, not a decoration
-  bolted onto a correct answer.
-- **Retire counting as a viable strategy.** Any presentation solvable by counting individual
-  items works against automaticity (§17.5) — keep pip/emoji groups only where the pattern is
-  small enough to be subitized at a glance, not counted one dot at a time.
-- **Fold latency into adaptivity (17.3).** A correct-but-slow answer is exactly as "not yet
-  automatic" as a wrong one — both should resurface for spaced practice, not just misses.
+> **Non-negotiable constraint:** nothing here may ever present a child's own normal response
+> time as slow, wrong, or a shortfall. A 7-year-old counting on fingers isn't failing — that's
+> what the skill being built normally looks like mid-way through. Speed is *rewarded* when it
+> happens; its absence is met with silence and full credit, never a penalty, a broken-combo
+> visual, a losing state, or any comparison to a number the child never chose. Get this wrong and
+> the feature actively teaches math anxiety, undoing §17.2 entirely — a worse outcome than never
+> building it.
 
-*(Caution: speed metrics for a 7-year-old need a floor/grace period — a child's fastest honest
-answer isn't instant, and punishing normal response time would just teach anxiety instead of
-fluency, undermining 17.2's own goals. Any timer/threshold here needs calibrating against real
-play data, not guessed.)*
+That constraint means measurement and reward can't be designed in one step — it has to be two,
+in order, with nothing skipped:
+
+1. **Baseline first, with zero visible effect on the game.** Before anything reacts to speed at
+   all, record per-answer latency (problem shown → ✓ tapped, §5/§6) silently for a good while —
+   no on-screen timer, no countdown feel, nothing the child can perceive as being tested. The
+   only goal at this stage is learning *this specific child's* normal range at each difficulty
+   tier (§3's sum ramp) — every kid's baseline will differ, and guessing one is the mistake this
+   whole item exists to avoid.
+2. **"Fast" is then defined relative to that baseline — never a fixed number.** Once real data
+   exists, "improvement" means beating *this child's own* recent median by some small margin: a
+   personal, moving target that ratchets up gently only as their actual times drop, and eases
+   back down on an off day or a harder tier rather than staying pinned to a target they've fallen
+   behind. No universal threshold (a guessed "1.5 seconds," say) should ever gate anything — see
+   the constraint above.
+3. **Reward fast-and-correct; never penalize slow-and-correct.** Once a personal baseline exists,
+   a streak/combo/score bonus can light up extra when an answer beats it — but a correct answer
+   slower than baseline lands exactly as it does today: full credit, full celebration, nothing
+   withheld, nothing flagged. The reward is strictly additive, never a tax on the normal case.
+4. **A speed-driven core mechanic (17.1) still can't let "slow" feel like losing.** A chase where
+   the gap visibly closes, or a beat visibly missed, risks becoming exactly the pressure this
+   constraint rules out. Any such mechanic's "not fast" outcome has to land as neutral — no combo
+   bump, nothing more — never as caught, behind, or any losing-state visual. The good feeling
+   should come from beating your own pace, not from what happens when you don't.
+5. **Retire counting as a viable strategy.** Any presentation solvable by counting individual
+   items works against automaticity (§17.5) — keep pip/emoji groups only where the pattern is
+   small enough to be subitized at a glance, not counted one dot at a time.
+6. **Fold latency into adaptivity (§17.3) as more reps, never as a marked mistake.** A
+   correct-but-slow answer can resurface for spaced practice the same way a miss might — but only
+   in the backend selection logic. Nothing child-facing should ever say "too slow"; a resurfaced
+   fact should look and feel identical whether it came back because it was missed or because it
+   was merely slow.
+
+Calibrating any of this (the margin in step 2, the grace period in step 1) needs real play data
+from actual sessions, not a number picked in the abstract — which is exactly why step 1 has to
+ship, run, and be reviewed well before step 2 or anything reward-shaped is built.
 
 ### Strengths to preserve from Phase 1
 Multiple representations of quantity (symbolic / set-based / subitizable pips), immediate
