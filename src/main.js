@@ -28,7 +28,7 @@ import { celebrate, tadaSparkles, flyStar } from "./fx.js";
 import { showWin } from "./win.js";
 import { showPicker, wirePicker } from "./picker.js";
 import { state, keyByDigit } from "./state.js";
-import { initStats, startSession, recordGame, recordMistake } from "./stats.js";
+import { initStats, startSession, recordGame, recordMistake, recordLatency } from "./stats.js";
 import { showStats, wireStats } from "./statsScreen.js";
 import { showPrizeBox, wirePrizeBox } from "./prizeBox.js";
 import { handlePickerKeydown, wireMasteryBadge } from "./mastery.js";
@@ -48,6 +48,14 @@ function clearEntry(){
 }
 function submitEntry(){
   if(state.locked || state.entry==="") return;
+  if(!state.latencyLogged){
+    // Response-time baseline (§17.6 step 1) — silent, first attempt only,
+    // never shown to the child, never affects gameplay. maxOperand lets the
+    // stats screen separate "this representation is slow" from "big numbers
+    // are slow" (see recordLatency in stats.js).
+    recordLatency(state.presentation, performance.now() - state.problemShownAt, Math.max(state.a, state.b));
+    state.latencyLogged = true;
+  }
   const val=parseInt(state.entry,10);
   if(val===state.answer) correct();
   else wrong();

@@ -8,7 +8,9 @@ export const state = {
   presentation: "digits", pipStyle: "dice", entry: "",
   starCount: 0, wrongCount: 0, locked: true,
   sumMax: SUM_START, streak: 0, maxStreak: 0,
-  gameWrongTotal: 0 // mistakes across the whole game, for the stats score (10 - mistakes, floor 0)
+  gameWrongTotal: 0, // mistakes across the whole game, for the stats score (10 - mistakes, floor 0)
+  problemShownAt: 0, // performance.now() when this problem first became answerable — response-time baseline (§17.6)
+  latencyLogged: false // true once this problem's first-attempt latency has been recorded, so retries don't log again
 };
 
 export const keyByDigit = {};

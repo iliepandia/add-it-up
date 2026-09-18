@@ -2,10 +2,14 @@
 // trickiest-problems list. Reachable only from the theme-picker screen.
 
 import {
-  statsScreen, statsGrid, chartGames, chartMonth, mistakesList,
+  statsScreen, statsGrid, chartGames, chartMonth, mistakesList, latencyTable, latencySizeTable,
   statsClose, statsResetBtn, resetConfirm, resetCancel, resetConfirmBtn
 } from "./dom.js";
-import { getSummary, getLast30Games, getLast30DaysSeries, getTopMistakes, resetStats } from "./stats.js";
+import { getSummary, getLast30Games, getLast30DaysSeries, getTopMistakes, getLatencyStats, resetStats } from "./stats.js";
+
+function formatLatency(ms){
+  return ms == null ? "—" : (ms / 1000).toFixed(1) + "s";
+}
 
 const THEME_LABEL = { classic: "Classic", nature: "Nature", space: "Space", animal: "Animals" };
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -120,11 +124,90 @@ function renderMistakes(){
   });
 }
 
+// Purely diagnostic (§17.6 step 1): shows whether one presentation runs
+// slower than the others so a real "improvement" target can eventually be
+// defined from this child's own data — never shown or referenced in play.
+function renderLatency(){
+  latencyTable.innerHTML = "";
+  const s = getLatencyStats();
+  if(!s.combined){
+    latencyTable.appendChild(emptyNote("Play a few games to see response times here."));
+    return;
+  }
+  const table = document.createElement("table"); table.className = "latency-grid";
+  const thead = document.createElement("thead");
+  thead.innerHTML = "<tr><th></th><th>Min</th><th>Median</th><th>Max</th></tr>";
+  table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  [
+    ["Digits", s.digits],
+    ["Emoji", s.emoji],
+    ["Pips", s.pips],
+    ["Combined", s.combined]
+  ].forEach(([label, stat], i) => {
+    const tr = document.createElement("tr");
+    tr.className = "latency-row" + (i === 3 ? " latency-combined" : "");
+    const nameCell = document.createElement("td"); nameCell.className = "latency-name";
+    nameCell.textContent = label + (stat ? ` (${stat.count})` : "");
+    tr.appendChild(nameCell);
+    [stat?.min, stat?.median, stat?.max].forEach(v => {
+      const td = document.createElement("td"); td.className = "latency-value";
+      td.textContent = formatLatency(v);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  latencyTable.appendChild(table);
+}
+
+// Splits the same data by operand size — small (≤4, glance-recognized) vs
+// large (5–9, likely counted) — since a big operand adds a "count the pile"
+// step for emoji/pips that digits never has, so a raw per-presentation
+// median can't tell "this representation is slow" apart from "big numbers
+// are slow, and this presentation happens to show them raw" (median only,
+// to keep a 2-way split × 4 rows readable — min/max live in the table above).
+function renderLatencyBySize(){
+  latencySizeTable.innerHTML = "";
+  const s = getLatencyStats();
+  if(!s.combined){
+    latencySizeTable.appendChild(emptyNote("Play a few games to see this breakdown here."));
+    return;
+  }
+  const table = document.createElement("table"); table.className = "latency-grid";
+  const thead = document.createElement("thead");
+  thead.innerHTML = "<tr><th></th><th>Small (≤4)</th><th>Large (5–9)</th></tr>";
+  table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  [
+    ["Digits", s.bySize.digits],
+    ["Emoji", s.bySize.emoji],
+    ["Pips", s.bySize.pips],
+    ["Combined", s.bySize.combined]
+  ].forEach(([label, sizes], i) => {
+    const tr = document.createElement("tr");
+    tr.className = "latency-row" + (i === 3 ? " latency-combined" : "");
+    const nameCell = document.createElement("td"); nameCell.className = "latency-name";
+    nameCell.textContent = label;
+    tr.appendChild(nameCell);
+    [sizes.small, sizes.large].forEach(stat => {
+      const td = document.createElement("td"); td.className = "latency-value";
+      td.textContent = stat ? `${formatLatency(stat.median)} (${stat.count})` : "—";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  latencySizeTable.appendChild(table);
+}
+
 function renderAll(){
   renderTiles();
   renderGamesChart();
   renderMonthChart();
   renderMistakes();
+  renderLatency();
+  renderLatencyBySize();
   resetConfirm.hidden = true;
 }
 

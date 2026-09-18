@@ -61,5 +61,7 @@ export function newProblem(){
   state.presentation = pick(["digits","emoji","pips"]);
   do{ state.a=1+rnd(9); state.b=1+rnd(9); }
   while(state.a+state.b>state.sumMax || (state.presentation==="pips" && (state.a>6||state.b>6)));
-  state.answer=state.a+state.b; state.entry=""; state.wrongCount=0; render();
+  state.answer=state.a+state.b; state.entry=""; state.wrongCount=0;
+  state.problemShownAt=performance.now(); state.latencyLogged=false; // response-time baseline (§17.6) — first attempt only, retries don't re-log
+  render();
 }

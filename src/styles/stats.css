@@ -34,6 +34,19 @@
 .mistake-count{color:var(--hero-dark); font-variant-numeric:tabular-nums;}
 .mistake-empty{padding:16px; text-align:center; color:var(--muted); font-size:14px; list-style:none;}
 
+.latency-table{background:var(--surface); border-radius:16px; padding:4px 10px;
+  box-shadow:0 2px 0 rgba(46,58,89,.05); overflow-x:auto;}
+.latency-grid{width:100%; border-collapse:collapse; font-family:var(--font);}
+.latency-grid th{font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;
+  letter-spacing:.03em; text-align:right; padding:10px 6px 6px;}
+.latency-grid th:first-child{text-align:left;}
+.latency-name{font-weight:700; color:var(--ink); padding:8px 6px; white-space:nowrap;}
+.latency-value{font-weight:700; color:var(--hero-dark); text-align:right; padding:8px 6px;
+  font-variant-numeric:tabular-nums;}
+.latency-row{border-top:1px solid #EEF2F8;}
+.latency-row.latency-combined{border-top:2px solid #E7ECF6;}
+.latency-row.latency-combined .latency-name{color:var(--grape);}
+
 .stats-actions{display:flex; flex-direction:column; align-items:center; gap:28px; padding-top:18px;}
 .stats-close-btn{font-family:var(--font); font-weight:700; color:var(--key-text); background:var(--key-bg);
   border:none; border-radius:16px; font-size:18px; padding:11px 40px;

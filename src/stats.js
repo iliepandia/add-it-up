@@ -6,6 +6,8 @@ const ABANDON_MS = 15 * 60 * 1000;   // sessions longer than this are treated as
 const HEARTBEAT_MS = 5000;
 const MAX_GAME_HISTORY = 500;        // plenty for the 30-game/30-day charts; keeps storage bounded
 const MISTAKE_LOG_DAYS = 7;          // "trickiest problems" only looks at recent misses, not the whole history
+const LATENCY_LOG_DAYS = 30;         // response-time baseline window (§17.6 step 1) — passive, never shown during play
+const SUBITIZE_MAX = 4;              // operands this size or smaller are typically recognized at a glance, not counted
 
 function dayKey(t){
   const d = new Date(t);
@@ -18,6 +20,7 @@ function blank(){
     session: { totalMs: 0, count: 0, minMs: null, maxMs: null },
     games: { totalScore: 0, count: 0, bestScore: 0, bestStreak: 0, totalCorrect: 0, totalWrong: 0, history: [] },
     mistakeLog: [], // [{a,b,t}] — recent wrong submissions, pruned to MISTAKE_LOG_DAYS on every write
+    latencyLog: [], // [{presentation,maxOperand,ms,t}] — one entry per problem's first attempt, pruned to LATENCY_LOG_DAYS
     days: {},
     active: null
   };
@@ -34,6 +37,7 @@ function load(){
       session: { ...b.session, ...data.session },
       games: { ...b.games, ...data.games, history: Array.isArray(data.games?.history) ? data.games.history : [] },
       mistakeLog: Array.isArray(data.mistakeLog) ? data.mistakeLog : [],
+      latencyLog: Array.isArray(data.latencyLog) ? data.latencyLog : [],
       days: data.days || {}
     };
   }catch(e){ return blank(); }
@@ -190,6 +194,78 @@ export function getTopMistakes(limit = 10){
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, limit)
     .map(([key, count]) => ({ key, count }));
+}
+
+// Response-time baseline (§17.6 step 1): purely passive — nothing reads this
+// during play, no timer or countdown is ever shown to the child. One sample
+// per problem, its *first* attempt only (see problem.js/main.js), so retries
+// after a wrong answer never skew it. maxOperand (the larger of a/b) is kept
+// alongside presentation because operand size confounds the comparison —
+// emoji/pips add a "count the pile" step that scales with the larger operand
+// and digits doesn't have at all, so raw presentation medians alone can't
+// tell a slow-representation apart from a slow-because-it's-big problem.
+export function recordLatency(presentation, ms, maxOperand){
+  if(!Number.isFinite(ms) || ms < 0) return; // guard against clock/tab-switch weirdness
+  const data = load();
+  const cutoff = Date.now() - LATENCY_LOG_DAYS * 86400000;
+  data.latencyLog = data.latencyLog.filter(e => e.t >= cutoff);
+  data.latencyLog.push({ presentation, maxOperand, ms: Math.round(ms), t: Date.now() });
+  save(data);
+}
+
+function median(sortedAsc){
+  const n = sortedAsc.length;
+  if(!n) return null;
+  const mid = Math.floor(n / 2);
+  return n % 2 ? sortedAsc[mid] : (sortedAsc[mid - 1] + sortedAsc[mid]) / 2;
+}
+
+function summarizeLatencies(msList){
+  if(!msList.length) return null;
+  const sorted = [...msList].sort((a, b) => a - b);
+  return { min: sorted[0], median: median(sorted), max: sorted[sorted.length - 1], count: msList.length };
+}
+
+// { digits, emoji, pips, combined }, each null or {min, median, max, count}
+// (ms), over the last 30 days — lets you see whether one presentation is
+// consistently slower before deciding what "improvement" should even mean.
+// Also `bySize`: the same four groups, each split into small (max operand
+// ≤ SUBITIZE_MAX, glance-recognized) vs large (likely counted) — since
+// operand size confounds the presentation comparison (see recordLatency),
+// this is what actually separates "this representation is slow" from
+// "big numbers are slow, and this representation happens to show them raw."
+export function getLatencyStats(){
+  const data = load();
+  const cutoff = Date.now() - LATENCY_LOG_DAYS * 86400000;
+  const recent = data.latencyLog.filter(e => e.t >= cutoff);
+
+  const byPresentation = { digits: [], emoji: [], pips: [] };
+  const bySize = {
+    digits: { small: [], large: [] },
+    emoji: { small: [], large: [] },
+    pips: { small: [], large: [] },
+    combined: { small: [], large: [] }
+  };
+  for(const e of recent){
+    if(byPresentation[e.presentation]) byPresentation[e.presentation].push(e.ms);
+    const bucket = e.maxOperand <= SUBITIZE_MAX ? "small" : "large";
+    if(bySize[e.presentation]) bySize[e.presentation][bucket].push(e.ms);
+    bySize.combined[bucket].push(e.ms);
+  }
+  const summarizeSize = g => ({ small: summarizeLatencies(g.small), large: summarizeLatencies(g.large) });
+
+  return {
+    digits: summarizeLatencies(byPresentation.digits),
+    emoji: summarizeLatencies(byPresentation.emoji),
+    pips: summarizeLatencies(byPresentation.pips),
+    combined: summarizeLatencies(recent.map(e => e.ms)),
+    bySize: {
+      digits: summarizeSize(bySize.digits),
+      emoji: summarizeSize(bySize.emoji),
+      pips: summarizeSize(bySize.pips),
+      combined: summarizeSize(bySize.combined)
+    }
+  };
 }
 
 // 7-day accuracy for the mastery badge (§12-adjacent feature) — same
