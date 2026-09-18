@@ -5,6 +5,7 @@ const STORAGE_KEY = "addItUpStats";
 const ABANDON_MS = 15 * 60 * 1000;   // sessions longer than this are treated as abandoned, not counted
 const HEARTBEAT_MS = 5000;
 const MAX_GAME_HISTORY = 500;        // plenty for the 30-game/30-day charts; keeps storage bounded
+const MISTAKE_LOG_DAYS = 7;          // "trickiest problems" only looks at recent misses, not the whole history
 
 function dayKey(t){
   const d = new Date(t);
@@ -16,7 +17,7 @@ function blank(){
     v: 1,
     session: { totalMs: 0, count: 0, minMs: null, maxMs: null },
     games: { totalScore: 0, count: 0, bestScore: 0, bestStreak: 0, totalCorrect: 0, totalWrong: 0, history: [] },
-    mistakes: {},
+    mistakeLog: [], // [{a,b,t}] — recent wrong submissions, pruned to MISTAKE_LOG_DAYS on every write
     days: {},
     active: null
   };
@@ -32,7 +33,7 @@ function load(){
       ...b, ...data,
       session: { ...b.session, ...data.session },
       games: { ...b.games, ...data.games, history: Array.isArray(data.games?.history) ? data.games.history : [] },
-      mistakes: data.mistakes || {},
+      mistakeLog: Array.isArray(data.mistakeLog) ? data.mistakeLog : [],
       days: data.days || {}
     };
   }catch(e){ return blank(); }
@@ -109,8 +110,9 @@ export function recordGame({ wrongCount, theme, streak }){
 
 export function recordMistake(a, b){
   const data = load();
-  const key = `${a}+${b}`;
-  data.mistakes[key] = (data.mistakes[key] || 0) + 1;
+  const cutoff = Date.now() - MISTAKE_LOG_DAYS * 86400000;
+  data.mistakeLog = data.mistakeLog.filter(m => m.t >= cutoff); // drop entries older than the window as we go
+  data.mistakeLog.push({ a, b, t: Date.now() });
   save(data);
 }
 
@@ -171,9 +173,20 @@ export function getLast30DaysSeries(){
   return out;
 }
 
+// Scoped to the last 7 days (MISTAKE_LOG_DAYS) so a rough patch early on — or
+// a fact the child has since mastered — doesn't sit pinned at the top forever;
+// this tracks *current* trouble spots, same reasoning as §11's "Favorite this
+// week" being 7-day rather than all-time.
 export function getTopMistakes(limit = 10){
   const data = load();
-  return Object.entries(data.mistakes)
+  const cutoff = Date.now() - MISTAKE_LOG_DAYS * 86400000;
+  const counts = {};
+  for(const m of data.mistakeLog){
+    if(m.t < cutoff) continue;
+    const key = `${m.a}+${m.b}`;
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  return Object.entries(counts)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, limit)
     .map(([key, count]) => ({ key, count }));

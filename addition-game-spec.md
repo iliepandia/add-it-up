@@ -1,6 +1,8 @@
 # Addition Game — Specification
 
-**Purpose:** A web game that helps a 7-year-old practice single-digit addition.
+**Purpose:** A web game that helps a 7-year-old practice single-digit addition, with a stated
+long-term direction (§17.6) of building **fast, automatic recall** — not just eventual
+accuracy. The child already understands addition; the goal is fluency, not concept-teaching.
 **Status:** Clarified and locked, ready to build.
 **Last updated:** 2026-09-18
 
@@ -432,6 +434,11 @@ tap/key not on a trophy, returns to the picker (§9) with test mode's on/off sta
   of a bark or a train, not a real recording. Revisit with real sample audio if truer realism is
   ever wanted; that would mean sourcing license-cleared clips and dropping the current
   single-HTML-file build (§2), so it's a deliberate trade-off, not an oversight.
+- **No latency/speed tracking exists yet.** Every stat and scoring rule (§6, §11) is purely
+  correctness-based — nothing records how long an answer took, so a child who counts on fingers
+  for 15s scores identically to one who answers instantly. This is the concrete prerequisite
+  every idea in §17.6 depends on, and is worth building (even just passively, to see how fast
+  games already are) before committing to any of that section's reward/mechanic changes.
 
 ---
 
@@ -452,14 +459,24 @@ Ordered by leverage toward that goal; each is paired with the theory it draws on
 > explicit commit-to-submit means a recorded "wrong" now reliably reflects the child not
 > knowing the fact rather than a mis-tap — a cleaner signal for either to build on when
 > they're eventually tackled. *(2026-09-18 update: the snake's eat animation, §14, and the §15
-> test shortcuts are the same kind of polish/tooling — no change to this assessment.)*
+> test shortcuts are the same kind of polish/tooling — no change to this assessment. Separately,
+> §17.1/17.3/17.5 below were revised the same day — this game's actual goal is fluency/speed for
+> a child who already understands addition, not concept-teaching, which the concrete-manipulative
+> framing those items originally borrowed was aimed at. See new §17.6.)*
 
-### 17.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage*
+### 17.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage, revised*
 The Phase 1 game is a **drill with juice**: solve the sum → get the fireworks. The math is
-the toll, not the play. Convert it to an **endogenous** design where manipulating numbers
-*is* the fun act — e.g. feed a creature exactly N berries, build a tower to a target height,
-fill a jar to a line. The addition becomes something you *do to get what you want*.
-*(Malone & Lepper; Habgood & Ainsworth, intrinsic integration.)*
+the toll, not the play. The fix is **not** concrete manipulation (feed-a-creature,
+fill-a-jar-style counting play — the earlier version of this item, and my own first pass in
+conversation) — this game's target skill is **fast mental recall**, not concept acquisition,
+and anything that invites counting objects works against that goal (§17.6). Instead, make the
+*fun mechanic's real-time responsiveness* run on how fast and accurately the child recalls the
+answer — e.g. a chase where speed of correct recall keeps a character ahead of something, a
+combo that only climbs under a time threshold, a rhythm the child keeps pace with. The addition
+becomes the thing the game's core tempo runs on, not a gate in front of an unrelated reward.
+*(Malone & Lepper; Habgood & Ainsworth, intrinsic integration — note the concrete-manipulative
+examples common in this literature target concept acquisition, not fluency; §17.6 has the
+reasoning specific to this game.)*
 
 ### 17.2 Scaffold the second wrong attempt — *highest safety priority*
 Phase 1 re-shows the identical problem until correct, with no teaching — a recipe for math
@@ -468,11 +485,14 @@ never-skip rule, but on the **second** miss, *help*: reveal pips under the digit
 count-up, show a number line, or decompose (`8 + 7 → 8 + 2 = 10, then +5`). Reframe errors as
 information, not verdicts. *(Dweck, growth mindset; Seligman, learned helplessness.)*
 
-### 17.3 Adaptivity + fact-memory
-Flat random difficulty prevents flow and a felt sense of progress. Track which addend pairs
-the child misses, resurface them (spaced retrieval / testing effect), and let difficulty drift
-upward as accuracy and speed rise. *(Csikszentmihalyi, flow; Roediger, testing effect.)* The
-mistake-frequency tracking already shipped in §11 is the raw data this would build on.
+### 17.3 Adaptivity + fact-memory — *revised: speed is half the signal*
+Flat random difficulty prevents flow and a felt sense of progress. Track which addend pairs the
+child misses **or answers slowly**, resurface them (spaced retrieval / testing effect), and let
+difficulty drift upward as accuracy *and speed* rise — not accuracy alone.
+*(Csikszentmihalyi, flow; Roediger, testing effect.)* The mistake-frequency tracking already
+shipped in §11 (now 7-day-scoped) is the accuracy half of this data; the speed half needs the
+latency tracking called out in §16/§17.6 — a fact answered correctly but slowly is exactly as
+"not yet automatic" as one answered wrong, and today's data can't tell the two apart.
 
 ### 17.4 Surface competence + one autonomy choice — *competence half now shipped*
 Give a visible mastery signal beyond a single session (levels, cumulative progress) and at
@@ -483,10 +503,48 @@ on the stats screen's (§11) existing persistent numbers. World/theme selection 
 covers only the shallow end of **autonomy**; a deeper in-game choice (between two problems, or
 a sub-mode) remains unbuilt.
 
-### 17.5 Sequence the representations (don't randomize blindly)
-The three formats are concrete → abstract (pips/emoji → digits) and map onto how number sense
-develops. Instead of random order, **lead concrete and fade toward abstract** as fluency on a
-fact grows. *(Concrete–Representational–Abstract; Clements & Sarama, subitizing.)*
+### 17.5 Sequence the representations (don't randomize blindly) — *revised*
+The original framing here — lead concrete, fade toward abstract, as if pips/emoji were a
+scaffold for a child still learning what addition *means* — doesn't fit this game: the child
+already has the concept. Pips/emoji only still serve the fluency goal if they stay **instantly
+recognized (subitized)** rather than **counted** — a die face read as "six" in one glance trains
+the same fast-pattern-recall the game wants; the same six dots counted one at a time trains the
+opposite habit. So the sequencing axis isn't concrete→abstract, it's **away from operand sizes
+large enough to invite counting** (the ones a child is likely to count rather than see at a
+glance drop out first), and *speed itself* — not "fluency on a fact," measured some other way —
+should gate how much of the pip/emoji presentation stays in the mix at all. *(Concrete–
+Representational–Abstract still applies to subitizing itself — recognizing "6 dots" instantly
+is its own representational skill — just not to the addition problem being solved here; Clements
+& Sarama, subitizing. See §17.6.)*
+
+### 17.6 Speed & instant recognition — *stated future direction, added 2026-09-18*
+This game's actual target skill is **fast, automatic recall** — `3 + 4 = 7` retrieved instantly,
+not worked out. Phase 1 as built (and 17.1/17.3/17.5 as originally written) leaned on
+concept-teaching techniques aimed at a different problem — a child still learning what addition
+*is*. Reoriented around fluency:
+
+- **Measure speed, not just correctness.** Nothing today records how long an answer took —
+  score is purely `10 − wrong count` (§11), so a child who counts on fingers for 15s scores
+  identically to one who answers instantly. Per-answer latency (problem shown → ✓ tapped, §5/§6)
+  is the missing raw signal everything below depends on (§16).
+- **Reward fast-*and*-correct above merely correct.** A streak/combo/score bonus that only
+  climbs under a time threshold (e.g. answered within ~1.5s) rather than any-time-correct, so
+  "got there eventually" and "knew it cold" feel and score differently.
+- **Drive a core game mechanic off live recall speed**, not a discrete answer→reward cycle —
+  e.g. a chase where a character's speed is continuously set by answer latency (fast keeps you
+  ahead, slow lets the gap close), or a rhythm the child keeps pace with. The fluency-appropriate
+  version of 17.1's intrinsic integration: the mechanic's tempo *is* the skill, not a decoration
+  bolted onto a correct answer.
+- **Retire counting as a viable strategy.** Any presentation solvable by counting individual
+  items works against automaticity (§17.5) — keep pip/emoji groups only where the pattern is
+  small enough to be subitized at a glance, not counted one dot at a time.
+- **Fold latency into adaptivity (17.3).** A correct-but-slow answer is exactly as "not yet
+  automatic" as a wrong one — both should resurface for spaced practice, not just misses.
+
+*(Caution: speed metrics for a 7-year-old need a floor/grace period — a child's fastest honest
+answer isn't instant, and punishing normal response time would just teach anxiety instead of
+fluency, undermining 17.2's own goals. Any timer/threshold here needs calibrating against real
+play data, not guessed.)*
 
 ### Strengths to preserve from Phase 1
 Multiple representations of quantity (symbolic / set-based / subitizable pips), immediate
