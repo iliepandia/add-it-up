@@ -4,9 +4,14 @@
 long-term direction (§17.6) of building **fast, automatic recall** — not just eventual
 accuracy. The child already understands addition; the goal is fluency, not concept-teaching.
 **Status:** Clarified and locked, ready to build.
-**Last updated:** 2026-09-18
+**Last updated:** 2026-09-19
 
-> **Scope:** Sections 1–16 are **Phase 1 — build now**. Section 17 is **Phase 2 — deferred, do not build now** (learning-design upgrades captured for a later version).
+> **Scope:** Sections 1–16 and **§18** are **Phase 1 — built**. Section 17 is **Phase 2 — deferred, do not build now** (learning-design upgrades captured for a later version).
+>
+> **Two modes:** the game now ships an **Easy** mode (the original game, §1–§16 exactly as written)
+> and an opt-in **Fast** mode (§18) that adds a visible timer and a speed reward. Everywhere below,
+> §1–§16 describe **Easy** mode; **§18 is the single place that lists every way Fast mode differs**,
+> and the sections it touches carry a pointer to it.
 
 ---
 
@@ -43,11 +48,15 @@ correct answers** — one star per correct answer — then shows a win screen (s
 **Answer range:** 2–12 → one digit (2–9) or two digits (10, 11, 12). The live max depends on
 the current ramp level (see Sum constraint).
 
+> **Fast mode (§18):** no ramp at all — the sum is a flat **6–12** for every problem, from the
+> first one, and neither a wrong nor a correct answer moves it.
+
 ---
 
 ## 4. Presentations
 
-Each problem picks **one of three presentations at random**:
+Each problem picks **one of three presentations at random** *(Fast mode instead lets the child
+pick, before every single problem — §18.3)*:
 
 1. **Digits** — `2 + 3 =`
 2. **Emoji groups** — one repeated emoji per operand, e.g. 😄😄😄😄 + 😄😄 =
@@ -136,6 +145,12 @@ answer on screen, *then* trigger the celebration.
   prize. Badges reposition as the streak grows and after a wrong; a prize with too few stars left
   to reach shows no badge.
 
+> **Fast mode (§18.5)** inserts a **second flying star** into this sequence when the answer beat
+> the water bar: the biker 🚴 lifts off the bar and lands on the same slot **250 ms after** the
+> regular star smashes home. A **streak reward waits for that landing** before it fires, so a
+> candy rain or a fly-by never plays over the biker's flight — and the next problem is held back
+> by the biker's flight *plus* the reward's full length, not the two overlapped.
+
 ### Wrong
 - **Shake** the on-screen items.
 - Flash a centered **thinking face 🤔 or question emoji ❓** (randomly chosen).
@@ -169,6 +184,8 @@ Synthesized in-browser (Web Audio), unlocked on the first user tap (mobile autop
 | A snake-easter-egg trophy touch (§14) | ding (same two-tone chime as the Space theme's key press) |
 | Tapping a prize in the prize box (§12) | a sound matched to *that specific prize*, not random |
 | Tapping the mastery badge (§13) | ding |
+| Star fills (including Fast mode's bonus biker landing, §18.5) | star "ting" |
+| Flipping the Easy/Fast toggle (§18.1) | ding on success; the wrong-answer ding-ding when Fast is still locked |
 
 Sound is best-effort — the game must remain fully playable if audio is unavailable.
 
@@ -191,6 +208,8 @@ Sound is best-effort — the game must remain fully playable if audio is unavail
 - Show **"Good job!"**, then a **randomly chosen emoji** (from a pool of **60** — animals,
   nature, treats, vehicles, and household objects) **repeated once per point of the longest
   streak** reached this game. That same emoji is also the game's **prize** — see §12.
+  *(Fast mode draws from its own separate 60-emoji pool and appends one 🚴 trophy per speed
+  bonus earned — §18.7.)*
 - The copies **reveal one at a time**, each with a **rising musical note**; when the reveal
   finishes (the sound is over), a **star explosion** bursts over the screen.
 - **Layout freeze:** the instant the reveal finishes, every trophy's on-screen position is
@@ -215,13 +234,19 @@ Sound is best-effort — the game must remain fully playable if audio is unavail
 Before **every** game the player sees a **theme picker**: four big buttons, each an **animated
 emoji** that also previews that theme's button colors. Tapping one (or pressing **1–4**) starts a
 fresh game in that world. Button animations: **👦 jumps** (classic), **🌳 sways** (nature),
-**🚀 bounces** (space), **🐔 shakes** (animal).
+**🚀 bounces** (space), **🐔 shakes** (animal). The picker also carries the **Easy/Fast difficulty
+toggle** (§18.1), the 📦 prize box (§12), the mastery badge (§13), and the 📊 stats link (§11).
 
 A theme changes the **background**, the **keypad + Play button colors**, the three **streak-reward
 visuals**, the **emoji-presentation category** (§4), and the **key-press sound**. The **problem
 card stays white with navy numbers** in every theme for legibility; the **prize badges** (§7) use
 each theme's own reward emojis; on dark themes the empty-star colour is lightened for contrast.
 Background/button motion is minimised under `prefers-reduced-motion`.
+
+**Fast mode is not a theme.** All four themes stay available in both modes and look identical
+in-game; Fast mode only adds a field of **falling 🚴 bikes over the theme-picker screen itself**
+(layered on top of that screen's own background, never replacing a theme's), so the mode the next
+game will start in is visible at a glance. Skipped under `prefers-reduced-motion`.
 
 | Theme | Background | Keys (bg / text, contrast) | Streak 3 / 6 / 9 | Key sound |
 |-------|-----------|----------------------------|------------------|-----------|
@@ -242,6 +267,12 @@ direction. The streak-6 fly-by also carries a **matching sound** — rocket **zo
 Reachable via a small **"📊 Stats"** link in the bottom-right corner of the theme-picker screen
 (§10). Everything is stored **locally on-device only** (browser `localStorage`) — there is no
 server and no data ever leaves the device.
+
+**Split per difficulty.** Every stat, chart, log, and the mastery badge below is tracked
+**separately for Easy and Fast** (§18.6) — two entirely independent histories in one storage blob.
+The stats screen carries its own copy of the Easy/Fast toggle at the top, which switches *which
+mode's* numbers are shown (it's the same single setting as the picker's, not a second one), and
+"Reset stats" clears **only the mode currently shown**.
 
 **Play-time definition:** a "session" is **active gameplay only**. The clock starts the instant
 a theme is picked and stops the instant the player returns to the theme picker — including via
@@ -295,7 +326,8 @@ or any in-game reward. Two views on the stats screen, both scoped to the trailin
   show them raw." (Pips' "Large" column only ever reflects 5–6, never 7–9, since §4 caps pip
   operands at 6 — a structural asymmetry worth knowing when reading that row.)
 
-**Reset:** a small, de-emphasized "Reset stats" link sits well below the Close button — spaced
+**Reset:** a small, de-emphasized "Reset stats" link — affecting only the mode on screen, per the
+split above — sits well below the Close button — spaced
 apart deliberately to avoid an accidental tap — and opens an inline **confirm / cancel** prompt.
 Nothing is deleted until the destructive option is explicitly confirmed — including the mistake
 and response-time logs above, which live in the same storage.
@@ -307,6 +339,10 @@ and response-time logs above, which live in the same storage.
 Reachable via a **📦 button** on the theme-picker screen (§10), below the world-select grid.
 Stored **locally on-device only** (its own `localStorage` key, separate from stats — §11's
 "Reset stats" never touches it), so prizes are permanent unless a dedicated reset is added later.
+
+**One box for both modes** (unlike stats, §11, which split). A Fast-mode prize is drawn from its
+own glyph pool and carries a small **🚴 badge** in the tile's top-right corner, so the shelf reads
+as one growing collection while still telling the two apart — see §18.7.
 
 **Earning a prize:**
 - **Every finished game** (10th star, §9) adds **exactly one prize** to the box: the same random
@@ -365,7 +401,9 @@ any single game (directly addresses §17.4's competence-signal recommendation).
   fill), plus a bonus **🏆** reserved exclusively for an **exact** 100% — zero wrong submissions
   in the window, not just rounding up to it.
 - **Precision** reuses the same correct ÷ (correct + wrong) formula as §11's all-time Accuracy
-  stat, scoped to games finished in the last 7 days.
+  stat, scoped to games finished in the last 7 days — and, like every other stat, **to the
+  currently selected mode** (§11, §18.6). Flipping the toggle re-reads the badge against that
+  mode's own 7 days, so a strong Easy record never dresses up a shaky Fast one.
 - **Arc:** a thin gold ring fills across each tier's own 5-point span, so every **0.5%** of
   precision moves the arc a fixed **10%** (10 half-percent steps = one full tier).
 - **Emoji size** scales evenly from **1.0×** (snail) to **2.0×** (trophy) across the 11 tiers.
@@ -388,7 +426,10 @@ A **retro, block-based snake** (green segments + a head, reminiscent of classic 
 occasionally crawls across the win screen (§9).
 
 - **Trigger:** only after a **perfect game** (score 10, §11) — and even then, only a **1-in-3**
-  chance, so it's a rare surprise rather than an expected reward.
+  chance in Easy mode, so it's a rare surprise rather than an expected reward. **Fast mode has
+  its own variant:** **1-in-2** odds, a **bright red** snake instead of green, **twice as long**
+  (16 blocks), and it crawls at full length **twice as long** (40 s) before shedding — matching
+  that mode's higher stakes. Everything else below is identical in both.
 - **Rendering:** lives in a dedicated layer that is the **first child of the win screen**, given
   a **negative `z-index`** so it paints behind every other win-screen element (trophies, "Good
   job!", the Play button) and above only the win screen's own background. It never intercepts
@@ -455,15 +496,20 @@ tap/key not on a trophy, returns to the picker (§9) with test mode's on/off sta
   of a bark or a train, not a real recording. Revisit with real sample audio if truer realism is
   ever wanted; that would mean sourcing license-cleared clips and dropping the current
   single-HTML-file build (§2), so it's a deliberate trade-off, not an oversight.
-- **Latency tracking is step 1 of 2 — step 1 now shipped, step 2 still not.** §17.6's baseline
-  measurement (per-answer response time, by presentation and operand size, §11) is built and
-  passively collecting — with zero visible effect on the game, per its own constraint. **Step 2
-  is not started:** deciding what "improvement" means relative to each child's own baseline, and
-  building anything (reward, mechanic, or adaptivity change) on top of it, is still deferred
-  Phase 2 work (§17.6) — the data existing doesn't mean it's time to act on it yet; §17.6 is
-  explicit that step 2 needs real play data to calibrate against, not a guess, and that's still
-  true even with step 1 done. Every other stat and scoring rule (§6) remains purely
-  correctness-based, unaffected by this.
+- **Latency tracking: steps 1–3 of §17.6 have now shipped; steps 4–6 have not.** Step 1 (the
+  passive per-answer baseline, §11) still runs exactly as specified, with zero visible effect on
+  the game. Steps 2 and 3 — a personal, moving "fast" target and an additive reward for beating
+  it — shipped as **Fast mode** (§18), deliberately behind an **explicit opt-in** rather than as a
+  change to the default game: Easy mode is still the game described in §1–§16, with no timer and
+  nothing speed-related visible anywhere. Still unbuilt: a speed-driven **core** mechanic (17.6
+  step 4 / §17.1), retiring counting-solvable presentations (step 5 / §17.5), and folding latency
+  into **fact-level** adaptivity (step 6 / §17.3) — Fast mode's adaptivity is one global drain
+  speed, not per-fact. Scoring (§6, §11) remains purely correctness-based in **both** modes.
+- **Fast mode's drain speed is calibrated from a small sample.** The first-ever drain duration is
+  seeded from this child's **maximum** Easy-mode response time + 2 s, then nudged by ±15% per
+  finished game (§18.4). The seed is deliberately generous, but one game's worth of evidence per
+  adjustment is coarse; revisit the ±15% steps and the "drained on more than half the problems"
+  threshold once there's real Fast-mode play data to read.
 
 ---
 
@@ -492,6 +538,15 @@ Ordered by leverage toward that goal; each is paired with the theory it draws on
 > flagged the first pass as not protective enough of a 7-year-old's normal response time. §17.6's
 > step 1 — the passive latency baseline itself — then actually shipped the same day, §11. Nothing
 > past step 1 has been built; collecting the data isn't a green light to act on it yet, §16.)*
+>
+> **Update (2026-09-19):** **Fast mode shipped (§18)** — §17.6 steps 2 and 3, one day after step
+> 1, and the first thing in this section to actually land. It sits behind an explicit opt-in and
+> a gate (one finished Easy game, so the personal baseline is real data rather than a guess), and
+> it also delivers **17.4's missing autonomy half twice over**: choosing the mode, and then
+> choosing how to see *every single problem* (§18.3) — a real in-game choice, not just theme
+> selection. What it is **not** is 17.1: the addition is still a gate in front of a reward, only
+> now a timed one. 17.2 (second-wrong scaffolding), 17.3's fact-level adaptivity, and 17.5
+> remain unaddressed — and 17.2 arguably matters *more* now that a timed mode exists.
 
 ### 17.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage, revised*
 The Phase 1 game is a **drill with juice**: solve the sum → get the fireworks. The math is
@@ -575,13 +630,17 @@ in order, with nothing skipped:
    child's* normal range at each difficulty tier (§3's sum ramp) — every kid's baseline will
    differ, and guessing one is the mistake this whole item exists to avoid. Steps 2 onward below
    remain unbuilt — collecting the data isn't itself permission to act on it yet (§16).
-2. **"Fast" is then defined relative to that baseline — never a fixed number.** Once real data
+2. **"Fast" is then defined relative to that baseline — never a fixed number.** *(Shipped
+   2026-09-19 as Fast mode, §18.4 — as a personal seeded-and-ratcheting drain duration rather
+   than a median-plus-margin; the "never a fixed number" rule is what it honours.)* Once real data
    exists, "improvement" means beating *this child's own* recent median by some small margin: a
    personal, moving target that ratchets up gently only as their actual times drop, and eases
    back down on an off day or a harder tier rather than staying pinned to a target they've fallen
    behind. No universal threshold (a guessed "1.5 seconds," say) should ever gate anything — see
    the constraint above.
-3. **Reward fast-and-correct; never penalize slow-and-correct.** Once a personal baseline exists,
+3. **Reward fast-and-correct; never penalize slow-and-correct.** *(Shipped 2026-09-19 as Fast
+   mode's bonus star, §18.5 — additive only: an emptied bar costs nothing.)* Once a personal
+   baseline exists,
    a streak/combo/score bonus can light up extra when an answer beats it — but a correct answer
    slower than baseline lands exactly as it does today: full credit, full celebration, nothing
    withheld, nothing flagged. The reward is strictly additive, never a tax on the normal case.
@@ -608,3 +667,158 @@ Multiple representations of quantity (symbolic / set-based / subitizable pips), 
 feedback (200 ms), multimodal input, low cognitive load, an explicit two-step confirm (type
 then ✓, §5/§6) that keeps the wrong-answer signal clean of fat-finger noise, and the never-skip
 principle (once scaffolded per 17.2).
+
+---
+
+## 18. Fast mode (the second difficulty) — *Phase 1, built 2026-09-19*
+
+An opt-in second way to play, sitting beside the original game rather than replacing it. Where
+Easy mode rewards **correctness alone**, Fast mode rewards **correctness *and* speed** — it is
+§17.6's steps 2–3 made concrete, and the first thing in §17 to actually ship.
+
+**The one rule everything here obeys (§17.6's non-negotiable constraint):** running out of time
+**costs nothing**. A correct answer is a correct answer — full star, full celebration, full score,
+identical in both modes. The timer only decides whether an **extra** reward is added on top. There
+is no losing state, no lost star, no "too slow" message, and no comparison to any number the child
+didn't set themselves.
+
+Sections §1–§16 describe Easy mode; what follows is the complete list of differences.
+
+### 18.1 Getting in: the Easy/Fast toggle
+
+- A single **switch** — `EASY  [👦|🚴]  FAST` — sits on the **theme-picker screen** (§10) and
+  again at the **top of the stats screen** (§11). Both render the **same one setting**; flipping
+  either flips both.
+- The button's face is the mode's own glyph (**👦** easy, **🚴** fast) and the active side's label
+  lights up. Tapping it dings and switches; the choice applies to the **next game started**.
+- **Gated:** Fast is locked until **at least one Easy game has been finished** (10 stars, §9).
+  While locked the toggle is visibly dimmed, and tapping it plays the wrong-answer ding, shakes
+  the button, and — on the picker only — shows the hint **"Finish an easy game first!"** for
+  ~1.8 s. The gate isn't arbitrary: Fast mode's timer is calibrated from this child's own Easy-mode
+  response times (§18.4), so it refuses to run until that data actually exists.
+- **Not persisted.** The mode lives in memory only, so a reload starts back in Easy. Deliberate:
+  the timed mode should be re-chosen, never inherited from a session someone forgot about.
+- While Fast is selected, the theme picker rains **🚴 bikes** over itself (§10) — the one visual
+  cue that the next game will be timed.
+
+### 18.2 Numbers: no ramp, a flat floor
+
+Easy mode's adaptive sum ramp (§3: start 5, +1 per correct, −2 per wrong) is **switched off
+entirely**. Fast mode's sums are a flat **6–12** from the very first problem and never move — not
+up on a correct answer, not down on a wrong one. Operands are still 1–9, and §4's 6-pips-per-operand
+cap still applies to pip problems.
+
+**Why no ramp:** the ramp exists to find the right *difficulty*; Fast mode's water bar (§18.4) is
+already doing that job, continuously and per-child. Two adaptive systems pushing on the same
+game at once would make neither readable.
+
+### 18.3 The child picks the presentation — every single problem
+
+Easy mode picks digits/emoji/pips at random (§4). Fast mode asks instead: before **every** problem
+a full-screen **"Pick how to see it!"** overlay shows the three representations as buttons, each
+with a **"?"** on it, and the problem isn't generated until one is tapped.
+
+- The previews are **fixed samples** of each representation — a 5-pip die face, the digit **9**,
+  a single 🍎 — never the upcoming problem's real numbers. The "?" makes it explicit that the
+  problem itself is still hidden: the child is choosing a *format*, not peeking at an answer.
+- **Anti-rut rotation:** picking the same representation **5 times in a row** drops it from the
+  offered set for the next **5 problems**, after which it returns. Keeps practice varied without
+  ever overriding the choice in the moment. The rotation resets at the start of every game.
+- The water bar (§18.4) is **hidden while the picker is up** and only starts once the problem is
+  on screen, so deciding how to see it is never part of the timed window.
+
+This is also the deeper **autonomy** choice §17.4 asked for and Easy mode never had — theme
+selection is one choice per game; this is one per problem.
+
+### 18.4 The water bar (the timer)
+
+A horizontal bar sits **under the problem card**. It starts **full** for every problem and drains
+**right to left** over a fixed duration, with the **🚴 biker riding the draining edge** (facing
+left, the way it travels) until the bar runs dry and the biker is gone.
+
+- **Constant within a game, personal across games.** The drain duration is one number, identical
+  for all 10 problems of a game, and stored in its own `localStorage` key (a difficulty setting,
+  not a stat — §11's reset never touches it).
+- **First-ever value:** this child's **slowest** recorded Easy-mode response time (§11's 30-day
+  latency log) **+ 2 s**, clamped to **2–20 s**; a fixed 7 s only if that data is somehow missing.
+  Deliberately generous — the opening experience should be beatable, not a wall.
+- **Between games** (never mid-game), the duration is nudged by how the finished game went:
+
+  | That game's result | Next game's bar |
+  |--------------------|-----------------|
+  | Bar **never** emptied (all 10 answers beat it) | **×0.85** — drains faster |
+  | Bar emptied on **more than half** the problems (6+ of 10) | **×1.15** — drains slower |
+  | Anything in between | unchanged |
+
+  Always re-clamped to **2–20 s**. A ratchet that eases back down on a bad run, not just up.
+- **Retries keep draining.** The bar is tied to when the *problem* first appeared, so a wrong
+  answer (§7) doesn't refill it — the same problem re-asked is the same problem. It refills only
+  for a genuinely new one.
+- **Freezes on a correct answer**, holding the fill and the biker in place through the celebration
+  instead of draining on underneath it.
+- **Whether the bar still had water is read at the instant ✓ is pressed** — not after the 200 ms
+  see-your-answer pause (§6), so that pause can never cost the bonus.
+
+### 18.5 The speed bonus: a second star
+
+Beat the bar on a correct answer and the star slot earns a **second, bonus star** — the 🚴 biker —
+alongside the regular ⭐.
+
+- **Sequence:** the regular star flies and smashes home exactly as in §7; **250 ms later** the
+  biker **lifts off the water bar itself** at its small on-bar size, swells to full size as it
+  rises, and snaps down onto the same slot with its own impact ring (it doesn't just pop into
+  existence at screen centre the way the plain star does), and the bar's biker is gone — it left.
+- **Streak rewards wait for it.** A 3/6/9-streak reward (§7) fires only once the biker has landed,
+  so a candy rain or fly-by never plays over the flight, and the next problem is held for the
+  biker's flight *plus* the reward's full run.
+- Under `prefers-reduced-motion` the bonus star simply **appears** on the slot, no flight.
+- **Missing the bar is silent.** No sound, no message, no mark on the star — the regular star and
+  its full celebration land identically either way. The *only* difference is the absence of an
+  extra.
+- Bonus stars earned across a game feed two things: the trophy row (§18.7) and the between-games
+  drain adjustment (§18.4). They do **not** affect the §11 score, which stays `10 − mistakes`.
+
+### 18.6 Stats are tracked separately
+
+Easy and Fast keep **entirely independent histories** — games, scores, accuracy, streaks,
+sessions, days played, favourite theme, trickiest problems, and the 30-day response-time log —
+with the stats screen's own copy of the toggle (§18.1) choosing which one is displayed, and
+"Reset stats" clearing only the displayed one. The mastery badge (§13) is likewise per-mode.
+
+**Why separate:** the two modes measure different things, so pooling them would corrupt both — a
+Fast-mode miss made under time pressure isn't the same event as an Easy-mode one, and averaging
+them would quietly drag the accuracy signal that §18.4 and §13 both read.
+
+**Migration:** stats saved before Fast mode existed were one flat blob with no mode on them. They
+are adopted wholesale as **Easy** history (which is what they are), and Fast starts empty. No
+history is rewritten or re-guessed.
+
+**Known gap:** bonus-star counts aren't recorded in stats — they're consumed for the drain
+adjustment and the trophies, then discarded. "How often do I beat the bar, over time?" is
+therefore not answerable from the stats screen today; it's the obvious next stat if Fast mode
+proves out.
+
+### 18.7 Winning in Fast mode
+
+- **Its own trophy pool:** 60 glyphs deliberately disjoint from Easy's (§9) — gems, dragons,
+  medals, tools — so a glance at the prize box separates the two even before the badge is noticed.
+- **The trophy row** is the usual one-per-longest-streak-point (§9), plus **one 🚴 appended per
+  speed bonus** earned that game, so the row shows both what was answered right and what was
+  answered fast.
+- **The prize box** (§12) is shared by both modes, one chronological shelf; a Fast-mode tile wears
+  a small **🚴 badge** in its corner. Tile size still follows that game's score, identically.
+- **The snake easter egg** (§14) still needs a perfect game, but in Fast mode it's **1-in-2**
+  instead of 1-in-3, **red**, **twice as long**, and crawls **twice as long** before shedding.
+
+### 18.8 What Fast mode is *not*
+
+- **Not harder arithmetic.** The number range is, if anything, narrower than Easy mode's top
+  (§18.2). The only thing added is a clock.
+- **Not a punishment mode.** See the constraint at the top of §18; every design decision here —
+  the generous seed, the ratchet that also eases *down*, the bonus being purely additive, the
+  bar being read at submit time, the opt-in gate, the non-persisted setting — exists to keep it
+  that way.
+- **Not §17.1.** The math is still a gate in front of a reward, now a timed one; the fun doesn't
+  yet *run on* recall speed in the way that item describes.
+- **Not per-fact adaptivity (§17.3).** One global drain speed for all problems — the bar doesn't
+  know that `8 + 7` is harder for this child than `2 + 3`.
