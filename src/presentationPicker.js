@@ -38,6 +38,22 @@ function emojiPreview(){
   return s;
 }
 
+// Keep the practice varied: pick the same representation RUN_LIMIT times in
+// a row and it drops out of the list for the next LOCKOUT_TURNS problems.
+const RUN_LIMIT = 5, LOCKOUT_TURNS = 5;
+let lastKey = null, runLength = 0;
+let lockedKey = null, lockedTurns = 0;
+
+export function resetPresentationRotation(){
+  lastKey = null; runLength = 0; lockedKey = null; lockedTurns = 0;
+}
+
+function trackRotation(key){
+  if(lockedTurns > 0) lockedTurns--; // this turn served part of the sit-out
+  if(key === lastKey) runLength++; else { lastKey = key; runLength = 1; }
+  if(runLength >= RUN_LIMIT){ lockedKey = key; lockedTurns = LOCKOUT_TURNS; lastKey = null; runLength = 0; }
+}
+
 let activeChoose = null;
 
 function handlePick(key){
@@ -45,6 +61,7 @@ function handlePick(key){
   if(!done) return;
   activeChoose = null;
   presentationPickerEl.classList.remove("show");
+  trackRotation(key);
   done(key);
 }
 
@@ -57,7 +74,8 @@ export function showPresentationPicker(onChoose){
 
   const row = document.createElement("div");
   row.className = "pres-options";
-  OPTIONS.forEach(({ key, build }) => {
+  const offered = OPTIONS.filter(o => !(lockedTurns > 0 && o.key === lockedKey));
+  offered.forEach(({ key, build }) => {
     const btn = document.createElement("button");
     btn.type = "button"; btn.className = "pres-option"; btn.dataset.presentation = key;
     btn.appendChild(build());

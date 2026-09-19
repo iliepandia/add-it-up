@@ -1,4 +1,5 @@
-// Hard mode's left-edge water bar: starts full for every problem and drains
+// Hard mode's water bar (horizontal, under the problem card): starts full
+// for every problem and drains
 // over state.waterDrainMs (constant for the whole game, see hardDifficulty.js).
 // Answering correctly before it empties earns the bonus star (see main.js).
 // Purely visual — driven off state.problemShownAt, which problem.js already

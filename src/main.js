@@ -23,13 +23,13 @@ import {
 } from "./config.js";
 import {
   card, keypad, flash, win, picker, statsLink, statsScreen, prizeBoxLink, prizeBox,
-  difficultyToggle, difficultyHint, statsDifficultyToggle, presentationPickerEl
+  difficultyToggle, difficultyHint, statsDifficultyToggle, presentationPickerEl, waterRiderEl
 } from "./dom.js";
 import { audio, sTada, sError, sDing } from "./audio.js";
 import { applyTheme, themeState, checkStreak } from "./themes.js";
 import { newProblem, renderAns } from "./problem.js";
 import { buildStars, fillStar, refreshStars, prepareBonusStar, revealBonusStar } from "./stars.js";
-import { celebrate, tadaSparkles, flyStar, flyStarTo } from "./fx.js";
+import { celebrate, tadaSparkles, flyStar, flyRiderTo } from "./fx.js";
 import { showWin } from "./win.js";
 import { showPicker, wirePicker } from "./picker.js";
 import { state, keyByDigit } from "./state.js";
@@ -40,7 +40,7 @@ import { handlePickerKeydown, wireMasteryBadge, renderMasteryBadge } from "./mas
 import { renderDifficultyToggle, attemptToggleMode, applyModeLook } from "./difficulty.js";
 import { getHardDrainDuration, adjustHardDrainDuration } from "./hardDifficulty.js";
 import { showWaterBar, hideWaterBar, freezeWaterBar, waterHasWater } from "./waterBar.js";
-import { showPresentationPicker } from "./presentationPicker.js";
+import { showPresentationPicker, resetPresentationRotation } from "./presentationPicker.js";
 
 // ---- input ----
 // Typing never auto-submits (fat-finger taps used to instantly count as a
@@ -88,13 +88,18 @@ function correct(){
     const impactAt=STAR_FLY*IMPACT_AT;
     const BONUS_GAP=250;
     const onImpact=()=>{
-      fillStar(idx); refreshStars(); celebrate(); checkStreak();
+      fillStar(idx); refreshStars(); celebrate();
       if(bonus){
         // Speed bonus: a second big star flies in after the regular one lands.
+        // The streak reward waits for that flight to land too, so a shower or
+        // flyby never plays over the biker.
         const b=prepareBonusStar(idx);
-        if(reduceMotion) revealBonusStar(b);
-        else setTimeout(()=>flyStarTo(b,()=>revealBonusStar(b),BONUS_GLYPH), BONUS_GAP);
-      }
+        if(reduceMotion){ revealBonusStar(b); checkStreak(); }
+        else setTimeout(()=>{
+          flyRiderTo(waterRiderEl, b, BONUS_GLYPH, ()=>{ revealBonusStar(b); checkStreak(); });
+          waterRiderEl.hidden=true; // it left the bar — rect already captured above
+        }, BONUS_GAP);
+      }else checkStreak();
     };
     if(won){
       recordGame(state.mode, { wrongCount: state.gameWrongTotal, theme: themeState.name, streak: state.maxStreak });
@@ -112,9 +117,11 @@ function correct(){
       // Hard mode's presentation picker is a full-screen overlay, so it must
       // wait for the bonus-star flight and any streak reward to finish.
       const bonusExtra = bonus ? BONUS_GAP + impactAt : 0;
+      // With a bonus the reward only starts once the biker lands, so its
+      // duration stacks on top of bonusExtra instead of overlapping it.
       const rewardMs = state.mode==="hard" && !won
         ? ([3,9].includes(state.streak) ? REWARD_SHOWER_DURATION : state.streak===6 ? FLYBY_DURATION : 0) : 0;
-      const hold = won ? WIN_HOLD : Math.max(POST_HOLD, rewardMs - bonusExtra);
+      const hold = won ? WIN_HOLD : Math.max(POST_HOLD, rewardMs);
       setTimeout(advance, impactAt + bonusExtra + hold);
     }
   }, SEE_RESULT);
@@ -157,6 +164,7 @@ function startGame(){
   startSession(state.mode);
   state.starCount=0; state.sumMax=SUM_START; state.streak=0; state.maxStreak=0; state.gameWrongTotal=0;
   state.bonusStarCount=0; state.pendingBonus=false;
+  resetPresentationRotation();
   if(state.mode==="hard") state.waterDrainMs=getHardDrainDuration(getLatencyStats("easy").combined?.max);
   buildStars(); refreshStars(); advanceProblem();
 }

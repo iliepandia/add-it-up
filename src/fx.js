@@ -37,7 +37,7 @@ export function flyStar(index,onImpact){ flyStarTo(starsEl.children[index],onImp
 
 // Big star from screen centre smashing into `target` (a star slot, or the
 // hard-mode bonus star under it).
-export function flyStarTo(target,onImpact,glyph){
+function flyStarTo(target,onImpact,glyph){
   const tr=target.getBoundingClientRect();
   const tx=tr.left+tr.width/2, ty=tr.top+tr.height/2;
   const cx=innerWidth/2, cy=innerHeight*0.42;
@@ -49,6 +49,28 @@ export function flyStarTo(target,onImpact,glyph){
     {transform:`translate(${cx}px,${cy}px) ${base} scale(1) rotate(-22deg)`, opacity:1, offset:0, easing:"ease-out"},
     {transform:`translate(${cx}px,${cy}px) ${base} scale(1) rotate(-12deg)`, opacity:1, offset:0.26, easing:"cubic-bezier(.55,0,.85,.5)"},
     {transform:`translate(${tx}px,${ty}px) ${base} scale(${smallScale}) rotate(6deg)`, opacity:1, offset:IMPACT_AT}
+  ], {duration:STAR_FLY, fill:"forwards"});
+  setTimeout(()=>{ onImpact(); impactRing(tx,ty); mega.remove(); }, STAR_FLY*IMPACT_AT);
+}
+
+/** The speed-bonus biker: lifts off from `source` (the water bar's rider) at
+ *  its own small size, swells to full size as it rises, then snaps down onto
+ *  `target` (the bonus slot under the star) — instead of just popping into
+ *  existence big at screen centre the way the plain star does. */
+export function flyRiderTo(source,target,glyph,onImpact){
+  const sr=source.getBoundingClientRect(), tr=target.getBoundingClientRect();
+  const sx=sr.left+sr.width/2, sy=sr.top+sr.height/2;
+  const tx=tr.left+tr.width/2, ty=tr.top+tr.height/2;
+  const BIG=Math.min(innerWidth,innerHeight)*0.6;
+  const startScale=(sr.height||24)/BIG;
+  const targetPx=parseFloat(getComputedStyle(target).fontSize)||20;
+  const endScale=targetPx/BIG;
+  const mega=document.createElement("div"); mega.className="mega-star"; mega.textContent=glyph; mega.style.fontSize=BIG+"px";
+  document.body.appendChild(mega); const base="translate(-50%,-50%)";
+  mega.animate([
+    {transform:`translate(${sx}px,${sy}px) ${base} scale(${startScale}) rotate(-8deg)`, offset:0, easing:"cubic-bezier(.2,.7,.4,1)"},
+    {transform:`translate(${(sx+tx)/2}px,${innerHeight*0.42}px) ${base} scale(1) rotate(0)`, offset:0.42, easing:"cubic-bezier(.55,0,.85,.5)"},
+    {transform:`translate(${tx}px,${ty}px) ${base} scale(${endScale}) rotate(6deg)`, offset:IMPACT_AT}
   ], {duration:STAR_FLY, fill:"forwards"});
   setTimeout(()=>{ onImpact(); impactRing(tx,ty); mega.remove(); }, STAR_FLY*IMPACT_AT);
 }
