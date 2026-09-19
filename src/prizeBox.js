@@ -14,6 +14,20 @@ import {
   tapCupcakeSparkle, tapCookieCrunch,
   tapRainbowShimmer, tapSunGlow, tapBloomChime, tapMushroomBoop, tapTreeRustleTap
 } from "./audio.js";
+import {
+  tapDragonRoar, tapDinoCall, tapSharkChomp, tapBatScreech, tapEagleScreech, tapWolfHowl,
+  tapRhinoSnort, tapApeGrunt, tapBigCatSnarl, tapScorpionSkitter,
+  tapFireCrackle, tapFirecracker, tapExplosion, tapSparkler, tapVolcanoRumble, tapZap,
+  tapBatteryCharge, tapSiren, tapMagnetHum, tapPotionFizz,
+  tapSwordClash, tapShieldClang, tapAxeChop, tapPickaxeStrike, tapBowTwang, tapTridentRing,
+  tapPunchThud, tapChopWhoosh,
+  tapGemChime, tapCrownFanfare, tapMedalChime, tapTrophyFanfare, tapKeyJingle, tapCrystalHum,
+  tapMagicWand, tapWardChime,
+  tapArcadeBlip, tapDiceRoll, tapCardFlick, tapSlotSpin, tapDartThunk, tapPuzzleClick, tapBowlingCrash,
+  tapCompassPing, tapStopwatchTick, tapDeskBell, tapHornCall, tapFlagFlap, tapTornadoWhoosh,
+  tapWaveCrash, tapBrickThud, tapChainClink, tapBoomerangWhirl, tapSledSwish, tapMountainWind,
+  tapShootingStar, tapCometWhoosh, tapSatelliteBeep
+} from "./audio.js";
 import { pick, BONUS_GLYPH } from "./config.js";
 import { getPrizeTiles } from "./prizes.js";
 
@@ -37,8 +51,27 @@ const PRIZE_SOUND = {
   "🚁": tapHeliWhir, "⛵": tapSailWhoosh, "🛸": tapUfoWarble, "🪀": tapYoyoBoing
 };
 
+// Hard mode's prize pool (HARD_WIN_END) is a different set of glyphs, so it
+// gets its own mapping into the hard-mode sound bank — same idea, matched to
+// what each prize is: 🐉 roars, ⚔️ clashes, 🎰 spins, 🌊 crashes. 🦖 is the one
+// glyph both pools share, and it reuses the same roar in either.
+const HARD_PRIZE_SOUND = {
+  "💎": tapGemChime, "🔥": tapFireCrackle, "⚡": tapZap, "🎖️": tapMedalChime, "🥇": tapMedalChime,
+  "🛡️": tapShieldClang, "⚔️": tapSwordClash, "🧨": tapFirecracker, "🎯": tapDartThunk, "🔮": tapCrystalHum,
+  "🧩": tapPuzzleClick, "🕹️": tapArcadeBlip, "🏹": tapBowTwang, "🪄": tapMagicWand, "🧿": tapWardChime,
+  "🗝️": tapKeyJingle, "👑": tapCrownFanfare, "🎇": tapSparkler, "🌋": tapVolcanoRumble, "🦂": tapScorpionSkitter,
+  "🦈": tapSharkChomp, "🐉": tapDragonRoar, "🦇": tapBatScreech, "🦅": tapEagleScreech, "🐺": tapWolfHowl,
+  "🦏": tapRhinoSnort, "🦍": tapApeGrunt, "🐆": tapBigCatSnarl, "🦖": tapRoar, "🦕": tapDinoCall,
+  "🌠": tapShootingStar, "☄️": tapCometWhoosh, "🛰️": tapSatelliteBeep, "🧲": tapMagnetHum, "⛏️": tapPickaxeStrike,
+  "🔱": tapTridentRing, "🪓": tapAxeChop, "🏆": tapTrophyFanfare, "🥋": tapChopWhoosh, "🎲": tapDiceRoll,
+  "🃏": tapCardFlick, "🎰": tapSlotSpin, "🧭": tapCompassPing, "⏱️": tapStopwatchTick, "🔋": tapBatteryCharge,
+  "🧪": tapPotionFizz, "🛎️": tapDeskBell, "📯": tapHornCall, "🚨": tapSiren, "🏴‍☠️": tapFlagFlap,
+  "💥": tapExplosion, "🌪️": tapTornadoWhoosh, "🌊": tapWaveCrash, "🧱": tapBrickThud, "🔗": tapChainClink,
+  "🪃": tapBoomerangWhirl, "🥊": tapPunchThud, "🎳": tapBowlingCrash, "🛷": tapSledSwish, "🏔️": tapMountainWind
+};
+
 function playPrizeSound(emoji){
-  const fn = PRIZE_SOUND[emoji];
+  const fn = PRIZE_SOUND[emoji] || HARD_PRIZE_SOUND[emoji];
   if(fn) fn();
 }
 

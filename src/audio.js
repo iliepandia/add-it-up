@@ -404,3 +404,131 @@ export function tapTreeRustleTap(){
   const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.07,t+0.05); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   src.connect(bp).connect(g).connect(c.destination); src.start(t); src.stop(t+dur);
 }
+
+// ---- hard-mode prize-box tap sounds ----
+// Hard mode wins from its own glyph pool (HARD_WIN_END in config.js), which
+// shares almost nothing with the easy pool — beasts, fire, weapons, treasure,
+// arcade gear — so it needs its own bank of families. Same building blocks as
+// above (tone/sweep/noiseHit/growl), and the same rule: related prizes share a
+// family rather than each of the 60 getting a bespoke synth. Kept generally
+// punchier and lower than the easy set, to match hard mode's higher stakes.
+
+// ---- beasts ----
+export function tapDragonRoar(){ growl(140,60,0.6,280,"sawtooth",0.18,0,3); noiseHit(0.45,"highpass",1200,600,0.8,0.07,0.1); }  // roar with a fire-hiss tail
+export function tapDinoCall(){ growl(200,120,0.45,500,"sawtooth",0.15,0,3); sweep(300,160,0.4,"sine",0.07,0.1); }                 // long-neck bellow, lower and mellower than tapRoar
+export function tapSharkChomp(){ noiseHit(0.06,"lowpass",900,300,1,0.16,0); tone(90,0.02,0.1,"sine",0.14); noiseHit(0.05,"highpass",2200,1400,1,0.10,0.12); }
+export function tapBatScreech(){ [0,0.07,0.14].forEach((d,i)=>sweep(5200-i*300,3000,0.05,"square",0.05,d)); }                     // very high and very short — kept quiet on purpose
+export function tapEagleScreech(){ growl(1600,900,0.18,2600,"sawtooth",0.11,0,3); growl(1400,800,0.14,2400,"sawtooth",0.09,0.2,3); }
+export function tapWolfHowl(){ growl(300,620,0.25,1200,"sawtooth",0.13,0,4); growl(620,600,0.35,1100,"sawtooth",0.12,0.25,4); growl(600,320,0.3,900,"sawtooth",0.10,0.6,4); }  // rise, hold, fall
+export function tapRhinoSnort(){ growl(120,80,0.22,300,"sawtooth",0.17,0,3); noiseHit(0.25,"lowpass",600,300,1,0.12,0.02); }
+export function tapApeGrunt(){ growl(220,140,0.12,600,"sawtooth",0.16,0,4); growl(200,130,0.12,560,"sawtooth",0.15,0.15,4); tone(70,0.32,0.12,"sine",0.15); }  // two grunts, then a chest thump
+export function tapBigCatSnarl(){ growl(420,260,0.3,1400,"sawtooth",0.13,0,6); noiseHit(0.3,"bandpass",1600,900,1.4,0.06,0); }
+export function tapScorpionSkitter(){ for(let i=0;i<6;i++) noiseHit(0.02,"highpass",3000+i*200,3000,2,0.07,i*0.045); }            // dry little legs on stone
+
+// ---- fire, energy & explosions ----
+export function tapFireCrackle(){
+  noiseHit(0.35,"bandpass",900,500,0.8,0.07,0);  // the body of the flame...
+  for(let i=0;i<5;i++) noiseHit(0.025,"highpass",2400+Math.random()*1600,2000,1.5,0.08,Math.random()*0.35);  // ...with sparks popping out of it
+}
+export function tapFirecracker(){ noiseHit(0.05,"highpass",1200,400,0.7,0.20,0); tone(70,0,0.12,"sine",0.16); }
+export function tapExplosion(){ noiseHit(0.5,"lowpass",1400,120,0.8,0.22,0); sweep(160,40,0.45,"sawtooth",0.16); }
+export function tapSparkler(){   // 🎇: whistle up, pop, then glittering fallout
+  sweep(500,1800,0.3,"sine",0.08);
+  noiseHit(0.06,"highpass",1500,600,0.8,0.16,0.32);
+  for(let i=0;i<8;i++) tone(1800+Math.random()*1400, 0.36+Math.random()*0.3, 0.12, "sine", 0.05);
+}
+export function tapVolcanoRumble(){ growl(80,45,0.6,200,"sawtooth",0.18,0,2); noiseHit(0.55,"lowpass",300,150,0.7,0.10,0.05); }
+export function tapZap(){   // electric crack: the pitch jumps at random, which is what makes it read as a spark rather than a beep
+  const c=audio(); if(!c) return; const t=c.currentTime;
+  const o=c.createOscillator(); o.type="square"; o.frequency.setValueAtTime(2400,t);
+  for(let i=1;i<7;i++) o.frequency.setValueAtTime(1200+Math.random()*2600, t+0.02*i);
+  const g=c.createGain(); g.gain.setValueAtTime(0.12,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.14);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t+0.16);
+  noiseHit(0.08,"highpass",3000,1500,1,0.10,0);
+}
+export function tapBatteryCharge(){ sweep(300,1600,0.3,"square",0.06); tone(2000,0.3,0.14,"sine",0.09); }   // charge-up whine, then "full"
+export function tapSiren(){
+  const c=audio(); if(!c) return; const t=c.currentTime;
+  const o=c.createOscillator(); o.type="sawtooth"; o.frequency.setValueAtTime(700,t);
+  o.frequency.linearRampToValueAtTime(1150,t+0.2); o.frequency.linearRampToValueAtTime(700,t+0.4); o.frequency.linearRampToValueAtTime(1150,t+0.6);
+  const lp=c.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=2200;
+  const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.10,t+0.05); g.gain.exponentialRampToValueAtTime(0.0001,t+0.65);
+  o.connect(lp).connect(g).connect(c.destination); o.start(t); o.stop(t+0.68);
+}
+export function tapMagnetHum(){ tone(120,0,0.4,"sawtooth",0.07); tone(123,0,0.4,"sawtooth",0.06); tone(240,0,0.35,"sine",0.04); }  // two near-identical pitches beating against each other = electric hum
+export function tapPotionFizz(){
+  for(let i=0;i<5;i++) sweep(240+i*60,(240+i*60)*2,0.1,"sine",0.08,i*0.07);   // bubbles rising up the flask
+  noiseHit(0.4,"highpass",4000,6000,0.8,0.05,0.05);
+}
+
+// ---- weapons & metal ----
+export function tapSwordClash(){
+  noiseHit(0.05,"bandpass",3800,2600,2,0.16,0);
+  [2400,3100,4300].forEach((f,i)=>tone(f,0.01,0.45-i*0.08,"triangle",0.06));   // the blade ringing after the hit
+  noiseHit(0.05,"bandpass",3400,2400,2,0.12,0.13);
+}
+export function tapShieldClang(){ [520,780,1170].forEach((f,i)=>tone(f,0,0.5-i*0.1,"triangle",0.09)); noiseHit(0.06,"bandpass",1500,700,1.5,0.14,0); }
+export function tapAxeChop(){ noiseHit(0.12,"bandpass",1200,300,0.9,0.15,0); tone(140,0.01,0.12,"triangle",0.14); noiseHit(0.2,"highpass",2500,1800,1,0.05,0.05); }  // thunk + splintering wood
+export function tapPickaxeStrike(){ noiseHit(0.04,"highpass",5000,3000,1.5,0.14,0); [1800,2700].forEach(f=>tone(f,0.01,0.3,"triangle",0.06)); tone(200,0,0.08,"sine",0.10); }
+export function tapBowTwang(){ sweep(420,180,0.28,"sawtooth",0.12); noiseHit(0.25,"bandpass",2200,3000,1.2,0.05,0.04); }   // string release, then the arrow's hiss
+export function tapTridentRing(){ [660,990,1320].forEach((f,i)=>tone(f,i*0.02,0.6,"sine",0.08)); }
+export function tapPunchThud(){ noiseHit(0.07,"lowpass",700,200,0.8,0.18,0); tone(110,0,0.12,"sine",0.16); }
+export function tapChopWhoosh(){ noiseHit(0.14,"bandpass",900,1800,1.1,0.10,0); noiseHit(0.06,"lowpass",600,200,0.8,0.16,0.14); tone(120,0.14,0.1,"sine",0.13); }  // 🥋: swing, then the strike lands
+
+// ---- treasure & magic ----
+export function tapGemChime(){ [2093,2637,3136].forEach((f,i)=>tone(f,i*0.04,0.5,"sine",0.07)); }
+export function tapCrownFanfare(){ [523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,i*0.07,0.4,"triangle",0.11)); tone(1318.5,0.28,0.5,"sine",0.06); }
+export function tapMedalChime(){ tone(880,0,0.3,"triangle",0.11); tone(1318.5,0.12,0.4,"triangle",0.10); noiseHit(0.05,"bandpass",2600,2000,2,0.05,0); }
+export function tapTrophyFanfare(){ tone(392,0,0.12,"triangle",0.11); [587.33,783.99,987.77].forEach(f=>tone(f,0.12,0.55,"triangle",0.10)); }
+export function tapKeyJingle(){
+  for(let i=0;i<4;i++) noiseHit(0.05,"bandpass",2600+Math.random()*1800,2200,3,0.08,i*0.06);
+  [2200,3300].forEach(f=>tone(f,0.02,0.25,"sine",0.04));
+}
+export function tapCrystalHum(){ sweep(400,900,0.5,"sine",0.08); tone(1350,0.1,0.5,"sine",0.04); }
+export function tapMagicWand(){ [1200,1600,2000,2500,3000].forEach((f,i)=>tone(f,i*0.045,0.25,"sine",0.07)); noiseHit(0.3,"highpass",5000,7000,1,0.04,0.05); }
+export function tapWardChime(){ tone(1046.5,0,0.4,"sine",0.09); tone(1244.5,0.06,0.45,"sine",0.07); }
+
+// ---- arcade & games ----
+export function tapArcadeBlip(){ tone(440,0,0.06,"square",0.09); tone(660,0.06,0.06,"square",0.09); tone(880,0.12,0.1,"square",0.08); }
+export function tapDiceRoll(){
+  for(let i=0;i<5;i++) noiseHit(0.03,"bandpass",1400+Math.random()*900,1200,2,0.09,i*0.05+Math.random()*0.02);  // tumbling...
+  tone(300,0.28,0.08,"triangle",0.10);   // ...and settling
+}
+export function tapCardFlick(){ noiseHit(0.05,"highpass",3000,1200,0.8,0.10,0); noiseHit(0.04,"highpass",2400,1000,0.8,0.07,0.07); }
+export function tapSlotSpin(){
+  for(let i=0;i<7;i++) tone(1200,i*0.05,0.03,"square",0.07);                                   // reel ticks...
+  [1046.5,1318.5,1568].forEach((f,i)=>tone(f,0.38+i*0.06,0.3,"triangle",0.10));                // ...then the payout
+}
+export function tapDartThunk(){ noiseHit(0.1,"bandpass",600,1400,1.2,0.07,0); tone(240,0.09,0.09,"triangle",0.13); tone(700,0.09,0.05,"triangle",0.06); }
+export function tapPuzzleClick(){ tone(900,0,0.04,"square",0.09); tone(600,0.05,0.07,"triangle",0.10); }
+export function tapBowlingCrash(){
+  tone(80,0,0.2,"sine",0.15);   // the ball arriving...
+  for(let i=0;i<7;i++) noiseHit(0.06,"bandpass",1500+Math.random()*1500,900,1.5,0.09,0.12+Math.random()*0.3);  // ...pins scattering
+}
+
+// ---- gear, weather & sky ----
+export function tapCompassPing(){ sweep(1400,1200,0.5,"sine",0.09); tone(2100,0.02,0.2,"sine",0.03); }   // sonar-style ping
+export function tapStopwatchTick(){ for(let i=0;i<4;i++) noiseHit(0.02,"bandpass",3200,2600,3,0.09,i*0.12); tone(2000,0.5,0.15,"sine",0.08); }
+export function tapDeskBell(){ tone(1568,0,0.6,"sine",0.13); tone(3136,0,0.3,"sine",0.05); noiseHit(0.03,"highpass",4000,3000,1,0.06,0); }
+export function tapHornCall(){ [392,523.25,659.25].forEach((f,i)=>tone(f,i*0.12,0.3,"sawtooth",0.07)); }
+export function tapFlagFlap(){ for(let i=0;i<3;i++) noiseHit(0.12,"bandpass",800+i*150,400,0.9,0.09,i*0.13); }
+export function tapTornadoWhoosh(){   // wind rising, with the filter swept round and round so it swirls
+  const c=audio(); if(!c) return; const t=c.currentTime, dur=0.6, buf=noiseBuffer(dur); if(!buf) return;
+  const src=c.createBufferSource(); src.buffer=buf;
+  const bp=c.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=2.5;
+  bp.frequency.setValueAtTime(300,t); bp.frequency.exponentialRampToValueAtTime(1600,t+dur);
+  const swirl=c.createOscillator(); swirl.type="sine"; swirl.frequency.value=7;
+  const swirlGain=c.createGain(); swirlGain.gain.value=400;
+  swirl.connect(swirlGain).connect(bp.frequency);
+  const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.14,t+0.2); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  src.connect(bp).connect(g).connect(c.destination); src.start(t); src.stop(t+dur); swirl.start(t); swirl.stop(t+dur);
+}
+export function tapWaveCrash(){ noiseHit(0.5,"lowpass",1200,300,0.7,0.16,0); noiseHit(0.6,"highpass",2000,5000,0.6,0.07,0.15); }  // crash, then the foam hissing away
+export function tapBrickThud(){ noiseHit(0.09,"lowpass",800,250,0.9,0.14,0); tone(160,0,0.1,"triangle",0.12); }
+export function tapChainClink(){ for(let i=0;i<3;i++){ noiseHit(0.04,"bandpass",2600+i*400,2000,4,0.10,i*0.07); tone(1800+i*300,i*0.07,0.2,"triangle",0.05); } }
+export function tapBoomerangWhirl(){ for(let i=0;i<8;i++) noiseHit(0.05,"bandpass",700+i*120,500+i*120,3,0.09-i*0.008,i*0.055); }  // spinning away, pitching up as it goes
+export function tapSledSwish(){ noiseHit(0.45,"bandpass",1800,900,0.8,0.10,0); }
+export function tapMountainWind(){ noiseHit(0.7,"bandpass",600,900,1.2,0.08,0); tone(180,0,0.7,"sine",0.03); }
+export function tapShootingStar(){ sweep(2600,700,0.5,"sine",0.09); [2000,2600].forEach((f,i)=>tone(f,0.02+i*0.05,0.2,"sine",0.05)); }
+export function tapCometWhoosh(){ sweep(1400,300,0.55,"sawtooth",0.07); noiseHit(0.55,"bandpass",2200,600,0.9,0.09,0); }
+export function tapSatelliteBeep(){ tone(1400,0,0.08,"square",0.08); tone(1400,0.16,0.08,"square",0.07); tone(1400,0.32,0.12,"square",0.06); noiseHit(0.4,"highpass",6000,8000,0.8,0.02,0); }
