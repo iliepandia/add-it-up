@@ -385,6 +385,19 @@ as one growing collection while still telling the two apart — see §18.7.
   pitch-swept oscillator "**growl**" for animal calls — deliberately more elaborate than a bare
   tone, though still stylized synthesis rather than real recordings (revisit with real sample
   audio if truer realism is ever wanted — see trade-offs in §15).
+- **Hard-mode prizes have their own matched sounds too.** Hard mode wins from a separate glyph
+  pool (§16), so it carries a second bank of families, built from the same pieces and mapped the
+  same way: beasts (dragon roar, wolf howl, shark chomp, bat screech, ape grunt + chest thump,
+  scorpion skitter), fire & energy (crackle, firecracker bang, explosion, sparkler, volcano
+  rumble, electric zap, siren, magnet hum, potion fizz), weapons & metal (sword clash, shield
+  clang, axe chop, pickaxe strike, bow twang, trident ring, punch thud), treasure & magic (gem
+  chime, crown/trophy fanfare, medal clink, key jingle, crystal hum, wand sparkle), arcade gear
+  (blip, dice roll, card flick, slot reels + payout, dart thunk, puzzle click, bowling crash), and
+  gear/weather/sky (compass ping, stopwatch ticks + bell, desk bell, horn call, flag flap, tornado
+  whoosh, wave crash, brick thud, chain clink, boomerang whirl, sled swish, mountain wind,
+  shooting star, comet whoosh, satellite beeps). These run **punchier and lower** than the easy
+  set, matching hard mode's higher stakes. 🥇 and 🎖️ share one medal chime, and 🦖 — the only glyph
+  in both pools — reuses the same roar either way, so all 60 hard glyphs are covered by 59 sounds.
 - A **← back button** (top-left) returns to the theme picker.
 - **Empty state:** "Finish a game to win your first prize!" if none are collected yet.
 
