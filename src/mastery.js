@@ -14,6 +14,7 @@ import { masteryBadge, masteryEmoji, masteryArc, masteryBalloon, masteryBalloonE
 import { sDing } from "./audio.js";
 import { getPrecision7d } from "./stats.js";
 import { testJumpToWin } from "./win.js";
+import { state } from "./state.js";
 
 const TIERS = ["🐌","🐔","🐢","🐝","🐷","🐱","🐶","🐄","🐻","🦖","🏆"];
 const TROPHY = TIERS.length - 1; // 10
@@ -42,7 +43,7 @@ function arcFractionFor(precision, tier, isPerfect){
 }
 
 function currentTier(){
-  const real = getPrecision7d();
+  const real = getPrecision7d(state.mode);
   const precision = testMode ? testPrecision : (real.hasData ? real.precision : 0);
   const isPerfect = testMode ? testPrecision >= 100 : (real.hasData && real.wrongTotal === 0 && real.correctTotal > 0);
   return { precision, isPerfect, tier: tierIndexFor(precision, isPerfect) };
@@ -110,7 +111,7 @@ export function wireMasteryBadge(){
 function toggleTestMode(){
   testMode = !testMode;
   if(testMode){
-    const real = getPrecision7d();
+    const real = getPrecision7d(state.mode);
     testPrecision = real.hasData ? Math.round(real.precision * 2) / 2 : 0; // start from the real value, snapped to a 0.5 step
   }
   sDing();

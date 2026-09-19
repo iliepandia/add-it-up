@@ -1,0 +1,21 @@
+/* ---- hard mode's "how do you want to see it?" overlay — shown fresh
+   before every problem (see presentationPicker.js). ---- */
+.presentation-picker{position:fixed; inset:0; z-index:60; display:none; flex-direction:column;
+  align-items:center; justify-content:center; gap:clamp(16px,4vh,32px); padding:24px;
+  background:linear-gradient(160deg,#E8F3FF 0%,#FFE8F0 100%); cursor:default;}
+.presentation-picker.show{display:flex; animation:winIn .3s ease;}
+.presentation-picker h1{font-family:var(--font); font-size:clamp(22px,6vw,36px); font-weight:700;
+  color:var(--ink); margin:0; text-align:center;}
+.pres-options{display:flex; gap:clamp(14px,4vw,28px); flex-wrap:wrap; justify-content:center;}
+.pres-option{font-family:var(--font); border:none; cursor:pointer; background:var(--surface);
+  border-radius:20px; padding:16px 12px 12px; width:clamp(96px,26vw,140px);
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  box-shadow:0 8px 0 rgba(46,58,89,.14); transition:transform .06s ease, box-shadow .06s ease;}
+.pres-option:active{transform:translateY(6px); box-shadow:0 2px 0 rgba(46,58,89,.14);}
+.pres-digit-preview{font-family:var(--font); font-size:clamp(36px,10vw,56px); font-weight:700;
+  color:var(--ink); line-height:1;}
+.pres-emoji-preview{font-size:clamp(34px,9vw,52px); line-height:1;}
+.pres-pip-card{width:clamp(48px,13vw,72px); height:clamp(48px,13vw,72px);}
+.pres-q{font-family:var(--font); font-size:clamp(20px,5.5vw,28px); font-weight:700; color:#fff;
+  background:var(--hero); width:1.6em; height:1.6em; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;}

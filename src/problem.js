@@ -1,6 +1,6 @@
 // Problem generation and rendering (digits / emoji groups / dice-domino pips).
 
-import { rnd, pick, EMOJI, PIPS } from "./config.js";
+import { rnd, pick, EMOJI, PIPS, HARD_SUM_MIN, SUM_MAX_CAP } from "./config.js";
 import { opA, opB, ansEl } from "./dom.js";
 import { state } from "./state.js";
 import { themeState } from "./themes.js";
@@ -48,19 +48,28 @@ export function renderAns(reveal){
   else ansEl.appendChild(numEl(state.entry, reveal?"reveal tada":null));
   // The clear (✕) and submit (✓) keys are built dynamically in main.js, so
   // they aren't in dom.js's static cache — looked up by id here, the one
-  // place entry-vs-empty is decided, and both dim together when there's
-  // nothing to clear or submit.
-  const empty = state.entry==="";
+  // place their dim state is decided. Both dim when there's nothing to act
+  // on: nothing typed yet, or the answer is already committed and input is
+  // frozen until the next problem.
+  const empty = state.entry==="" || state.locked;
   const submitKey = document.getElementById("submitKey");
   if(submitKey){ const becameActive = submitKey.disabled && !empty; submitKey.disabled = empty; if(becameActive) popKey(submitKey); }
   const clearKey = document.getElementById("clearKey");
   if(clearKey){ const becameActive = clearKey.disabled && !empty; clearKey.disabled = empty; if(becameActive) popKey(clearKey); }
 }
 
+// Easy mode picks a random presentation and rides the sum ramp (§3); hard
+// mode's presentation is chosen by the child beforehand (presentationPicker.js,
+// already stored in state.presentation by the time this runs) and has no
+// ramp — just a flat floor so the sum is never below HARD_SUM_MIN.
 export function newProblem(){
-  state.presentation = pick(["digits","emoji","pips"]);
+  const hard = state.mode === "hard";
+  if(!hard) state.presentation = pick(["digits","emoji","pips"]);
   do{ state.a=1+rnd(9); state.b=1+rnd(9); }
-  while(state.a+state.b>state.sumMax || (state.presentation==="pips" && (state.a>6||state.b>6)));
+  while(
+    (hard ? (state.a+state.b<HARD_SUM_MIN || state.a+state.b>SUM_MAX_CAP) : state.a+state.b>state.sumMax) ||
+    (state.presentation==="pips" && (state.a>6||state.b>6))
+  );
   state.answer=state.a+state.b; state.entry=""; state.wrongCount=0;
   state.problemShownAt=performance.now(); state.latencyLogged=false; // response-time baseline (§17.6) — first attempt only, retries don't re-log
   render();

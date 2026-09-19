@@ -10,7 +10,12 @@ export const state = {
   sumMax: SUM_START, streak: 0, maxStreak: 0,
   gameWrongTotal: 0, // mistakes across the whole game, for the stats score (10 - mistakes, floor 0)
   problemShownAt: 0, // performance.now() when this problem first became answerable — response-time baseline (§17.6)
-  latencyLogged: false // true once this problem's first-attempt latency has been recorded, so retries don't log again
+  latencyLogged: false, // true once this problem's first-attempt latency has been recorded, so retries don't log again
+
+  mode: "easy", // "easy" | "hard" — the difficulty toggle; shared by the picker and stats screens
+  waterDrainMs: 0, // hard mode only: how long this game's water bar takes to fully drain (constant for the whole game)
+  bonusStarCount: 0, // hard mode only: correct answers this game beaten before the bar drained
+  pendingBonus: false // hard mode only: set at submit time, consumed by correct()'s delayed star-fill
 };
 
 export const keyByDigit = {};

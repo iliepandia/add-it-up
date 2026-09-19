@@ -271,13 +271,34 @@ as **abandoned** and excluded from the time stats (the day still counts toward "
 - **Last 30 days** — line chart of each day's average score across the last 30 calendar days
   (a day with no games leaves a gap in the line).
 
-**Trickiest problems:** the top 10 most-missed `a + b` combinations, each with a mistake
-counter, sorted by frequency. A wrong *submission* counts as a mistake, so missing the same
-problem twice before getting it counts as two.
+**Trickiest problems (last 7 days):** the top 10 most-missed `a + b` combinations, each with a
+mistake counter, sorted by frequency. A wrong *submission* counts as a mistake, so missing the
+same problem twice before getting it counts as two. Scoped to the **trailing 7 days** (not
+all-time) so a rough patch early on, or a fact since mastered, doesn't sit pinned at the top
+forever — same reasoning as "Favorite this week" above. Backed by a timestamped log
+(`{a, b, t}` per miss) that self-prunes to the 7-day window on every write.
+
+**Response time (last 30 days):** §17.6's baseline-measurement step — see that section for the
+full reasoning and the non-negotiable safety constraint it operates under. In short: every
+problem's **first attempt** (correct or wrong; retries after a miss don't re-log) has its
+latency recorded — time from the problem appearing to ✓/Enter being pressed — tagged with its
+presentation (§4) and its larger operand. This is **purely passive**: no timer, countdown, or
+any speed-related feedback is ever shown to the child, and nothing here affects scoring, difficulty,
+or any in-game reward. Two views on the stats screen, both scoped to the trailing 30 days:
+- **By presentation** — Min / Median / Max (with sample count) for Digits, Emoji, Pips, and
+  Combined.
+- **By operand size** — the same four groups, each split into **Small (≤4)** vs **Large (5–9)**,
+  median + count only. This exists because operand size confounds the presentation comparison:
+  emoji/pips add a "figure out how many are in this pile" step that scales with the larger
+  operand and digits doesn't have at all, so a raw per-presentation median can't tell "this
+  representation is slow" apart from "big numbers are slow, and this presentation happens to
+  show them raw." (Pips' "Large" column only ever reflects 5–6, never 7–9, since §4 caps pip
+  operands at 6 — a structural asymmetry worth knowing when reading that row.)
 
 **Reset:** a small, de-emphasized "Reset stats" link sits well below the Close button — spaced
 apart deliberately to avoid an accidental tap — and opens an inline **confirm / cancel** prompt.
-Nothing is deleted until the destructive option is explicitly confirmed.
+Nothing is deleted until the destructive option is explicitly confirmed — including the mistake
+and response-time logs above, which live in the same storage.
 
 ---
 
@@ -434,13 +455,15 @@ tap/key not on a trophy, returns to the picker (§9) with test mode's on/off sta
   of a bark or a train, not a real recording. Revisit with real sample audio if truer realism is
   ever wanted; that would mean sourcing license-cleared clips and dropping the current
   single-HTML-file build (§2), so it's a deliberate trade-off, not an oversight.
-- **No latency/speed tracking exists yet.** Every stat and scoring rule (§6, §11) is purely
-  correctness-based — nothing records how long an answer took, so a child who counts on fingers
-  for 15s scores identically to one who answers instantly. This is the concrete prerequisite
-  every idea in §17.6 depends on — and it's a **two-step** prerequisite, not one: first measure
-  *this child's own* baseline with zero visible effect on the game, and only then decide what
-  "improvement" means relative to that baseline. Nothing in §17.6 should ever be built against a
-  guessed universal number (a flat "1.5 seconds," for instance) — see §17.6 for why.
+- **Latency tracking is step 1 of 2 — step 1 now shipped, step 2 still not.** §17.6's baseline
+  measurement (per-answer response time, by presentation and operand size, §11) is built and
+  passively collecting — with zero visible effect on the game, per its own constraint. **Step 2
+  is not started:** deciding what "improvement" means relative to each child's own baseline, and
+  building anything (reward, mechanic, or adaptivity change) on top of it, is still deferred
+  Phase 2 work (§17.6) — the data existing doesn't mean it's time to act on it yet; §17.6 is
+  explicit that step 2 needs real play data to calibrate against, not a guess, and that's still
+  true even with step 1 done. Every other stat and scoring rule (§6) remains purely
+  correctness-based, unaffected by this.
 
 ---
 
@@ -466,7 +489,9 @@ Ordered by leverage toward that goal; each is paired with the theory it draws on
 > a child who already understands addition, not concept-teaching, which the concrete-manipulative
 > framing those items originally borrowed was aimed at. See new §17.6 — since strengthened with a
 > non-negotiable constraint (baseline-first measurement, reward-only/never-punitive) after review
-> flagged the first pass as not protective enough of a 7-year-old's normal response time.)*
+> flagged the first pass as not protective enough of a 7-year-old's normal response time. §17.6's
+> step 1 — the passive latency baseline itself — then actually shipped the same day, §11. Nothing
+> past step 1 has been built; collecting the data isn't a green light to act on it yet, §16.)*
 
 ### 17.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage, revised*
 The Phase 1 game is a **drill with juice**: solve the sum → get the fireworks. The math is
@@ -541,12 +566,15 @@ concept-teaching techniques aimed at a different problem — a child still learn
 That constraint means measurement and reward can't be designed in one step — it has to be two,
 in order, with nothing skipped:
 
-1. **Baseline first, with zero visible effect on the game.** Before anything reacts to speed at
-   all, record per-answer latency (problem shown → ✓ tapped, §5/§6) silently for a good while —
-   no on-screen timer, no countdown feel, nothing the child can perceive as being tested. The
-   only goal at this stage is learning *this specific child's* normal range at each difficulty
-   tier (§3's sum ramp) — every kid's baseline will differ, and guessing one is the mistake this
-   whole item exists to avoid.
+1. **Baseline first, with zero visible effect on the game — shipped 2026-09-18 (§11).** Every
+   problem's first-attempt latency (problem shown → ✓/Enter, §5/§6) is recorded silently — no
+   on-screen timer, no countdown feel, nothing the child can perceive as being tested — tagged by
+   presentation (§4) and operand size, reviewable on the stats screen (§11) over a rolling 30
+   days. This is *only* measurement: nothing reads this data during play, and it affects no
+   scoring, difficulty, or reward yet. The goal at this stage is purely learning *this specific
+   child's* normal range at each difficulty tier (§3's sum ramp) — every kid's baseline will
+   differ, and guessing one is the mistake this whole item exists to avoid. Steps 2 onward below
+   remain unbuilt — collecting the data isn't itself permission to act on it yet (§16).
 2. **"Fast" is then defined relative to that baseline — never a fixed number.** Once real data
    exists, "improvement" means beating *this child's own* recent median by some small margin: a
    personal, moving target that ratchets up gently only as their actual times drop, and eases

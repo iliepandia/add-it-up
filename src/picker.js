@@ -11,7 +11,7 @@ export function showPicker(){
   win.classList.remove("show");
   picker.classList.add("show");
   state.locked=true;
-  endSession(); // browsing the picker (or stats, reached from here) is never play time
+  endSession(state.mode); // browsing the picker (or stats, reached from here) is never play time
   stopSnake();
   renderMasteryBadge();
 }

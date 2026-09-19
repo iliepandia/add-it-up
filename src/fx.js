@@ -33,13 +33,17 @@ export function tadaSparkles(){
   for(let i=0;i<10;i++) spawnParticle("✨",cx,cy,26,22);
 }
 
-export function flyStar(index,onImpact){
-  const target=starsEl.children[index]; const tr=target.getBoundingClientRect();
+export function flyStar(index,onImpact){ flyStarTo(starsEl.children[index],onImpact); }
+
+// Big star from screen centre smashing into `target` (a star slot, or the
+// hard-mode bonus star under it).
+export function flyStarTo(target,onImpact,glyph){
+  const tr=target.getBoundingClientRect();
   const tx=tr.left+tr.width/2, ty=tr.top+tr.height/2;
   const cx=innerWidth/2, cy=innerHeight*0.42;
   const targetPx=parseFloat(getComputedStyle(target).fontSize)||30;
   const BIG=Math.min(innerWidth,innerHeight)*0.6; const smallScale=targetPx/BIG;
-  const mega=document.createElement("div"); mega.className="mega-star"; mega.textContent="★"; mega.style.fontSize=BIG+"px";
+  const mega=document.createElement("div"); mega.className="mega-star"; mega.textContent=glyph||"★"; mega.style.fontSize=BIG+"px";
   document.body.appendChild(mega); const base="translate(-50%,-50%)";
   mega.animate([
     {transform:`translate(${cx}px,${cy}px) ${base} scale(1) rotate(-22deg)`, opacity:1, offset:0, easing:"ease-out"},

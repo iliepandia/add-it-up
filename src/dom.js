@@ -42,3 +42,13 @@ export const masteryArc = $("#masteryArc");
 export const masteryBalloon = $("#masteryBalloon");
 export const masteryBalloonEmoji = $("#masteryBalloonEmoji");
 export const masteryBalloonCaption = $("#masteryBalloonCaption");
+
+export const difficultyToggle = $("#difficultyToggle");
+export const difficultyHint = $("#difficultyHint");
+export const statsDifficultyToggle = $("#statsDifficultyToggle");
+
+export const waterBarEl = $("#waterBar");
+export const waterFillEl = $("#waterFill");
+export const waterRiderEl = $("#waterRider");
+
+export const presentationPickerEl = $("#presentationPicker");

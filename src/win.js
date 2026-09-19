@@ -1,6 +1,6 @@
 // End screen: trophy reveal + closing star explosion.
 
-import { pick, rnd, reduceMotion, WIN_END } from "./config.js";
+import { pick, rnd, reduceMotion, WIN_END, HARD_WIN_END, BONUS_GLYPH } from "./config.js";
 import { win, picker, trophiesEl, winfxEl } from "./dom.js";
 import { tone, sParty, sStar, sTada, sDing } from "./audio.js";
 import { spawnParticle } from "./fx.js";
@@ -77,15 +77,18 @@ function makeTrophiesClickable(){
   });
 }
 
-function revealTrophies(glyph,count){
+// One trophy per glyph, revealed on a rising scale: the streak prizes first,
+// then one bike per speed bonus earned. They're all plain trophies, so the
+// bikes tap, freeze and get eaten by the snake exactly like the rest.
+function revealTrophies(glyphs){
   trophiesEl.style.cssText="";
   trophiesEl.innerHTML="";
   const STEP=260, PENTA=[0,2,4,7,9,12,14,16,19,21];
-  for(let i=0;i<count;i++) setTimeout(()=>{
-    const e=document.createElement("span"); e.className="trophy"; e.textContent=glyph; trophiesEl.appendChild(e);
+  glyphs.forEach((g,i)=> setTimeout(()=>{
+    const e=document.createElement("span"); e.className="trophy"; e.textContent=g; trophiesEl.appendChild(e);
     const semi=PENTA[Math.min(i,PENTA.length-1)]; tone(523.25*Math.pow(2,semi/12),0,0.22,"triangle",0.14);
-  }, i*STEP);
-  setTimeout(()=>{ starExplosion(); freezeTrophyLayout(); makeTrophiesClickable(); trophiesReady=true; }, count*STEP+250);
+  }, i*STEP));
+  setTimeout(()=>{ starExplosion(); freezeTrophyLayout(); makeTrophiesClickable(); trophiesReady=true; }, glyphs.length*STEP+250);
 }
 
 // The snake reports its current segments (viewport-pixel rects) on every
@@ -120,11 +123,16 @@ export function showWin(){
   win.classList.add("show");
   state.locked=true;
   trophiesReady=false; eatPending=0; eatingQueue=false;
-  const glyph=pick(WIN_END);
+  const hard = state.mode === "hard";
+  const glyph=pick(hard ? HARD_WIN_END : WIN_END);
   const score=Math.max(0,10-state.gameWrongTotal);
-  addPrize(glyph,score); // exactly one prize per finished game, into the persistent prize box
-  if(score>=10 && rnd(3)===0) startSnake(onSnakeStep); // perfect game: 1-in-3 chance of the crawling snake easter egg
-  revealTrophies(glyph, Math.max(1,state.maxStreak));
+  addPrize(glyph,score,state.mode); // exactly one prize per finished game, into the persistent prize box
+  // Perfect game: a crawling snake easter egg — hard mode's is red and twice
+  // as likely (1-in-2 vs easy's 1-in-3), matching its generally higher stakes.
+  if(score>=10 && rnd(hard?2:3)===0) startSnake(onSnakeStep, hard?"hard":"easy");
+  const trophies=Array(Math.max(1,state.maxStreak)).fill(glyph);
+  for(let i=0;i<state.bonusStarCount;i++) trophies.push(BONUS_GLYPH); // one bike per speed bonus
+  revealTrophies(trophies);
 }
 
 // Test-mode shortcut (typing TEST then S on the theme picker, see mastery.js)
@@ -138,5 +146,5 @@ export function testJumpToWin(){
   trophiesReady=false; eatPending=0; eatingQueue=false;
   const glyph=pick(WIN_END);
   startSnake(onSnakeStep);
-  revealTrophies(glyph, 10);
+  revealTrophies(Array(10).fill(glyph));
 }

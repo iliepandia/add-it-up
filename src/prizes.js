@@ -31,21 +31,25 @@ function save(list){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }catch(e){ /* storage unavailable (private mode, quota) — prizes just won't persist */ }
 }
 
-export function addPrize(emoji, score){
+export function addPrize(emoji, score, mode){
   const list = load();
-  list.push({ emoji, score });
+  list.push({ emoji, score, mode });
   save(list);
 }
 
 // Flat list of prize tiles to render, in the order they were earned (storage
 // is already append-only chronological, so this is just a straight map).
 // Each tile carries its own display scale, derived from that game's score.
+// Both modes share this one box (per design) — `mode` just lets the box
+// badge a hard-mode tile differently; entries earned before hard mode
+// existed have no mode recorded and are treated as easy.
 export function getPrizeTiles(){
   const list = load();
   return list.map(entry => {
     // Old storage format was a plain emoji string, with no score recorded.
     const emoji = typeof entry === "string" ? entry : entry.emoji;
     const score = typeof entry === "string" ? null : entry.score;
-    return { emoji, scale: sizeScaleForScore(score), perfect: score === 10 };
+    const mode = typeof entry === "string" ? "easy" : (entry.mode || "easy");
+    return { emoji, scale: sizeScaleForScore(score), perfect: score === 10, hard: mode === "hard" };
   });
 }

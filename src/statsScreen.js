@@ -6,6 +6,7 @@ import {
   statsClose, statsResetBtn, resetConfirm, resetCancel, resetConfirmBtn
 } from "./dom.js";
 import { getSummary, getLast30Games, getLast30DaysSeries, getTopMistakes, getLatencyStats, resetStats } from "./stats.js";
+import { state } from "./state.js";
 
 function formatLatency(ms){
   return ms == null ? "—" : (ms / 1000).toFixed(1) + "s";
@@ -43,7 +44,7 @@ function emptyNote(text){
 }
 
 function renderTiles(){
-  const s = getSummary();
+  const s = getSummary(state.mode);
   statsGrid.innerHTML = "";
   const rows = [
     ["Games played", s.gamesPlayed || "—"],
@@ -70,7 +71,7 @@ function renderGridlines(svg, W, H, pad){
 
 function renderGamesChart(){
   chartGames.innerHTML = "";
-  const games = getLast30Games();
+  const games = getLast30Games(state.mode);
   if(!games.length){ chartGames.appendChild(emptyNote("Play a few games to see your progress here.")); return; }
   const W = 300, H = 110, pad = 6, n = games.length;
   const bw = (W - pad * 2) / n;
@@ -86,7 +87,7 @@ function renderGamesChart(){
 
 function renderMonthChart(){
   chartMonth.innerHTML = "";
-  const days = getLast30DaysSeries();
+  const days = getLast30DaysSeries(state.mode);
   if(!days.some(d => d.avg != null)){ chartMonth.appendChild(emptyNote("No games in the last 30 days yet.")); return; }
   const W = 300, H = 110, pad = 6;
   const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none", class: "chart-svg" });
@@ -108,7 +109,7 @@ function renderMonthChart(){
 
 function renderMistakes(){
   mistakesList.innerHTML = "";
-  const top = getTopMistakes(10);
+  const top = getTopMistakes(state.mode, 10);
   if(!top.length){
     const li = document.createElement("li"); li.className = "mistake-empty";
     li.textContent = "No mistakes yet — great job!";
@@ -129,7 +130,7 @@ function renderMistakes(){
 // defined from this child's own data — never shown or referenced in play.
 function renderLatency(){
   latencyTable.innerHTML = "";
-  const s = getLatencyStats();
+  const s = getLatencyStats(state.mode);
   if(!s.combined){
     latencyTable.appendChild(emptyNote("Play a few games to see response times here."));
     return;
@@ -169,7 +170,7 @@ function renderLatency(){
 // to keep a 2-way split × 4 rows readable — min/max live in the table above).
 function renderLatencyBySize(){
   latencySizeTable.innerHTML = "";
-  const s = getLatencyStats();
+  const s = getLatencyStats(state.mode);
   if(!s.combined){
     latencySizeTable.appendChild(emptyNote("Play a few games to see this breakdown here."));
     return;
@@ -224,5 +225,5 @@ export function wireStats(){
   statsClose.addEventListener("click", hideStats);
   statsResetBtn.addEventListener("click", () => { resetConfirm.hidden = false; });
   resetCancel.addEventListener("click", () => { resetConfirm.hidden = true; });
-  resetConfirmBtn.addEventListener("click", () => { resetStats(); renderAll(); });
+  resetConfirmBtn.addEventListener("click", () => { resetStats(state.mode); renderAll(); });
 }

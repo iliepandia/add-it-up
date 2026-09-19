@@ -12,26 +12,35 @@ import "./styles/rotate.css";
 import "./styles/prizeBox.css";
 import "./styles/snake.css";
 import "./styles/mastery.css";
+import "./styles/waterBar.css";
+import "./styles/presentationPicker.css";
 
 import {
   GOAL, SUM_START, SUM_MIN, SUM_MAX_CAP, SEE_RESULT, STAR_FLY, IMPACT_AT,
   POST_HOLD, WIN_HOLD, WRONG_HOLD,
   REVEAL_FLASH, REVEAL_TO_FLASH, FLASH_REPEATS, KEY_FLASH_ON, KEY_FLASH_GAP, reduceMotion,
-  WRONG_FACES, pick
+  WRONG_FACES, pick, FLYBY_DURATION, REWARD_SHOWER_DURATION, BONUS_GLYPH
 } from "./config.js";
-import { card, keypad, flash, win, picker, statsLink, statsScreen, prizeBoxLink, prizeBox } from "./dom.js";
-import { audio, sTada, sError } from "./audio.js";
+import {
+  card, keypad, flash, win, picker, statsLink, statsScreen, prizeBoxLink, prizeBox,
+  difficultyToggle, difficultyHint, statsDifficultyToggle, presentationPickerEl
+} from "./dom.js";
+import { audio, sTada, sError, sDing } from "./audio.js";
 import { applyTheme, themeState, checkStreak } from "./themes.js";
 import { newProblem, renderAns } from "./problem.js";
-import { buildStars, fillStar, refreshStars } from "./stars.js";
-import { celebrate, tadaSparkles, flyStar } from "./fx.js";
+import { buildStars, fillStar, refreshStars, prepareBonusStar, revealBonusStar } from "./stars.js";
+import { celebrate, tadaSparkles, flyStar, flyStarTo } from "./fx.js";
 import { showWin } from "./win.js";
 import { showPicker, wirePicker } from "./picker.js";
 import { state, keyByDigit } from "./state.js";
-import { initStats, startSession, recordGame, recordMistake, recordLatency } from "./stats.js";
+import { initStats, startSession, recordGame, recordMistake, recordLatency, getLatencyStats } from "./stats.js";
 import { showStats, wireStats } from "./statsScreen.js";
 import { showPrizeBox, wirePrizeBox } from "./prizeBox.js";
-import { handlePickerKeydown, wireMasteryBadge } from "./mastery.js";
+import { handlePickerKeydown, wireMasteryBadge, renderMasteryBadge } from "./mastery.js";
+import { renderDifficultyToggle, attemptToggleMode, applyModeLook } from "./difficulty.js";
+import { getHardDrainDuration, adjustHardDrainDuration } from "./hardDifficulty.js";
+import { showWaterBar, hideWaterBar, freezeWaterBar, waterHasWater } from "./waterBar.js";
+import { showPresentationPicker } from "./presentationPicker.js";
 
 // ---- input ----
 // Typing never auto-submits (fat-finger taps used to instantly count as a
@@ -53,40 +62,69 @@ function submitEntry(){
     // never shown to the child, never affects gameplay. maxOperand lets the
     // stats screen separate "this representation is slow" from "big numbers
     // are slow" (see recordLatency in stats.js).
-    recordLatency(state.presentation, performance.now() - state.problemShownAt, Math.max(state.a, state.b));
+    recordLatency(state.mode, state.presentation, performance.now() - state.problemShownAt, Math.max(state.a, state.b));
     state.latencyLogged = true;
   }
   const val=parseInt(state.entry,10);
-  if(val===state.answer) correct();
-  else wrong();
+  if(val===state.answer){
+    // Hard mode's water bar: whether it still had water at this exact
+    // instant decides the bonus (2nd) star — checked at submit time, then
+    // carried through correct()'s SEE_RESULT delay to the star-fill itself.
+    state.pendingBonus = state.mode==="hard" && waterHasWater();
+    correct();
+  }else wrong();
 }
 
 // ---- correct ----
 function correct(){
-  state.locked=true;
+  state.locked=true; renderAns(); freezeWaterBar();
+  const bonus = state.pendingBonus; state.pendingBonus=false;
   setTimeout(()=>{
     state.sumMax=Math.min(SUM_MAX_CAP, state.sumMax+1);
     state.streak++; state.maxStreak=Math.max(state.maxStreak, state.streak);
     state.starCount++;
+    if(bonus) state.bonusStarCount++;
     const idx=state.starCount-1, won=state.starCount>=GOAL;
-    const onImpact=()=>{ fillStar(idx); refreshStars(); celebrate(); checkStreak(); };
-    if(won) recordGame({ wrongCount: state.gameWrongTotal, theme: themeState.name, streak: state.maxStreak });
+    const impactAt=STAR_FLY*IMPACT_AT;
+    const BONUS_GAP=250;
+    const onImpact=()=>{
+      fillStar(idx); refreshStars(); celebrate(); checkStreak();
+      if(bonus){
+        // Speed bonus: a second big star flies in after the regular one lands.
+        const b=prepareBonusStar(idx);
+        if(reduceMotion) revealBonusStar(b);
+        else setTimeout(()=>flyStarTo(b,()=>revealBonusStar(b),BONUS_GLYPH), BONUS_GAP);
+      }
+    };
+    if(won){
+      recordGame(state.mode, { wrongCount: state.gameWrongTotal, theme: themeState.name, streak: state.maxStreak });
+      // Between-game adaptivity (not mid-game): a perfect-timing game speeds
+      // the bar up next time, a game where it drained more than half the
+      // time slows it back down — see hardDifficulty.js.
+      if(state.mode==="hard") adjustHardDrainDuration(state.bonusStarCount, GOAL);
+    }
+    const advance = () => { if(won){ hideWaterBar(); showWin(); } else advanceProblem(); };
     if(reduceMotion){
       onImpact();
-      setTimeout(()=> won?showWin():(newProblem(),unlockEnter()), won?WIN_HOLD:POST_HOLD);
+      setTimeout(advance, won?WIN_HOLD:POST_HOLD);
     }else{
       flyStar(idx,onImpact);
-      const afterImpact=STAR_FLY*IMPACT_AT;
-      setTimeout(()=> won?showWin():(newProblem(),unlockEnter()), afterImpact + (won?WIN_HOLD:POST_HOLD));
+      // Hard mode's presentation picker is a full-screen overlay, so it must
+      // wait for the bonus-star flight and any streak reward to finish.
+      const bonusExtra = bonus ? BONUS_GAP + impactAt : 0;
+      const rewardMs = state.mode==="hard" && !won
+        ? ([3,9].includes(state.streak) ? REWARD_SHOWER_DURATION : state.streak===6 ? FLYBY_DURATION : 0) : 0;
+      const hold = won ? WIN_HOLD : Math.max(POST_HOLD, rewardMs - bonusExtra);
+      setTimeout(advance, impactAt + bonusExtra + hold);
     }
   }, SEE_RESULT);
 }
 
 // ---- wrong ----
 function wrong(){
-  state.locked=true; sError();
+  state.locked=true; renderAns(); sError();
   state.sumMax=Math.max(SUM_MIN, state.sumMax-2); state.streak=0; state.gameWrongTotal++; refreshStars();
-  recordMistake(state.a, state.b);
+  recordMistake(state.mode, state.a, state.b);
   if(!reduceMotion){ card.classList.add("shake"); card.addEventListener("animationend",()=>card.classList.remove("shake"),{once:true}); }
   flash.textContent=pick(WRONG_FACES);
   flash.classList.remove("show"); void flash.offsetWidth; flash.classList.add("show");
@@ -116,9 +154,28 @@ function reAskSame(){ state.entry=""; state.wrongCount=0; renderAns(); state.loc
 // ---- start / restart ----
 function startGame(){
   picker.classList.remove("show"); win.classList.remove("show");
-  startSession();
+  startSession(state.mode);
   state.starCount=0; state.sumMax=SUM_START; state.streak=0; state.maxStreak=0; state.gameWrongTotal=0;
-  buildStars(); refreshStars(); newProblem(); unlockEnter();
+  state.bonusStarCount=0; state.pendingBonus=false;
+  if(state.mode==="hard") state.waterDrainMs=getHardDrainDuration(getLatencyStats("easy").combined?.max);
+  buildStars(); refreshStars(); advanceProblem();
+}
+// Easy mode goes straight to the next problem; hard mode asks how to see it
+// first, every single time (presentationPicker.js), then starts that
+// problem's water bar once it's shown.
+function advanceProblem(){
+  if(state.mode==="hard"){
+    hideWaterBar();
+    showPresentationPicker(choice=>{
+      state.presentation=choice;
+      newProblem();
+      unlockEnter();
+      showWaterBar();
+    });
+  }else{
+    newProblem();
+    unlockEnter();
+  }
 }
 function unlockEnter(){
   state.locked=false;
@@ -160,6 +217,7 @@ function buildKeypad(){
 window.addEventListener("keydown",e=>{
   if(statsScreen.classList.contains("show")) return;
   if(prizeBox.classList.contains("show")) return;
+  if(presentationPickerEl.classList.contains("show")) return;
   if(picker.classList.contains("show")){
     if(handlePickerKeydown(e)) return;
     const map={"1":"classic","2":"nature","3":"space","4":"animal"};
@@ -175,12 +233,45 @@ win.addEventListener("pointerdown",e=>{ e.preventDefault(); audio(); showPicker(
 statsLink.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); audio(); showStats(); });
 prizeBoxLink.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); audio(); showPrizeBox(); });
 
+// ---- difficulty toggle (shared control, picker + stats screen; §difficulty.js) ----
+let hintTimer=null;
+function showDifficultyHint(){
+  if(!difficultyHint) return;
+  difficultyHint.hidden=false;
+  clearTimeout(hintTimer);
+  hintTimer=setTimeout(()=>{ difficultyHint.hidden=true; }, 1800);
+}
+function refreshDifficultyUI(){
+  renderDifficultyToggle(difficultyToggle);
+  renderDifficultyToggle(statsDifficultyToggle);
+  renderMasteryBadge();
+  applyModeLook();
+  if(statsScreen.classList.contains("show")) showStats();
+}
+function wireDifficultyToggle(btn){
+  if(!btn) return;
+  btn.addEventListener("pointerdown", e=>{
+    e.preventDefault(); e.stopPropagation();
+    if(attemptToggleMode()){
+      audio(); sDing();
+      refreshDifficultyUI();
+    }else{
+      audio(); sError();
+      if(btn===difficultyToggle) showDifficultyHint();
+      btn.classList.remove("deny"); void btn.offsetWidth; btn.classList.add("deny");
+    }
+  });
+}
+
 // ---- boot ----
 buildKeypad();
 wirePicker(name=>{ applyTheme(name); themeState.current.click(); startGame(); });
 wireStats();
 wirePrizeBox();
 wireMasteryBadge();
+wireDifficultyToggle(difficultyToggle);
+wireDifficultyToggle(statsDifficultyToggle);
+refreshDifficultyUI();
 initStats();
 showPicker();
 document.querySelector("#buildVer").textContent = `ver: ${__BUILD_VERSION__}`;

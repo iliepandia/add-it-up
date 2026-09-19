@@ -18,6 +18,10 @@
 .snake-head .snake-seg-face::before{left:6px;}
 .snake-head .snake-seg-face::after{right:6px;}
 
+/* Hard mode variant (§win.js): bright red instead of classic green. */
+#snakeLayer.snake-hard .snake-seg-face{background:#E63946; border-color:#A81E2B;}
+#snakeLayer.snake-hard .snake-head .snake-seg-face{background:#FF4D5B; border-color:#A81E2B;}
+
 /* Eating: a bulge pops through the body head-to-tail when the snake
    swallows a prize (see snake.js's eatPrize) — biggest at the head, tapering
    for the rest of the body. */

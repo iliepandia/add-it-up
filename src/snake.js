@@ -12,6 +12,7 @@ const CELL = 26;      // px per grid cell
 const LENGTH = 8;      // body blocks, including the head, before it starts shrinking
 const TICK_MS = 150;   // ms per grid step
 const TURN_CHANCE = 0.35; // odds of an unforced sharp turn on any given tick
+const HARD_LENGTH_MULT = 2, HARD_LIFE_MULT = 2; // hard variant: twice as long, lives twice as long
 const SHRINK_AFTER_MS = 20000; // how long the snake crawls at full length first
 const SHRINK_STEP_MS = 400;    // how long each tail segment takes to disappear once shrinking starts
 const EAT_STEP_MS = 90;   // stagger between each segment's pop starting, head to tail
@@ -27,6 +28,7 @@ let head = { x: 0, y: 0 };
 let dir = DIRS[0];
 let body = []; // positions, index 0 = head
 let startedAt = 0;
+let maxLen = LENGTH, shrinkAfter = SHRINK_AFTER_MS; // per-variant
 let capLength = LENGTH; // current max length; counts down once shrinking begins
 let onStep = null; // optional callback(segmentRects) fired after every tick
 let eating = false; // true while an eat animation is playing — pauses movement/onStep
@@ -62,7 +64,7 @@ function layout(){
 function buildSegs(){
   snakeLayer.innerHTML = "";
   segEls = []; segFaces = [];
-  for(let i = 0; i < LENGTH; i++){
+  for(let i = 0; i < maxLen; i++){
     const s = document.createElement("div");
     s.className = "snake-seg" + (i === 0 ? " snake-head" : "");
     const face = document.createElement("div");
@@ -92,8 +94,8 @@ function tick(){
   head = { x: head.x + dir[0], y: head.y + dir[1] };
   body.unshift(head);
 
-  const shrinkFor = performance.now() - startedAt - SHRINK_AFTER_MS;
-  capLength = shrinkFor > 0 ? Math.max(0, LENGTH - 1 - Math.floor(shrinkFor / SHRINK_STEP_MS)) : LENGTH;
+  const shrinkFor = performance.now() - startedAt - shrinkAfter;
+  capLength = shrinkFor > 0 ? Math.max(0, maxLen - 1 - Math.floor(shrinkFor / SHRINK_STEP_MS)) : maxLen;
 
   while(segEls.length > capLength){ const seg = segEls.pop(); segFaces.pop(); if(seg) seg.remove(); }
   if(capLength <= 0){ stopSnake(); return; }
@@ -126,17 +128,23 @@ export function eatPrize(onDone){
 
 /** onStepCb(segmentRects), if given, fires after every tick with each
  *  current body segment's viewport-pixel rect ({x,y,w,h}) — lets a caller
- *  (e.g. the win screen) react to the snake touching something on screen. */
-export function startSnake(onStepCb){
+ *  (e.g. the win screen) react to the snake touching something on screen.
+ *  variant "hard" recolors the snake bright red (see snake.css); anything
+ *  else (including omitted) keeps the classic green. */
+export function startSnake(onStepCb, variant){
   stopSnake();
   if(reduceMotion || !snakeLayer) return;
   layout();
   head = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
   dir = DIRS[Math.floor(Math.random() * DIRS.length)];
   body = [head];
-  capLength = LENGTH;
+  const hard = variant === "hard";
+  maxLen = hard ? LENGTH * HARD_LENGTH_MULT : LENGTH;
+  shrinkAfter = hard ? SHRINK_AFTER_MS * HARD_LIFE_MULT : SHRINK_AFTER_MS;
+  capLength = maxLen;
   startedAt = performance.now();
   onStep = onStepCb || null;
+  snakeLayer.classList.toggle("snake-hard", variant === "hard");
   buildSegs();
   place();
   timer = setInterval(tick, TICK_MS);
@@ -144,7 +152,7 @@ export function startSnake(onStepCb){
 
 export function stopSnake(){
   if(timer){ clearInterval(timer); timer = null; }
-  if(snakeLayer) snakeLayer.innerHTML = "";
+  if(snakeLayer){ snakeLayer.innerHTML = ""; snakeLayer.classList.remove("snake-hard"); }
   segEls = []; segFaces = [];
   onStep = null;
   eating = false;

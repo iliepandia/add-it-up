@@ -14,7 +14,7 @@ import {
   tapCupcakeSparkle, tapCookieCrunch,
   tapRainbowShimmer, tapSunGlow, tapBloomChime, tapMushroomBoop, tapTreeRustleTap
 } from "./audio.js";
-import { pick } from "./config.js";
+import { pick, BONUS_GLYPH } from "./config.js";
 import { getPrizeTiles } from "./prizes.js";
 
 // Every prize emoji (see WIN_END in config.js) maps to a sound that matches
@@ -74,7 +74,7 @@ function renderPrizes(){
     prizeStrip.appendChild(p);
     return;
   }
-  tiles.forEach(({ emoji, scale, perfect }) => {
+  tiles.forEach(({ emoji, scale, perfect, hard }) => {
     // Two layers on purpose: the outer box is a stable grid cell that never
     // animates or moves, so its neighbors keep their position no matter what
     // happens to the emoji inside — only the inner face pops/scales/reacts.
@@ -88,6 +88,13 @@ function renderPrizes(){
     face.style.animation = "trophyPop .4s cubic-bezier(.34,1.56,.64,1)";
     face.addEventListener("animationend", () => { face.style.animation = ""; }, { once: true });
     cell.appendChild(face);
+
+    if(hard){
+      const badge = document.createElement("span");
+      badge.className = "prize-hard-badge";
+      badge.textContent = BONUS_GLYPH;
+      cell.appendChild(badge);
+    }
 
     cell.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); audio(); playTapAnim(face); playPrizeSound(emoji); });
     prizeStrip.appendChild(cell);

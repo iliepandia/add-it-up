@@ -2,6 +2,8 @@
 
 export const GOAL = 10;
 export const SUM_START = 5, SUM_MIN = 5, SUM_MAX_CAP = 12; // difficulty ramp: start, floor, ceiling
+export const BONUS_GLYPH = "🚴🏻‍♂️"; // hard mode's speed reward: a bike, matching the FAST toggle icon
+export const HARD_SUM_MIN = 6; // hard mode: no ramp, but the sum is never allowed below this
 export const SEE_RESULT = 200;
 export const STAR_FLY = 1050, IMPACT_AT = 0.82;
 export const POST_HOLD = 1200, WIN_HOLD = 1400, WRONG_HOLD = 1000;
@@ -31,6 +33,16 @@ export const WIN_END = ["🐄","🚀","🦖","🚲","🚗","🎂",
   "🌼","🍉","🍓","🍭","🍩","🍪","🧁","🎪","🎠","🎡",
   "🚁","⛵","🛸","🪀"];
 export const PIPS = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+
+// Hard mode's own trophy/prize pool — deliberately separate glyphs from
+// WIN_END (§9/§12) so a glance at the prize box tells easy- from
+// hard-mode wins apart even before the small badge (see prizeBox.js) is noticed.
+export const HARD_WIN_END = ["💎","🔥","⚡","🎖️","🥇","🛡️","⚔️","🧨","🎯","🔮",
+  "🧩","🕹️","🏹","🪄","🧿","🗝️","👑","🎇","🌋","🦂",
+  "🦈","🐉","🦇","🦅","🐺","🦏","🦍","🐆","🦖","🦕",
+  "🌠","☄️","🛰️","🧲","⛏️","🔱","🪓","🏆","🥋","🎲",
+  "🃏","🎰","🧭","⏱️","🔋","🧪","🛎️","📯","🚨","🏴‍☠️",
+  "💥","🌪️","🌊","🧱","🔗","🪃","🥊","🎳","🛷","🏔️"];
 
 export const rnd = n => Math.floor(Math.random()*n);
 export const pick = arr => arr[rnd(arr.length)];

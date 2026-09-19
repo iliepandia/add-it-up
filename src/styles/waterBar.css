@@ -1,0 +1,15 @@
+/* ---- hard mode's water bar: horizontal, under the problem card. Full at the
+   start of every problem; the fill is left-anchored and its width shrinks, so
+   the water drains right to left (see waterBar.js), with a biker riding the
+   draining edge until the bar runs dry. ---- */
+.water-bar{position:relative; width:100%; max-width:min(720px,94vw); flex:0 0 auto;}
+.water-bar[hidden]{display:none;}
+.water-track{width:100%; height:clamp(14px,3vw,20px); border-radius:999px; overflow:hidden;
+  background:rgba(46,58,89,.14); box-shadow:inset 0 0 0 2px rgba(46,58,89,.18);}
+.water-fill{height:100%; width:100%; border-radius:inherit;
+  background:linear-gradient(90deg,#0288D1 0%,#5AD1F7 100%);}
+/* Mirrored so the rider faces the way it travels. */
+.water-rider{position:absolute; top:50%; left:100%; transform:translate(-50%,-52%) scaleX(-1);
+  font-size:clamp(22px,6vw,32px); line-height:1; pointer-events:none;
+  filter:drop-shadow(0 1px 2px rgba(46,58,89,.3));}
+.water-rider[hidden]{display:none;}
