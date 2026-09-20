@@ -22,7 +22,7 @@ import {
   WRONG_FACES, pick, FLYBY_DURATION, REWARD_SHOWER_DURATION, BONUS_GLYPH
 } from "./config.js";
 import {
-  card, keypad, flash, win, picker, statsLink, statsScreen, prizeBoxLink, prizeBox,
+  card, keypad, flash, win, playBtn, picker, statsLink, statsScreen, prizeBoxLink, prizeBox,
   difficultyToggle, difficultyHint, statsDifficultyToggle, presentationPickerEl, waterRiderEl
 } from "./dom.js";
 import { audio, sTada, sError, sDing } from "./audio.js";
@@ -252,12 +252,20 @@ window.addEventListener("keydown",e=>{
     if(map[e.key]){ audio(); applyTheme(map[e.key]); themeState.current.click(); startGame(); }
     return;
   }
-  if(win.classList.contains("show")){ audio(); showPicker(); return; }
+  // On the win screen only Enter/Space restarts; every other key is swallowed,
+  // so a stray press can't cut the trophy/snake celebration short.
+  if(win.classList.contains("show")){
+    if(e.key==="Enter" || e.key===" "){ audio(); showPicker(); }
+    return;
+  }
   if(e.key>="0" && e.key<="9"){ audio(); handleDigit(parseInt(e.key,10)); return; }
   if(e.key==="Enter"){ audio(); submitEntry(); return; }
   if(e.key==="Backspace" || e.key==="Escape" || e.key==="Delete"){ audio(); clearEntry(); }
 });
-win.addEventListener("pointerdown",e=>{ e.preventDefault(); audio(); showPicker(); });
+// Restart is the Play button alone. Tapping anywhere on the win screen used to
+// restart, so a kid reaching for a trophy — or for the snake — cancelled the
+// celebration by accident.
+playBtn.addEventListener("pointerdown",e=>{ e.preventDefault(); audio(); showPicker(); });
 statsLink.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); audio(); showStats(); });
 prizeBoxLink.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); audio(); showPrizeBox(); });
 
