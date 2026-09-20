@@ -420,6 +420,22 @@ export function comboBoom(){
   tone(1568,0.02,0.5,"sine",0.05);  // a bright sparkle on top so it lands celebratory, not doomy
 }
 
+// ---- prize-box merge game (prizeMerge.js) ----
+// Four of a kind locking together: a four-note ladder that arrives somewhere,
+// so "you completed the set" reads by ear before the tiles start moving.
+export function mergeLock(){
+  [523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,i*0.08,0.22,"triangle",0.10));
+  noiseHit(0.26,"bandpass",900,2600,1.2,0.07,0.24);
+  tone(1568,0.34,0.45,"sine",0.07);
+}
+// The present going off: paper tearing, a low pop, then sparkle fallout as
+// the new prize comes out.
+export function presentPop(){
+  noiseHit(0.18,"highpass",1800,5200,0.8,0.12);
+  tone(180,0.10,0.18,"triangle",0.16);
+  [1318.5,1760,2093,2637].forEach((f,i)=>tone(f,0.16+i*0.05,0.30,"sine",0.08));
+}
+
 // ---- hard-mode prize-box tap sounds ----
 // Hard mode wins from its own glyph pool (HARD_WIN_END in config.js), which
 // shares almost nothing with the easy pool — beasts, fire, weapons, treasure,

@@ -43,13 +43,45 @@ export function addPrize(emoji, score, mode){
 // Both modes share this one box (per design) — `mode` just lets the box
 // badge a hard-mode tile differently; entries earned before hard mode
 // existed have no mode recorded and are treated as easy.
+//
+// `index` is the tile's position in storage. The merge game (prizeMerge.js)
+// needs it to trade four specific entries for one, and it is only valid for
+// as long as the render it came from is on screen — any write shifts every
+// later index, which is why a merge re-renders the whole shelf.
 export function getPrizeTiles(){
   const list = load();
-  return list.map(entry => {
+  return list.map((entry, index) => {
     // Old storage format was a plain emoji string, with no score recorded.
     const emoji = typeof entry === "string" ? entry : entry.emoji;
     const score = typeof entry === "string" ? null : entry.score;
     const mode = typeof entry === "string" ? "easy" : (entry.mode || "easy");
-    return { emoji, scale: sizeScaleForScore(score), perfect: score === 10, hard: mode === "hard" };
+    // A merged prize was never played for, so it has no score to derive a
+    // size from — it carries the size inherited from the four it replaced.
+    const scale = entry && entry.scale != null ? entry.scale : sizeScaleForScore(score);
+    const perfect = entry && entry.perfect != null ? !!entry.perfect : score === 10;
+    return { emoji, scale, perfect, hard: mode === "hard", index };
   });
+}
+
+// The four-of-a-kind trade (see prizeMerge.js): the entries at `indices` are
+// deleted and one new prize takes the slot `keepIndex` held, so the reward
+// appears exactly where the last tapped prize was. Net effect on the
+// collection is -3 entries. Called only when the present is actually opened —
+// a present left unopened costs the child nothing.
+// Returns the new prize's index in the rewritten list.
+export function mergePrizes(indices, keepIndex, emoji, scale, perfect){
+  const list = load();
+  const drop = new Set(indices);
+  const merged = { emoji, scale, perfect, mode: "easy", merged: true };
+  const next = [];
+  let newIndex = -1;
+  list.forEach((entry, i) => {
+    if(i === keepIndex){ newIndex = next.length; next.push(merged); }
+    else if(!drop.has(i)) next.push(entry);
+  });
+  // keepIndex fell off the end (storage changed underneath us) — still grant
+  // the prize rather than silently swallowing four tiles.
+  if(newIndex < 0){ newIndex = next.length; next.push(merged); }
+  save(next);
+  return newIndex;
 }

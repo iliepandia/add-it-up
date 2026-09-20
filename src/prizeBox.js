@@ -31,6 +31,7 @@ import {
 import { pick, BONUS_GLYPH } from "./config.js";
 import { getPrizeTiles } from "./prizes.js";
 import { hardPrizeTap, playAnim, resetPrizeFx } from "./prizeCombo.js";
+import { breakGroup, easyPrizeTap, initPrizeMerge, presentTap, resetPrizeMerge } from "./prizeMerge.js";
 
 // Every prize emoji (see WIN_END in config.js) maps to a sound that matches
 // what it actually is, so a tap sounds like that prize instead of a random
@@ -96,7 +97,56 @@ function playTapAnim(el){
   playAnim(el, name, dur);
 }
 
-function renderPrizes(){
+function makeTile(tile, pop){
+  const { emoji, scale, perfect, hard } = tile;
+  // Two layers on purpose: the outer box is a stable grid cell that never
+  // animates or moves, so its neighbors keep their position no matter what
+  // happens to the emoji inside — only the inner face pops/scales/reacts.
+  const cell = document.createElement("div");
+  cell.className = "prize-tile" + (perfect ? " prize-perfect" : "");
+  cell.style.setProperty("--scale", scale);
+
+  const face = document.createElement("div");
+  face.className = "prize-emoji";
+  face.textContent = emoji;
+  if(pop){
+    face.style.animation = "trophyPop .4s cubic-bezier(.34,1.56,.64,1)";
+    face.addEventListener("animationend", () => { face.style.animation = ""; }, { once: true });
+  }
+  cell.appendChild(face);
+
+  if(hard){
+    const badge = document.createElement("span");
+    badge.className = "prize-hard-badge";
+    badge.textContent = BONUS_GLYPH;
+    cell.appendChild(badge);
+  }
+
+  // Three behaviours share this one tap:
+  //  - a pending present gets first refusal and bursts open (prizeMerge.js);
+  //  - a hard prize builds a tap combo, and breaks any easy group under way,
+  //    since only easy prizes can be grouped (prizeCombo.js);
+  //  - an easy prize plays its reaction and feeds the merge game.
+  const tapOne = () => playTapAnim(face);
+  const tapSound = () => playPrizeSound(emoji);
+  cell.addEventListener("pointerdown", e => {
+    e.preventDefault(); e.stopPropagation(); audio();
+    if(presentTap(cell)) return;
+    if(hard){ breakGroup(); hardPrizeTap(cell, face, emoji, tapOne, tapSound); }
+    else easyPrizeTap(tile, cell, face, tapOne, tapSound);
+  });
+  return cell;
+}
+
+/** Build the shelf from storage. `focusIndex` is passed after a merge, when
+ *  the reward's reveal has already played on screen: the rebuild then exists
+ *  only to hand every tile its new, correct storage index, so nothing pops a
+ *  second time and the scroll position is put back where the child left it. */
+function renderPrizes(focusIndex){
+  const merged = focusIndex != null;
+  const wrap = prizeStrip.parentElement;
+  const keepScroll = wrap ? wrap.scrollTop : 0;
+
   prizeStrip.innerHTML = "";
   const tiles = getPrizeTiles();
   if(!tiles.length){
@@ -106,52 +156,26 @@ function renderPrizes(){
     prizeStrip.appendChild(p);
     return;
   }
-  tiles.forEach(({ emoji, scale, perfect, hard }) => {
-    // Two layers on purpose: the outer box is a stable grid cell that never
-    // animates or moves, so its neighbors keep their position no matter what
-    // happens to the emoji inside — only the inner face pops/scales/reacts.
-    const cell = document.createElement("div");
-    cell.className = "prize-tile" + (perfect ? " prize-perfect" : "");
-    cell.style.setProperty("--scale", scale);
-
-    const face = document.createElement("div");
-    face.className = "prize-emoji";
-    face.textContent = emoji;
-    face.style.animation = "trophyPop .4s cubic-bezier(.34,1.56,.64,1)";
-    face.addEventListener("animationend", () => { face.style.animation = ""; }, { once: true });
-    cell.appendChild(face);
-
-    if(hard){
-      const badge = document.createElement("span");
-      badge.className = "prize-hard-badge";
-      badge.textContent = BONUS_GLYPH;
-      cell.appendChild(badge);
-    }
-
-    // Easy prizes react once per tap and forget. Hard prizes remember, and a
-    // third tap in quick succession sets them off (see prizeCombo.js).
-    const tapOne = () => playTapAnim(face);
-    const tapSound = () => playPrizeSound(emoji);
-    cell.addEventListener("pointerdown", e => {
-      e.preventDefault(); e.stopPropagation(); audio();
-      if(hard) hardPrizeTap(cell, face, emoji, tapOne, tapSound);
-      else { tapOne(); tapSound(); }
-    });
-    prizeStrip.appendChild(cell);
-  });
+  tiles.forEach(tile => prizeStrip.appendChild(makeTile(tile, !merged)));
+  if(wrap) wrap.scrollTop = keepScroll;
+  const focus = merged && prizeStrip.children[focusIndex];
+  if(focus) focus.scrollIntoView({ block: "nearest" });
 }
 
 export function showPrizeBox(){
   renderPrizes();
   resetPrizeFx();
+  resetPrizeMerge();
   prizeBox.classList.add("show");
 }
 
 function hidePrizeBox(){
   resetPrizeFx();
+  resetPrizeMerge();
   prizeBox.classList.remove("show");
 }
 
 export function wirePrizeBox(){
+  initPrizeMerge({ rerender: renderPrizes, prizeSound: playPrizeSound });
   prizeBoxBack.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); audio(); hidePrizeBox(); });
 }
