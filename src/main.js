@@ -183,6 +183,7 @@ function startGame(){
   startSession(state.mode);
   state.starCount=0; state.sumMax=SUM_START; state.streak=0; state.maxStreak=0; state.gameWrongTotal=0;
   state.bonusStarCount=0; state.pendingBonus=false; state.gameLatencies=[];
+  state.objectProblems=0; // the pips/emoji allowance (§4) is per game, like the rotation below
   resetPresentationRotation();
   if(state.mode==="hard") state.waterDrainMs=getHardDrainDuration(getLatencyStats("easy").combined?.max);
   buildStars(); refreshStars(); advanceProblem();

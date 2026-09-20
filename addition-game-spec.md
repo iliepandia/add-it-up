@@ -61,7 +61,7 @@ the current ramp level (see Sum constraint).
 ## 4. Presentations
 
 Each problem picks **one of three presentations at random** *(Fast mode instead lets the child
-pick, before every single problem — §18.3)*:
+pick, before every single problem — §18.3)*, subject to the per-game allowance below:
 
 1. **Digits** — `2 + 3 =`
 2. **Emoji groups** — one repeated emoji per operand, e.g. 😄😄😄😄 + 😄😄 =
@@ -87,6 +87,27 @@ pick, before every single problem — §18.3)*:
 > and to neither digits — there is nothing to count in a "9". It allows sums up to `6 + 6 = 12`,
 > which matches the ramp's top and Fast mode's ceiling, so **all three presentations still cover
 > the full range** at max difficulty; digits alone can show a single operand above 6.
+
+**Object-presentation allowance: 7 per game** *(added 2026-09-19)*. Across a whole game, at most
+**7 of the 10 problems** may use an object presentation — **pips and emoji counted together**.
+Once that allowance is spent, **every remaining problem is digits**, so a game always finishes on
+plain symbols and can never be played end-to-end without reading numerals.
+
+- **Easy mode** stops rolling pips/emoji and picks digits for the rest of the game.
+- **Fast mode** stops *offering* them: the "Pick how to see it!" picker (§18.3) shows **Digits
+  alone** once the allowance is gone. The overlay still appears and still waits for a tap, since
+  that tap is what starts the water bar (§18.4) — the child is never put on the clock before
+  they're ready, even when there's only one button.
+- The allowance **resets at the start of every game**, like the anti-rut rotation (§18.3).
+- Where the two rules disagree, the allowance wins: it's a hard rule, while the anti-rut rotation
+  is only a nudge, so the rotation is **skipped** whenever honouring it would leave nothing to
+  offer. (Otherwise a spent allowance plus a locked-out Digits would show an empty picker and the
+  game would stall.)
+
+*Why:* objects can be **seen** rather than recalled, so a game made mostly of them can be
+completed without ever practising the fact. This is a blunt, non-adaptive first step toward
+§17.5/§17.6 step 5 — "how much of the pip/emoji presentation stays in the mix at all" — which
+eventually wants to be gated on *speed* rather than a fixed count.
 
 ---
 
@@ -681,6 +702,10 @@ with a **"?"** on it, and the problem isn't generated until one is tapped.
 - **Anti-rut rotation:** picking the same representation **5 times in a row** drops it from the
   offered set for the next **5 problems**, after which it returns. Keeps practice varied without
   ever overriding the choice in the moment. The rotation resets at the start of every game.
+- **Object allowance (§4):** once the game's 7 pips/emoji problems are used up, the picker offers
+  **Digits alone** for the rest of the game. The overlay still shows and still waits for the tap,
+  because that tap is what starts the water bar. The allowance outranks the rotation above, which
+  is skipped rather than allowed to empty the row.
 - The water bar (§18.4) is **hidden while the picker is up** and only starts once the problem is
   on screen, so deciding how to see it is never part of the timed window.
 

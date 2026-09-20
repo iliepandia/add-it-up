@@ -4,6 +4,13 @@ export const GOAL = 10;
 export const SUM_START = 5, SUM_MIN = 5, SUM_MAX_CAP = 12; // difficulty ramp: start, floor, ceiling
 export const BONUS_GLYPH = "🚴🏻‍♂️"; // hard mode's speed reward: a bike, matching the FAST toggle icon
 export const HARD_SUM_MIN = 6; // hard mode: no ramp, but the sum is never allowed below this
+// At most this many problems per game may show quantity as objects (pips or
+// emoji, counted together); the rest are digits. Object presentations are the
+// ones a child can fall back on *seeing* the answer rather than recalling it,
+// so a game always ends on plain symbols — GOAL - MAX_OBJECT_PROBLEMS of them
+// at minimum. Applies to both modes: easy stops rolling them, fast stops
+// offering them.
+export const MAX_OBJECT_PROBLEMS = 7;
 export const SEE_RESULT = 200;
 export const STAR_FLY = 1050, IMPACT_AT = 0.82;
 export const POST_HOLD = 1200, WIN_HOLD = 1400, WRONG_HOLD = 1000;

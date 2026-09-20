@@ -1,6 +1,6 @@
 // Problem generation and rendering (digits / emoji groups / dice-domino pips).
 
-import { rnd, pick, EMOJI, PIPS, HARD_SUM_MIN, SUM_MAX_CAP } from "./config.js";
+import { rnd, pick, EMOJI, PIPS, HARD_SUM_MIN, SUM_MAX_CAP, MAX_OBJECT_PROBLEMS } from "./config.js";
 import { opA, opB, ansEl } from "./dom.js";
 import { state } from "./state.js";
 import { themeState } from "./themes.js";
@@ -12,6 +12,12 @@ import { themeState } from "./themes.js";
 // Digits are uncapped; there is nothing to count in a "9".
 const SUBITIZE_CAP = 6;
 const COUNTABLE_CAPPED = new Set(["pips", "emoji"]);
+
+/** Does this game have any of its object-presentation allowance left (§4)?
+ *  Both modes ask: easy stops rolling pips/emoji, fast stops offering them. */
+export function objectQuotaLeft(){
+  return state.objectProblems < MAX_OBJECT_PROBLEMS;
+}
 
 function pipCard(v, style){
   const el=document.createElement("div"); el.className="pip-card "+(style || state.pipStyle);
@@ -113,7 +119,11 @@ export function renderAns(reveal){
 // ramp — just a flat floor so the sum is never below HARD_SUM_MIN.
 export function newProblem(){
   const hard = state.mode === "hard";
-  if(!hard) state.presentation = pick(["digits","emoji","pips"]);
+  // Easy rolls its own presentation, and stops rolling object ones once the
+  // game's allowance is spent. Fast already has the child's pick sitting in
+  // state.presentation, chosen from whatever the picker was allowed to offer.
+  if(!hard) state.presentation = objectQuotaLeft() ? pick(["digits","emoji","pips"]) : "digits";
+  if(COUNTABLE_CAPPED.has(state.presentation)) state.objectProblems++;
   do{ state.a=1+rnd(9); state.b=1+rnd(9); }
   while(
     (hard ? (state.a+state.b<HARD_SUM_MIN || state.a+state.b>SUM_MAX_CAP) : state.a+state.b>state.sumMax) ||

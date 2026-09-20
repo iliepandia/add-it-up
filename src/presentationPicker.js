@@ -7,6 +7,7 @@
 import { presentationPickerEl } from "./dom.js";
 import { PIPS } from "./config.js";
 import { audio } from "./audio.js";
+import { objectQuotaLeft } from "./problem.js";
 
 const OPTIONS = [
   { key: "pips", build: pipsPreview },
@@ -74,7 +75,15 @@ export function showPresentationPicker(onChoose){
 
   const row = document.createElement("div");
   row.className = "pres-options";
-  const offered = OPTIONS.filter(o => !(lockedTurns > 0 && o.key === lockedKey));
+  // Two independent narrowings, applied in order of authority. The game's
+  // object-presentation allowance (§4) is a hard rule and comes first; the
+  // anti-rut lockout is only a nudge, so it's skipped whenever applying it
+  // would leave nothing to pick — otherwise a spent allowance plus a locked-out
+  // Digits would offer an empty row and the game would stall here.
+  const allowed = OPTIONS.filter(o => o.key === "digits" || objectQuotaLeft());
+  const offered = allowed.length > 1
+    ? allowed.filter(o => !(lockedTurns > 0 && o.key === lockedKey))
+    : allowed;
   offered.forEach(({ key, build }) => {
     const btn = document.createElement("button");
     btn.type = "button"; btn.className = "pres-option"; btn.dataset.presentation = key;
