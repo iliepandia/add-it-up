@@ -84,6 +84,15 @@ function submitEntry(){
 // ---- correct ----
 function correct(){
   state.locked=true; renderAns(); freezeWaterBar();
+  // Association pass: now that the answer is in, show each operand the *other*
+  // way (pips under digits, the numeral under pips/emoji) so the shape and the
+  // number get tied together while the child is looking at a win. Safe to show
+  // the same hint as the second-miss scaffold (§17.2) because it lands *after*
+  // the commit with input already locked — it can't help solve anything, so it
+  // isn't a shortcut, and it carries no judgement either way (§17.6).
+  // Deliberately before the SEE_RESULT beat below, so the layout it adds has
+  // settled by the time flyStar() measures where the star should land.
+  showOperandHints();
   const bonus = state.pendingBonus; state.pendingBonus=false;
   setTimeout(()=>{
     state.sumMax=Math.min(SUM_MAX_CAP, state.sumMax+1);

@@ -129,11 +129,29 @@ work (§17.2, §17.3) to build on.
 **Correct path timing:** on a correct submission, wait **200 ms** so the child sees their
 answer on screen, *then* trigger the celebration.
 
+**What this guarantees for the stats (§11).** Because nothing is evaluated before ✓/Enter, an
+uncommitted mis-tap is invisible to every counter in the game: **accuracy**, the per-game score,
+the "trickiest problems" log and the response-time log all move only on a committed answer. A
+child can type, clear and retype as often as they like at no cost. *(Confirmed by inspection
+2026-09-19: the wrong-answer path has exactly one call site, inside the submit handler, and the
+digit and clear handlers touch no stats at all.)*
+
 ---
 
 ## 7. Feedback & animation
 
 ### Correct
+- **Association pass (added 2026-09-19).** The instant the answer is committed, each operand
+  gains the **same quantity hint** the second-miss scaffold uses (§7 "2nd wrong", step 0):
+  **pips under a numeral**, **the numeral under pips or an emoji pile**. The point is to tie the
+  *shape* to the *digit* while the child is looking at a win — a number and its quantity seen
+  together, at the moment it feels good.
+  - It appears **after the commit**, with input already locked, so it can never serve as a
+    shortcut to the answer; and it carries no judgement, appearing identically on a first-try
+    answer and on one that took three attempts (§17.6's constraint).
+  - Consistent with §17.5: every face shown is within the subitizing cap (7/8/9 arrive as two
+    dice), so this trains *recognition*, not counting.
+  - It clears with the problem when the next one is generated.
 - **Emoji explosion** of particles, sized **~3× base** (large, screen-filling burst).
 - All particles in a single burst are the **same** emoji.
 - Each burst picks a **random** emoji from a *happy* set (heart, present, smiley, star, etc.).
@@ -314,7 +332,7 @@ as **abandoned** and excluded from the time stats (the day still counts toward "
 | Games played | all-time count |
 | Average score | all-time, out of 10 |
 | Best score | all-time max, out of 10 |
-| Accuracy | correct ÷ (correct + wrong) across all games |
+| Accuracy | correct ÷ (correct + wrong) across all games. **Only committed answers count** (§6) — a wrong digit typed and cleared, or any tap never confirmed with ✓/Enter, has no effect on this or any other stat |
 | Longest streak | best consecutive-correct streak ever reached |
 | Total play time | sum of finalized sessions (see definition above) |
 | Average / shortest / longest session | over finalized sessions |
