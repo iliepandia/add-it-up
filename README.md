@@ -14,23 +14,41 @@ generated build artifact.
 
 ```
 src/
-  main.js       game loop / wiring (composition root)
-  config.js     constants, timing, emoji/pip data
-  state.js      shared mutable game state
-  dom.js        cached DOM element references
-  audio.js      synthesized sound effects
-  problem.js    problem generation + rendering (digits/emoji/pips)
-  stars.js      star crown, streak indicator, badges ("streaks")
-  themes.js     theme table, current theme, world backgrounds ("theme selection")
-  rewards.js    milestone celebration animations ("rewards")
-  fx.js         generic particle/animation primitives ("animations")
-  win.js        trophy reveal + closing screen ("end screen")
-  picker.js     "pick a world" screen ("intro")
-  stats.js      local play-stats storage (sessions, scores, mistakes) — localStorage only, no network
-  statsScreen.js  stats screen UI (tiles, charts, mistakes list)
-  styles/       CSS split to match the modules above
-index.html      dev entry point (Vite serves this)
+  core
+    main.js       game loop / wiring (composition root)
+    config.js     constants, timing, emoji/pip data
+    state.js      shared mutable game state
+    dom.js        cached DOM element references
+    problem.js    problem generation + rendering (digits/emoji/pips)
+  presentation
+    audio.js      synthesized sound effects
+    fx.js         generic particle/animation primitives ("animations")
+    rewards.js    milestone celebration animations ("rewards")
+    stars.js      star crown, streak indicator, badges ("streaks")
+    themes.js     theme table, current theme, world backgrounds ("theme selection")
+  screens
+    picker.js     "pick a world" screen ("intro")
+    win.js        trophy reveal + closing screen ("end screen")
+    snake.js      crawling-snake easter egg on the win screen (perfect games)
+    statsScreen.js  stats screen UI (tiles, charts, mistakes list)
+  fast mode (the opt-in timed difficulty)
+    difficulty.js      Easy/Fast toggle, mode gating, falling-bike look
+    hardDifficulty.js  the adaptive water-bar drain speed, persisted per child
+    waterBar.js        the draining timer bar under the problem card
+    presentationPicker.js  the child picks how to see each problem
+  prizes & progress
+    prizes.js     persistent prize collection (localStorage, survives a stats reset)
+    prizeBox.js   the prize-box shelf screen + per-prize tap sounds
+    prizeCombo.js hard-mode tap combos: charge on tap 2, erupt on tap 3
+    mastery.js    7-day mastery badge (snail → dinosaur → trophy)
+    stats.js      local play-stats storage (sessions, scores, mistakes, response
+                  times) — localStorage only, no network
+  styles/         CSS split to match the modules above
+index.html        dev entry point (Vite serves this)
 ```
+
+The groupings above are for reading convenience only — every module lives flat
+in `src/`.
 
 Setup:
 
@@ -52,3 +70,11 @@ npm run build
 
 Bump the `?ver=` query param in this README when you deploy, so GitHub
 Pages' cache doesn't serve a stale copy.
+
+# Docs
+
+- [`addition-game-spec.md`](addition-game-spec.md) — what the game **is**: the
+  complete specification of everything built (§1–§15 Easy mode, §18 Fast mode).
+- [`addition-game-future.md`](addition-game-future.md) — what it **isn't yet**:
+  the Phase 2 learning-design backlog, open items, and a gap analysis of the
+  shipped game against both.

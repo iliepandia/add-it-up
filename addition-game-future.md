@@ -137,16 +137,15 @@ difficulty. Every other fallback in the codebase degrades gently.
 max latency + 2 s, else 5 s + 2 s), not to `MIN_MS`. Small fix, and it matches the safety
 posture everywhere else.
 
-### G8. The README's module map is 9 modules out of date
-`README.md` documents `src/` as 14 modules. There are **23**. Missing: `difficulty.js`,
-`hardDifficulty.js`, `mastery.js`, `presentationPicker.js`, `prizeBox.js`, `prizeCombo.js`,
-`prizes.js`, `snake.js`, `waterBar.js` — i.e. essentially everything added since Fast mode, the
-prize box and the mastery badge. The README also doesn't mention this spec or this file at all,
-so there's no entry point from the repo to either document.
+### ~~G8. The README's module map is 9 modules out of date~~ — **fixed 2026-09-19**
+`README.md` had documented `src/` as 14 modules when there were **23**, missing essentially
+everything added since Fast mode, the prize box and the mastery badge — and it didn't mention
+either spec file, so the repo had no entry point to its own documentation.
 
-**Recommendation:** refresh the module list and add a one-line "Docs" section pointing at
-`addition-game-spec.md` and `addition-game-future.md`. Left unfixed here deliberately — it's
-outside the scope of this evaluation, and it's a one-minute edit whenever you want it.
+**Resolved:** the module list now covers all 23 (grouped by role for readability, though the
+files stay flat in `src/`), and a **Docs** section links `addition-game-spec.md` and
+`addition-game-future.md`. Kept here as a record rather than deleted, since docs drift is the
+kind of thing worth re-checking whenever a batch of modules lands.
 
 ---
 
@@ -161,7 +160,7 @@ outside the scope of this evaluation, and it's a one-minute edit whenever you wa
 | G4 | Emoji groups invite counting | Low | Rule already exists for pips; just inconsistent |
 | G7 | Hardest-setting fallback | Very low | Latent, one-line fix |
 | G6 | Global not per-fact adaptivity (§16) | High | Genuinely Phase 2; depends on G3 |
-| G8 | README module map 9 modules stale | Very low | Docs drift; no entry point to either spec file |
+| ~~G8~~ | ~~README module map stale~~ | — | **Fixed** 2026-09-19 |
 
 A reasonable next slice: **G3 → G2 → G1**. G3 and G2 are small and make the game's own goal
 measurable; G1 is the one that matters most and benefits from having that measurement in place
