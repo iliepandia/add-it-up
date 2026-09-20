@@ -633,12 +633,25 @@ occasionally crawls across the win screen (§9).
   eat animations and play them **one at a time**, snake frozen the whole time — never
   overlapping. Movement (and new-touch detection) **resumes automatically** once the queue
   empties.
-  - **The pop is instant; only the return is animated** *(revised 2026-09-19 — it used to ramp
-    up over ~0.1s and drop back inside a single 0.26s animation)*. A segment **snaps** to full
-    size in one frame — a swallow should look like a sudden bulge, not a swell — and then
-    **deflates over a configurable duration, currently 500 ms**. That duration is a single
-    constant (`EAT_RETURN_MS`) that the code pushes into CSS, so the keyframes and the timing
-    that waits for them can't drift apart. The head's "O" mouth runs on the same clock.
+  - **The bulge is a travelling wave, not a row of separate pops** *(revised 2026-09-20; it was
+    an instant snap plus a 500 ms deflate, and before that a 0.26 s pop)*. One lump moves from
+    head to tail, and **the blocks around it swell too, on a sliding scale** — so a bulge in the
+    middle of the snake visibly pushes out its neighbours on both sides, rather than one block
+    inflating alone while the rest sit still.
+    - **Two knobs**, both per block: **rise 500 ms** (normal size → full) and **settle 500 ms**
+      (full → normal). Everything else follows from them. A block starts swelling once the wave
+      is **3 blocks away** (`EAT_SPREAD`), which fixes the wave's speed at one block per
+      rise ÷ spread ≈ **167 ms**; the settle then spans however many blocks it buys at that
+      speed — 3 at the current numbers. Set a longer settle than rise and the lump simply grows
+      a longer tail behind it.
+    - **Driven in JavaScript, frame by frame, not by CSS keyframes.** The whole point is that a
+      block's size depends on where the wave is relative to its *neighbours*, and a CSS
+      animation can only ever describe one element on its own clock. The head's "O" mouth opens
+      in step with the head's own swell, from the same loop.
+    - **Cost:** one swallow now takes **~2.2 s** (easy, 8 blocks) or **~3.5 s** (Fast, 16), about
+      **1.8× the old timing**, and the snake is frozen for all of it — so a handful of prizes
+      touched at once stacks up. Lower `EAT_RISE_MS` to speed the whole thing up; it scales
+      everything together.
   - **The mouth sits below the eyes** *(fixed 2026-09-19)* — offset down by half its own height
     so it no longer overlaps them.
   - Implementation note: each body block is a positioning shell plus an inner "face" div, so the

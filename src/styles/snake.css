@@ -22,23 +22,13 @@
 #snakeLayer.snake-hard .snake-seg-face{background:#E63946; border-color:#A81E2B;}
 #snakeLayer.snake-hard .snake-head .snake-seg-face{background:#FF4D5B; border-color:#A81E2B;}
 
-/* Eating: a bulge pops through the body head-to-tail when the snake
-   swallows a prize (see snake.js's eatPrize) — biggest at the head, tapering
-   for the rest of the body. */
-/* The bulge SNAPS to full size (the keyframes start there, so there is no
-   ramp up at all) and only the deflation is animated, over --eat-return —
-   set from snake.js's EAT_RETURN_MS so there is one knob, not two. The
-   fallback matches that constant and only applies if the property is missing. */
-.snake-seg-face.snake-eating{animation:eatBulge var(--eat-return,500ms) ease-out; z-index:2;}
-.snake-head .snake-seg-face.snake-eating{animation:eatBulgeHead var(--eat-return,500ms) ease-out;}
-@keyframes eatBulge{
-  0%{transform:scale(3.49);}
-  100%{transform:scale(1);}
-}
-@keyframes eatBulgeHead{
-  0%{transform:scale(4.28);}
-  100%{transform:scale(1);}
-}
+/* Eating: a bulge travels head-to-tail when the snake swallows a prize —
+   biggest at the head, and carrying the blocks around it with it.
+   No keyframes here on purpose. The whole point of the effect is that each
+   block's size depends on how close the wave is to its NEIGHBOURS, and a CSS
+   animation can only describe one element on its own clock. snake.js drives
+   every face's transform per frame instead (see eatPrize); the only thing
+   stylesheet-side is the transform-origin on .snake-seg-face above. */
 
 /* Big "O" mouth, hidden until the head pops open mid-bite. */
 /* top is the mouth's CENTRE (it's translated back by half its own size below).
@@ -49,11 +39,6 @@
 .snake-mouth{position:absolute; left:50%; top:92%; width:60%; height:60%;
   border-radius:50%; background:#7A2020; border:2px solid #4A1010;
   transform:translate(-50%,-50%) scale(0); opacity:0;}
-/* The mouth follows the same shape as the bulge it belongs to: open at once,
-   close on the way back down, on the same clock. */
-.snake-head .snake-seg-face.snake-eating .snake-mouth{animation:mouthOpen var(--eat-return,500ms) ease-out;}
-@keyframes mouthOpen{
-  0%{transform:translate(-50%,-50%) scale(1); opacity:1;}
-  70%{transform:translate(-50%,-50%) scale(.85); opacity:1;}
-  100%{transform:translate(-50%,-50%) scale(0); opacity:0;}
-}
+/* The mouth opens in step with the head's own swell — also driven from
+   eatPrize, for the same reason as the bulge above. The rule here is just its
+   closed resting state. */

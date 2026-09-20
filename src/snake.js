@@ -15,13 +15,25 @@ const TURN_CHANCE = 0.35; // odds of an unforced sharp turn on any given tick
 const HARD_LENGTH_MULT = 2, HARD_LIFE_MULT = 2; // hard variant: twice as long, lives twice as long
 const SHRINK_AFTER_MS = 20000; // how long the snake crawls at full length first
 const SHRINK_STEP_MS = 400;    // how long each tail segment takes to disappear once shrinking starts
-const EAT_STEP_MS = 90;   // stagger between each segment's pop starting, head to tail
-// A segment snaps to full size instantly — a swallow should look like a sudden
-// bulge, not a swell — and then eases back down over EAT_RETURN_MS. Only the
-// return is animated, and this is the single knob for how slow it is:
-// buildSegs() pushes it into CSS, so the keyframes and the JS timing that waits
-// on them can't drift apart.
-const EAT_RETURN_MS = 500;
+// ---- the swallow (see eatPrize) ----
+// The bulge is a travelling WAVE, not a per-block pop: a lump moves from head
+// to tail and the blocks around it swell too, on a sliding scale, so a bulge in
+// the middle of the snake visibly pushes out its neighbours on both sides.
+// That coupling is why this is driven frame by frame in JS — a CSS animation
+// can only ever describe one element in isolation.
+//
+// A block's own rise takes EAT_RISE_MS (it starts swelling once the wave is
+// EAT_SPREAD blocks away and peaks as the wave arrives) and its settle takes
+// EAT_RETURN_MS. Those two times set everything else: the wave crosses one
+// block every EAT_RISE_MS / EAT_SPREAD, and its trailing edge stretches over
+// however many blocks EAT_RETURN_MS buys at that speed. Make the settle longer
+// than the rise and the lump just grows a longer tail behind it.
+const EAT_SPREAD = 3;       // blocks ahead of the wave that have already started to swell
+const EAT_RISE_MS = 500;    // normal size -> full, for any one block
+const EAT_RETURN_MS = 500;  // full -> normal
+const EAT_STEP_MS = EAT_RISE_MS / EAT_SPREAD;        // ms for the wave to cross one block
+const EAT_FALL_BLOCKS = EAT_RETURN_MS / EAT_STEP_MS; // how far the settling tail reaches
+const HEAD_PEAK = 4.28, BODY_PEAK = 3.49;            // full-size multipliers; the head bulges more
 
 const DIRS = [[1,0], [-1,0], [0,1], [0,-1]];
 
@@ -37,6 +49,7 @@ let maxLen = LENGTH, shrinkAfter = SHRINK_AFTER_MS; // per-variant
 let capLength = LENGTH; // current max length; counts down once shrinking begins
 let onStep = null; // optional callback(segmentRects) fired after every tick
 let eating = false; // true while an eat animation is playing — pauses movement/onStep
+let mouthEl = null; // the head's "O" mouth, opened in step with the head's own swell
 
 function inBounds(x, y){ return x >= 0 && x < cols && y >= 0 && y < rows; }
 function sameDir(a, b){ return a[0] === b[0] && a[1] === b[1]; }
@@ -68,8 +81,7 @@ function layout(){
 
 function buildSegs(){
   snakeLayer.innerHTML = "";
-  snakeLayer.style.setProperty("--eat-return", EAT_RETURN_MS + "ms");
-  segEls = []; segFaces = [];
+  segEls = []; segFaces = []; mouthEl = null;
   for(let i = 0; i < maxLen; i++){
     const s = document.createElement("div");
     s.className = "snake-seg" + (i === 0 ? " snake-head" : "");
@@ -83,9 +95,9 @@ function buildSegs(){
     const face = document.createElement("div");
     face.className = "snake-seg-face";
     if(i === 0){
-      const mouth = document.createElement("div");
-      mouth.className = "snake-mouth";
-      face.appendChild(mouth);
+      mouthEl = document.createElement("div");
+      mouthEl.className = "snake-mouth";
+      face.appendChild(mouthEl);
     }
     s.appendChild(face);
     snakeLayer.appendChild(s);
@@ -118,27 +130,61 @@ function tick(){
   if(onStep) onStep(body.map(p => ({ x: p.x * CELL, y: p.y * CELL, w: CELL, h: CELL })));
 }
 
-/** Plays a bulge that pops the head bigger, then travels tail-ward through
- *  the body — the visual of swallowing one prize. Each segment snaps to full
- *  size at once, then deflates over EAT_RETURN_MS. Pauses movement (and stops
- *  new touches from being detected) until the last segment has finished
- *  deflating, then calls onDone so a caller can either resume play or
- *  immediately queue the next eat. */
+// Smoothstep — eases both ends of a block's swell so the wave reads as a soft
+// lump travelling under the skin rather than a row of triangles.
+const smooth = w => w * w * (3 - 2 * w);
+
+/** How swollen the block `dist` blocks from the wave centre should be, 0..1.
+ *  Positive `dist` is ahead of the wave (still rising), negative is behind it
+ *  (settling back), which is what lets the two sides have different lengths. */
+function bulgeAt(dist){
+  const reach = dist >= 0 ? EAT_SPREAD : EAT_FALL_BLOCKS;
+  if(reach <= 0) return dist === 0 ? 1 : 0;
+  return smooth(Math.max(0, Math.min(1, 1 - Math.abs(dist) / reach)));
+}
+
+/** The visual of swallowing one prize: a lump that swells the head and travels
+ *  tail-ward, carrying its neighbours with it (see the constants above).
+ *  Pauses movement — and new-touch detection — until the wave has left the
+ *  tail and every block is back to normal, then calls onDone so a caller can
+ *  resume play or queue the next eat. */
 export function eatPrize(onDone){
   eating = true;
-  if(!segFaces.length){ eating = false; if(onDone) onDone(); return; }
-  let i = 0;
-  (function step(){
-    const face = segFaces[i];
-    if(face){
-      face.classList.remove("snake-eating"); void face.offsetWidth; // restart cleanly if still mid-pop
-      face.classList.add("snake-eating");
-      face.addEventListener("animationend", () => face.classList.remove("snake-eating"), { once: true });
+  const faces = segFaces, n = faces.length;
+  if(!n){ eating = false; if(onDone) onDone(); return; }
+  const finish = () => { eating = false; if(onDone) onDone(); };
+
+  // The centre starts far enough ahead of the head that the head begins at
+  // normal size, and runs past the tail far enough for the last block to
+  // finish settling.
+  const from = -EAT_SPREAD, to = (n - 1) + EAT_FALL_BLOCKS;
+  const durationMs = (to - from) * EAT_STEP_MS;
+  const t0 = performance.now();
+
+  (function frame(now){
+    // Bail out if the snake was torn down (or restarted) mid-swallow.
+    if(!eating || segFaces !== faces){ return; }
+    const t = Math.min(durationMs, now - t0);
+    const centre = from + t / EAT_STEP_MS;
+    for(let i = 0; i < n; i++){
+      const w = bulgeAt(i - centre);
+      const peak = (i === 0 ? HEAD_PEAK : BODY_PEAK) - 1;
+      faces[i].style.transform = `scale(${(1 + peak * w).toFixed(3)})`;
     }
-    i++;
-    if(i < segFaces.length) setTimeout(step, EAT_STEP_MS);
-    else setTimeout(() => { eating = false; if(onDone) onDone(); }, EAT_RETURN_MS);
-  })();
+    // The mouth opens exactly in step with the head's own swell.
+    if(mouthEl){
+      const w = bulgeAt(0 - centre);
+      mouthEl.style.transform = `translate(-50%,-50%) scale(${w.toFixed(3)})`;
+      mouthEl.style.opacity = w.toFixed(3);
+    }
+    if(t < durationMs) requestAnimationFrame(frame);
+    else { clearBulge(faces); finish(); }
+  })(t0);
+}
+
+function clearBulge(faces){
+  for(const f of faces) f.style.transform = "";
+  if(mouthEl){ mouthEl.style.transform = ""; mouthEl.style.opacity = ""; }
 }
 
 /** onStepCb(segmentRects), if given, fires after every tick with each
