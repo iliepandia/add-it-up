@@ -6,11 +6,16 @@ accuracy. The child already understands addition; the goal is fluency, not conce
 **Status:** Clarified and locked, ready to build.
 **Last updated:** 2026-09-19
 
-> **Scope:** Sections 1–16 and **§18** are **Phase 1 — built**. Section 17 is **Phase 2 — deferred, do not build now** (learning-design upgrades captured for a later version).
+> **Scope:** This file is **what the game is** — Sections 1–15 and **§18**, all **Phase 1, built**.
 >
-> **Two modes:** the game now ships an **Easy** mode (the original game, §1–§16 exactly as written)
+> **Everything not yet built lives in [`addition-game-future.md`](addition-game-future.md)**:
+> the Phase 2 learning-design backlog (§17), the open items and tweaks (§16), and a gap analysis
+> of the shipped game against both. §16 and §17 keep anchor headings here so the two files' ~39
+> cross-references still resolve — the numbering is deliberately unchanged.
+>
+> **Two modes:** the game now ships an **Easy** mode (the original game, §1–§15 exactly as written)
 > and an opt-in **Fast** mode (§18) that adds a visible timer and a speed reward. Everywhere below,
-> §1–§16 describe **Easy** mode; **§18 is the single place that lists every way Fast mode differs**,
+> §1–§15 describe **Easy** mode; **§18 is the single place that lists every way Fast mode differs**,
 > and the sections it touches carry a pointer to it.
 
 ---
@@ -538,184 +543,17 @@ tap/key not on a trophy, returns to the picker (§9) with test mode's on/off sta
 
 ## 16. Open items / future tweaks
 
-- A **linear difficulty ramp** is now in Phase 1 (§3, sum 5→12); the **adaptive, fact-tracking**
-  version remains Phase 2 (§17.3).
-- Prize-box and mastery-badge tap sounds (§12, §13) are stylized synthesis (Web Audio, no audio
-  files, §8) — meaningfully better than plain oscillator tones, but still a synth's approximation
-  of a bark or a train, not a real recording. Revisit with real sample audio if truer realism is
-  ever wanted; that would mean sourcing license-cleared clips and dropping the current
-  single-HTML-file build (§2), so it's a deliberate trade-off, not an oversight.
-- **Latency tracking: steps 1–3 of §17.6 have now shipped; steps 4–6 have not.** Step 1 (the
-  passive per-answer baseline, §11) still runs exactly as specified, with zero visible effect on
-  the game. Steps 2 and 3 — a personal, moving "fast" target and an additive reward for beating
-  it — shipped as **Fast mode** (§18), deliberately behind an **explicit opt-in** rather than as a
-  change to the default game: Easy mode is still the game described in §1–§16, with no timer and
-  nothing speed-related visible anywhere. Still unbuilt: a speed-driven **core** mechanic (17.6
-  step 4 / §17.1), retiring counting-solvable presentations (step 5 / §17.5), and folding latency
-  into **fact-level** adaptivity (step 6 / §17.3) — Fast mode's adaptivity is one global drain
-  speed, not per-fact. Scoring (§6, §11) remains purely correctness-based in **both** modes.
-- **Fast mode's drain speed is calibrated from a small sample.** The first-ever drain duration is
-  seeded from this child's **maximum** Easy-mode response time + 2 s, then nudged by ±15% per
-  finished game (§18.4). The seed is deliberately generous, but one game's worth of evidence per
-  adjustment is coarse; revisit the ±15% steps and the "drained on more than half the problems"
-  threshold once there's real Fast-mode play data to read.
+> **Moved to [`addition-game-future.md`](addition-game-future.md).** Section numbers here are
+> deliberately unchanged — the spec and the companion file cross-reference each other ~39 times
+> (`§16`, `§17.3`, `§17.6` and friends), and renumbering would break every one of them. This
+> heading stays as an anchor; the content lives in the companion file.
 
 ---
 
 ## 17. Phase 2 — Learning design (deferred, do not build now)
 
-Upgrades to make the math *emerge from play* rather than be a toll paid to reach a reward.
-Ordered by leverage toward that goal; each is paired with the theory it draws on.
-
-> **Progress check (2026-09-17):** everything built since the last review — the input commit
-> mechanism (§5/§6), prize-box tap sounds matched to each emoji (§12), and the mastery badge
-> (§13) — is engagement/UX polish and information-signal quality, not learning design. Of the
-> five items below, only **17.4's competence half** has meaningfully landed: the mastery badge
-> is exactly the persistent, visible mastery-progress signal it calls for, on top of the
-> pre-existing stats screen (§11). Its **autonomy** half is still just theme selection; a
-> deeper in-game choice hasn't been built. **17.1** (intrinsic integration), **17.2**
-> (second-wrong scaffolding), **17.3** (adaptivity), and **17.5** (sequenced representations)
-> remain entirely unaddressed. One side-benefit worth noting for 17.2/17.3: §6's move to an
-> explicit commit-to-submit means a recorded "wrong" now reliably reflects the child not
-> knowing the fact rather than a mis-tap — a cleaner signal for either to build on when
-> they're eventually tackled. *(2026-09-18 update: the snake's eat animation, §14, and the §15
-> test shortcuts are the same kind of polish/tooling — no change to this assessment. Separately,
-> §17.1/17.3/17.5 below were revised the same day — this game's actual goal is fluency/speed for
-> a child who already understands addition, not concept-teaching, which the concrete-manipulative
-> framing those items originally borrowed was aimed at. See new §17.6 — since strengthened with a
-> non-negotiable constraint (baseline-first measurement, reward-only/never-punitive) after review
-> flagged the first pass as not protective enough of a 7-year-old's normal response time. §17.6's
-> step 1 — the passive latency baseline itself — then actually shipped the same day, §11. Nothing
-> past step 1 has been built; collecting the data isn't a green light to act on it yet, §16.)*
->
-> **Update (2026-09-19):** **Fast mode shipped (§18)** — §17.6 steps 2 and 3, one day after step
-> 1, and the first thing in this section to actually land. It sits behind an explicit opt-in and
-> a gate (one finished Easy game, so the personal baseline is real data rather than a guess), and
-> it also delivers **17.4's missing autonomy half twice over**: choosing the mode, and then
-> choosing how to see *every single problem* (§18.3) — a real in-game choice, not just theme
-> selection. What it is **not** is 17.1: the addition is still a gate in front of a reward, only
-> now a timed one. 17.2 (second-wrong scaffolding), 17.3's fact-level adaptivity, and 17.5
-> remain unaddressed — and 17.2 arguably matters *more* now that a timed mode exists.
-
-### 17.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage, revised*
-The Phase 1 game is a **drill with juice**: solve the sum → get the fireworks. The math is
-the toll, not the play. The fix is **not** concrete manipulation (feed-a-creature,
-fill-a-jar-style counting play — the earlier version of this item, and my own first pass in
-conversation) — this game's target skill is **fast mental recall**, not concept acquisition,
-and anything that invites counting objects works against that goal (§17.6). Instead, make the
-*fun mechanic's real-time responsiveness* run on how fast and accurately the child recalls the
-answer — e.g. a chase where speed of correct recall keeps a character ahead of something, a
-combo that lights up extra under a (personally-calibrated, never guessed — §17.6) pace, a rhythm
-the child keeps pace with. The addition becomes the thing the game's core tempo runs on, not a
-gate in front of an unrelated reward — but the "not fast enough" outcome must stay strictly
-neutral, never a losing state (§17.6's constraint is non-negotiable here too).
-*(Malone & Lepper; Habgood & Ainsworth, intrinsic integration — note the concrete-manipulative
-examples common in this literature target concept acquisition, not fluency; §17.6 has the
-reasoning specific to this game.)*
-
-### 17.2 Scaffold the second wrong attempt — *highest safety priority*
-Phase 1 re-shows the identical problem until correct, with no teaching — a recipe for math
-anxiety and learned helplessness when the child genuinely doesn't know the fact. Keep the
-never-skip rule, but on the **second** miss, *help*: reveal pips under the digits, animate a
-count-up, show a number line, or decompose (`8 + 7 → 8 + 2 = 10, then +5`). Reframe errors as
-information, not verdicts. *(Dweck, growth mindset; Seligman, learned helplessness.)*
-
-### 17.3 Adaptivity + fact-memory — *revised: speed is half the signal*
-Flat random difficulty prevents flow and a felt sense of progress. Track which addend pairs the
-child misses **or answers slowly**, resurface them (spaced retrieval / testing effect), and let
-difficulty drift upward as accuracy *and speed* rise — not accuracy alone.
-*(Csikszentmihalyi, flow; Roediger, testing effect.)* The mistake-frequency tracking already
-shipped in §11 (now 7-day-scoped) is the accuracy half of this data; the speed half needs the
-latency tracking called out in §16/§17.6 — a fact answered correctly but slowly can be *treated*
-like a miss by the backend resurfacing logic (both mean "not yet automatic"), but never *shown*
-to the child that way — §17.6's constraint applies here too, not just to scoring.
-
-### 17.4 Surface competence + one autonomy choice — *competence half now shipped*
-Give a visible mastery signal beyond a single session (levels, cumulative progress) and at
-least one real choice (choose between two problems, or a sub-mode). *(Deci & Ryan,
-Self-Determination Theory — competence + autonomy.)* The **competence** half is now addressed:
-the mastery badge (§13) is exactly this — an 11-tier, cross-session progress signal — layered
-on the stats screen's (§11) existing persistent numbers. World/theme selection (§10) still
-covers only the shallow end of **autonomy**; a deeper in-game choice (between two problems, or
-a sub-mode) remains unbuilt.
-
-### 17.5 Sequence the representations (don't randomize blindly) — *revised*
-The original framing here — lead concrete, fade toward abstract, as if pips/emoji were a
-scaffold for a child still learning what addition *means* — doesn't fit this game: the child
-already has the concept. Pips/emoji only still serve the fluency goal if they stay **instantly
-recognized (subitized)** rather than **counted** — a die face read as "six" in one glance trains
-the same fast-pattern-recall the game wants; the same six dots counted one at a time trains the
-opposite habit. So the sequencing axis isn't concrete→abstract, it's **away from operand sizes
-large enough to invite counting** (the ones a child is likely to count rather than see at a
-glance drop out first), and *speed itself* — not "fluency on a fact," measured some other way —
-should gate how much of the pip/emoji presentation stays in the mix at all. *(Concrete–
-Representational–Abstract still applies to subitizing itself — recognizing "6 dots" instantly
-is its own representational skill — just not to the addition problem being solved here; Clements
-& Sarama, subitizing. See §17.6.)*
-
-### 17.6 Speed & instant recognition — *stated future direction, added 2026-09-18, safety-first revision*
-This game's actual target skill is **fast, automatic recall** — `3 + 4 = 7` retrieved instantly,
-not worked out. Phase 1 as built (and 17.1/17.3/17.5 as originally written) leaned on
-concept-teaching techniques aimed at a different problem — a child still learning what addition
-*is*. Reoriented around fluency — but every idea below is subordinate to one constraint:
-
-> **Non-negotiable constraint:** nothing here may ever present a child's own normal response
-> time as slow, wrong, or a shortfall. A 7-year-old counting on fingers isn't failing — that's
-> what the skill being built normally looks like mid-way through. Speed is *rewarded* when it
-> happens; its absence is met with silence and full credit, never a penalty, a broken-combo
-> visual, a losing state, or any comparison to a number the child never chose. Get this wrong and
-> the feature actively teaches math anxiety, undoing §17.2 entirely — a worse outcome than never
-> building it.
-
-That constraint means measurement and reward can't be designed in one step — it has to be two,
-in order, with nothing skipped:
-
-1. **Baseline first, with zero visible effect on the game — shipped 2026-09-18 (§11).** Every
-   problem's first-attempt latency (problem shown → ✓/Enter, §5/§6) is recorded silently — no
-   on-screen timer, no countdown feel, nothing the child can perceive as being tested — tagged by
-   presentation (§4) and operand size, reviewable on the stats screen (§11) over a rolling 30
-   days. This is *only* measurement: nothing reads this data during play, and it affects no
-   scoring, difficulty, or reward yet. The goal at this stage is purely learning *this specific
-   child's* normal range at each difficulty tier (§3's sum ramp) — every kid's baseline will
-   differ, and guessing one is the mistake this whole item exists to avoid. Steps 2 onward below
-   remain unbuilt — collecting the data isn't itself permission to act on it yet (§16).
-2. **"Fast" is then defined relative to that baseline — never a fixed number.** *(Shipped
-   2026-09-19 as Fast mode, §18.4 — as a personal seeded-and-ratcheting drain duration rather
-   than a median-plus-margin; the "never a fixed number" rule is what it honours.)* Once real data
-   exists, "improvement" means beating *this child's own* recent median by some small margin: a
-   personal, moving target that ratchets up gently only as their actual times drop, and eases
-   back down on an off day or a harder tier rather than staying pinned to a target they've fallen
-   behind. No universal threshold (a guessed "1.5 seconds," say) should ever gate anything — see
-   the constraint above.
-3. **Reward fast-and-correct; never penalize slow-and-correct.** *(Shipped 2026-09-19 as Fast
-   mode's bonus star, §18.5 — additive only: an emptied bar costs nothing.)* Once a personal
-   baseline exists,
-   a streak/combo/score bonus can light up extra when an answer beats it — but a correct answer
-   slower than baseline lands exactly as it does today: full credit, full celebration, nothing
-   withheld, nothing flagged. The reward is strictly additive, never a tax on the normal case.
-4. **A speed-driven core mechanic (17.1) still can't let "slow" feel like losing.** A chase where
-   the gap visibly closes, or a beat visibly missed, risks becoming exactly the pressure this
-   constraint rules out. Any such mechanic's "not fast" outcome has to land as neutral — no combo
-   bump, nothing more — never as caught, behind, or any losing-state visual. The good feeling
-   should come from beating your own pace, not from what happens when you don't.
-5. **Retire counting as a viable strategy.** Any presentation solvable by counting individual
-   items works against automaticity (§17.5) — keep pip/emoji groups only where the pattern is
-   small enough to be subitized at a glance, not counted one dot at a time.
-6. **Fold latency into adaptivity (§17.3) as more reps, never as a marked mistake.** A
-   correct-but-slow answer can resurface for spaced practice the same way a miss might — but only
-   in the backend selection logic. Nothing child-facing should ever say "too slow"; a resurfaced
-   fact should look and feel identical whether it came back because it was missed or because it
-   was merely slow.
-
-Calibrating any of this (the margin in step 2, the grace period in step 1) needs real play data
-from actual sessions, not a number picked in the abstract — which is exactly why step 1 has to
-ship, run, and be reviewed well before step 2 or anything reward-shaped is built.
-
-### Strengths to preserve from Phase 1
-Multiple representations of quantity (symbolic / set-based / subitizable pips), immediate
-feedback (200 ms), multimodal input, low cognitive load, an explicit two-step confirm (type
-then ✓, §5/§6) that keeps the wrong-answer signal clean of fat-finger noise, and the never-skip
-principle (once scaffolded per 17.2).
+> **Moved to [`addition-game-future.md`](addition-game-future.md)**, together with the gap
+> analysis of what is actually built against it. Anchor kept for the same reason as §16 above.
 
 ---
 
@@ -731,7 +569,7 @@ identical in both modes. The timer only decides whether an **extra** reward is a
 is no losing state, no lost star, no "too slow" message, and no comparison to any number the child
 didn't set themselves.
 
-Sections §1–§16 describe Easy mode; what follows is the complete list of differences.
+Sections §1–§15 describe Easy mode; what follows is the complete list of differences.
 
 ### 18.1 Getting in: the Easy/Fast toggle
 
