@@ -89,9 +89,9 @@
   content:""; position:absolute; left:50%; bottom:-16px; width:136%; height:38px;
   transform:translateX(-50%); border-radius:50%;
   background:radial-gradient(ellipse at center,
-    rgba(255,214,90,.95) 0%, rgba(255,150,20,.6) 42%, rgba(255,120,0,0) 74%);
+    rgba(255,255,255,.98) 0%, rgba(255,248,215,.78) 42%, rgba(255,235,170,0) 74%);
   filter:blur(3px); pointer-events:none; z-index:-1;
-  animation:presentGlow 1.1s ease-in-out infinite alternate;}
+  animation:presentGlow .55s ease-in-out infinite alternate;}
 /* The idle breathing resumes on its own once an inline tap animation finishes
    and prizeCombo.playAnim hands the face back to CSS. */
 .prize-tile.prize-present .prize-emoji{animation:presentBreathe 1.2s ease-in-out infinite alternate;}

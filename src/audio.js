@@ -357,7 +357,14 @@ export function tapKiteFlutter(){
   src.connect(bp).connect(g).connect(c.destination); src.start(t); src.stop(t+dur);
 }
 export function tapYoyoBoing(){ sweep(300,150,0.1,"triangle",0.12); sweep(150,320,0.12,"triangle",0.10,0.1); }
-export function tapBallThump(){ tone(120,0,0.09,"sine",0.16); }
+// A 120Hz sine on its own is near-silent on phone and laptop speakers, so the
+// kick lives in the leather "pok" of the noise transient and a mid punch that
+// drops in pitch; the low body underneath only adds the weight.
+export function tapBallThump(){
+  noiseHit(0.05,"bandpass",1800,500,1.1,0.18);
+  sweep(340,90,0.17,"triangle",0.20);
+  tone(170,0,0.13,"sine",0.14);
+}
 export function tapPaintSwish(){ sweep(900,1400,0.14,"triangle",0.09); }
 export function tapCastleFanfare(){ [523.25,659.25,783.99].forEach((f,i)=>tone(f,i*0.08,0.22,"triangle",0.11)); }
 
