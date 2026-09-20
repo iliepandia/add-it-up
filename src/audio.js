@@ -405,6 +405,21 @@ export function tapTreeRustleTap(){
   src.connect(bp).connect(g).connect(c.destination); src.start(t); src.stop(t+dur);
 }
 
+// ---- prize-box combo escalation (prizeCombo.js) ----
+// Two mode-agnostic sounds layered *over* whatever the prize itself sounds
+// like, so the combo tier reads by ear even while the prize keeps its voice:
+// a rising whine that says "building", and a deep boom that says "went off".
+export function comboCharge(){
+  sweep(320,1250,0.45,"sawtooth",0.07);
+  [1174.66,1567.98].forEach((f,i)=>tone(f,0.3+i*0.07,0.18,"sine",0.07));
+}
+export function comboBoom(){
+  sweep(190,42,0.65,"sine",0.22);
+  sweep(95,30,0.75,"triangle",0.15);
+  noiseHit(0.5,"lowpass",1400,180,0.8,0.18);
+  tone(1568,0.02,0.5,"sine",0.05);  // a bright sparkle on top so it lands celebratory, not doomy
+}
+
 // ---- hard-mode prize-box tap sounds ----
 // Hard mode wins from its own glyph pool (HARD_WIN_END in config.js), which
 // shares almost nothing with the easy pool — beasts, fire, weapons, treasure,

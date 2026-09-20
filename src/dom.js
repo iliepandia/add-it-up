@@ -35,6 +35,7 @@ export const prizeBoxLink = $("#prizeBoxLink");
 export const prizeBox = $("#prizeBox");
 export const prizeBoxBack = $("#prizeBoxBack");
 export const prizeStrip = $("#prizeStrip");
+export const prizeFx = $("#prizeFx");
 
 export const masteryBadge = $("#masteryBadge");
 export const masteryEmoji = $("#masteryEmoji");

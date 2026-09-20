@@ -398,6 +398,42 @@ as one growing collection while still telling the two apart — see §18.7.
   shooting star, comet whoosh, satellite beeps). These run **punchier and lower** than the easy
   set, matching hard mode's higher stakes. 🥇 and 🎖️ share one medal chime, and 🦖 — the only glyph
   in both pools — reuses the same roar either way, so all 60 hard glyphs are covered by 59 sounds.
+- **Hard-mode prizes build combos; easy-mode prizes don't.** This is the one way the two kinds of
+  prize behave differently on tap, and it exists so a Fast-mode prize is visibly *worth more* than
+  an easy one once it's sitting on the shelf. Tapping the **same** hard tile again within
+  **1.2s** escalates:
+  1. **Tap 1** — exactly the easy-mode reaction: one random visual of the ten, plus that prize's
+     own sound. The two modes are indistinguishable until a combo is actually under way.
+  2. **Tap 2 — charged.** One *fixed* wind-up motion (rear back, shudder, swell to 1.14×) plus a
+     rising tone layered over the prize's own sound. The tile then **holds** a pulsing warm glow
+     at that larger size until the window lapses, so it visibly has something stored up.
+  3. **Tap 3 — eruption.** The face compresses and punches out past the tile's bounds, a deep
+     boom plays, a shockwave ring expands from the tile, and a **full-screen finale matched to
+     that specific prize** fires. The combo then resets to zero, so a fourth tap starts again
+     at tap 1.
+
+  Taps 2 and 3 are deliberately **not** random (unlike tap 1): the escalation has to be
+  *learnable*, so a child can discover on their own that a third tap sets the thing off. A combo
+  left hanging past the window simply cools off — the glow clears and the face deflates back to
+  normal size rather than snapping — so a tile is never stuck charged.
+- **Six eruption kinds**, each of the 60 hard glyphs mapped to the one that matches what it *is*
+  — the same "family" approach the tap sounds use, rather than 60 bespoke finales:
+  **rain** (falls from above: 🌋 throws 🔥, 🌊 throws 💧, 👑/🗝️/🧱 throw themselves),
+  **sweep** (one giant glyph crosses the whole screen — for prizes that move under their own
+  power: 🐉 🦈 🦅 ☄️ 🐆 🪃 🏴‍☠️),
+  **swirl** (spirals outward from centre — anything that turns: 🌪️ 🔮 🧭 ⏱️ 🃏 🪄),
+  **flash** (a tinted wash over the whole box plus outsized glyphs — things that *are* a burst of
+  light or noise: ⚡ 🚨 🔋 🔱 📯 🧿 🕹️),
+  **quake** (the whole shelf shudders **as one unit**, so tiles still never move relative to each
+  other, while heavy glyphs thud out of the tile: 🦖 🦏 🧱-likes, weapons, 🥊 🎳 🏔️), and
+  **burst** (a radial blast out of the tile — the generic finale and the fallback for any glyph
+  with no entry).
+  The particle glyph is often **not** the prize itself, because what a thing *throws* reads better
+  than copies of the thing: 🌋 rains fire, 🌊 rains water, 💎/🏆/🪄 throw ✨.
+- **Reduced motion** (§15) still gets the full escalation by ear and on the tile — sound, wind-up,
+  punch and shockwave ring — but the screen-wide particle finale is skipped.
+- Eruption effects render in their **own layer above the shelf** that never intercepts a tap, and
+  are cleared whenever the box opens or closes, so a finale never bleeds into the next visit.
 - A **← back button** (top-left) returns to the theme picker.
 - **Empty state:** "Finish a game to win your first prize!" if none are collected yet.
 
