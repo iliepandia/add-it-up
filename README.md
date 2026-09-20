@@ -3,7 +3,7 @@ Game for Kids to practice addition in a fun way
 
 # Play the game
 
-[Open the game](https://iliepandia.github.io/add-it-up/addition-game.html?ver=101)
+[Open the game](https://iliepandia.github.io/add-it-up/addition-game.html?ver=107)
 
 # Development
 
@@ -42,7 +42,8 @@ src/
     prizeCombo.js hard-mode tap combos: charge on tap 2, erupt on tap 3
     prizeMerge.js easy-mode four-of-a-kind: badge, merge into a present, open
                   it for a new prize
-    mastery.js    7-day mastery badge (snail → dinosaur → trophy)
+    mastery.js    two badges: 7-day accuracy (stone → crown) and, in Fast mode,
+                  speed against the child's own earlier pace (walk → rocket)
     stats.js      local play-stats storage (sessions, scores, mistakes, response
                   times) — localStorage only, no network
   styles/         CSS split to match the modules above

@@ -4,22 +4,27 @@ Companion to [`addition-game-spec.md`](addition-game-spec.md). **That file descr
 game *is*; this one describes what it is *not yet*** — plus, struck through, the items that
 started here and have since shipped, kept as a record of what closed them and when.
 
-**Closed so far:** §17.2 and §17.4, and gaps G1, G2, G3, G4, G8, G9. **Still open:** §17.1,
-§17.3, §17.5, §17.6 steps 4–6, and gaps G5, G6, G7, G10 — with **G5 (misses never resurface) the
-one to do next**, being the cheapest real learning win left: the data already exists and only
-the problem-selection call site has to change.
+**Closed so far:** §17.2 and §17.4, and gaps G1, G2, G3, G4, G8, G9, G10. **Still open:** §17.1,
+§17.3, §17.6 steps 4–6, and gaps G5, G6, G7 — plus §17.5, which is now **partly** delivered
+rather than unaddressed (see its row below). **G5 (misses never resurface) is the one to do
+next**, being the cheapest real learning win left: the data already exists and only the
+problem-selection call site has to change. **G7** is a one-line fallback fix that can ride along
+with anything.
 
-**G9 and G10 came from watching a child play, not from reading the code.** G9 (speed had no
-badge, and the accuracy badge's art already looked like speed) is now fixed. **G10 remains**: the
-cyclist still isn't part of any story, though putting the bike on the speed ladder's rung 4 gives
-it somewhere to belong. Both are §17.1 in practice — Fast mode measures speed correctly but
-doesn't yet *mean* much to the child.
+**G9 and G10 came from watching a child play, not from reading the code** — and both are now
+fixed. G9 gave speed its own badge and took the movement art off accuracy; G10 gave the bike a
+destination: he rides towards a 🎂 cake, and beating the bar wins it. Neither closes §17.1 —
+Fast mode still measures speed correctly without the maths *driving* anything — but the child's
+own question ("why is the guy on the bike?") now has an answer on screen.
 
 Section numbers (§16, §17.x) match the spec's original numbering and are deliberately preserved
 — the two files cross-reference each other roughly 39 times, so renumbering would break every
 link. §16 and §17 keep anchor headings in the spec pointing here.
 
-**Last evaluated:** 2026-09-19, against build 94. G9/G10 added the same day from playtest.
+**Last evaluated:** 2026-09-20, against **build 107**. Re-verified against source: G5, G6 and G7
+confirmed untouched; G10 confirmed closed by the cake; §17.5's row corrected for the
+object-presentation allowance that shipped in build 93 and that the previous pass missed. The
+prior evaluation was 2026-09-19 against build 94, when G9 and G10 were added from playtest.
 
 ---
 
@@ -35,13 +40,21 @@ half as unbuilt, contradicting both §17's progress note and §18.3, which had a
 as closed. The code was right and the item text was stale; it has since been corrected. Per-item
 bodies are the thing most likely to drift — the dated progress notes above them were accurate.
 
+**A second, opposite drift found on re-read (2026-09-20): this file was behind the code twice
+over.** §17.5's row still described emoji as uncapped and the easy-mode presentation roll as
+uniform — both untrue since build 93's object-presentation allowance, which shipped *before* this
+file's last two edits and was missed by them. And G10 was still listed as open and bolded after
+the cake had shipped. The lesson generalises the one above: **a gap's status has to be re-read
+against source, not carried forward** — an entry can rot by being fixed just as easily as by
+being stale.
+
 | Item | Spec claims | Found in code | Verdict |
 |---|---|---|---|
 | **17.1** Intrinsic integration | Unaddressed | The math still gates an unrelated reward. Fast mode times the gate; it doesn't make the reward *run on* recall | ✅ claim accurate — **not built** |
 | **17.2** Scaffold 2nd wrong | Unaddressed *(at time of review)* | `wrong()` now calls `showOperandHints()` before `revealAnswer()` — pips under digits, numerals under pips/emoji, 7/8/9 split across two dice | ✅ **CLOSED** 2026-09-19 — see G1 |
 | **17.3** Adaptivity + fact memory | Unaddressed | `getTopMistakes()` is imported by `statsScreen.js` only. `newProblem()` picks operands uniformly at random within the sum bound | ✅ claim accurate — **not built** |
 | **17.4** Competence + autonomy | Both halves shipped | `mastery.js` (11 tiers) = competence; `presentationPicker.js` (per-problem choice) + the Easy/Fast sub-mode = autonomy | ✅ **CLOSED** 2026-09-19 |
-| **17.5** Sequence representations | Unaddressed | Easy mode: `pick(["digits","emoji","pips"])`, uniform. Pips correctly capped at ≤6; emoji groups are not (see G4) | ✅ claim accurate — **not built** |
+| **17.5** Sequence representations | Unaddressed | Two of the three anti-counting rules now exist: operands are capped at `SUBITIZE_CAP` (6) for both pips *and* emoji (`problem.js`, see G4), and `MAX_OBJECT_PROBLEMS` caps object presentations at **7 per game**, after which easy mode rolls digits only (`objectQuotaLeft()`) | ⚠️ **partly built** — the caps landed, the *sequencing* didn't |
 | **17.6** steps 1–3 (baseline, personal target, additive reward) | Shipped | `recordLatency()` per first attempt; Fast mode's seeded-and-ratcheting drain; bonus star is purely additive | ✅ claim accurate — **built** |
 | **17.6** steps 4–6 (speed-driven core, retire counting, latency→adaptivity) | Unbuilt | Confirmed absent | ✅ claim accurate — **not built** |
 
@@ -250,7 +263,31 @@ still otherwise. It must never drop a tier because a child had a slow day, and a
 never be shown a snail *for being slow* — which is exactly what option 2 risks if the bottom tier
 is reachable by anything other than not playing. Worth designing the floor before the ceiling.
 
-### G10. The bike isn't part of any story — a child asked why it's there
+### ~~G10. The bike isn't part of any story~~ — **fixed 2026-09-20**
+
+**Resolved:** the bike got the first and cheapest of the three fixes below — **a destination, not
+an opponent**. `BONUS_REWARD_GLYPH` (`config.js`) is a **🎂 cake**, parked at the start of the
+water bar; the rider travels towards it as the bar drains (`waterBar.js`), and answering before
+it empties **wins the cake**: it lifts off the bar and lands under the star just earned
+(`main.js`), then appears again on the win screen as one trophy per bonus (`win.js`). The child's
+question now has an answer visible on screen: he's riding to get the cake.
+
+Nothing pursues the child, so §17.6 step 4 is honoured — an emptied bar is still "didn't get
+there this time", never "caught", and it still costs nothing.
+
+**Two things to keep an eye on, neither serious enough to hold the gap open:**
+
+- **The geometry is the reverse of what this entry asked for.** The rider reaches the cake when
+  the water runs *out* — `waterBar.js`: *"Run dry and he reaches it: both are gone."* Arriving is
+  what happens when the cake is **not** won. In play it reads as the cake being taken away rather
+  than as arrival, and it is not framed as a loss anywhere, but "beating it means arriving" is
+  not what was built. Worth a look next time someone watches a child play it.
+- **"Name it once" wasn't done.** There is still no sentence anywhere explaining the bike or the
+  cake — the Fast toggle is a bare glyph and a `FAST` label. The story is now *shown* rather than
+  *told*, which may well be enough, but that is an assumption, not an observation: the original
+  finding came from a child asking out loud, and no one has watched the same child meet the cake.
+
+#### Original finding
 **Playtest observation (2026-09-19):** the child kept asking *"why is the guy on the bike?"*.
 
 The cyclist (`BONUS_GLYPH`) carries a lot of Fast mode: it's the Easy/Fast toggle icon, the rider
@@ -290,7 +327,7 @@ than from reading the code. That makes it better evidence than anything above it
 | ~~G3~~ | ~~Latency log lacks correctness flag~~ | — | **Fixed** 2026-09-19 |
 | G5 | Misses never resurface (§17.3) | Low–medium | Data already exists; best learning-per-line-changed |
 | ~~G4~~ | ~~Emoji groups invite counting~~ | — | **Fixed** 2026-09-19 |
-| **G10** | **The bike isn't part of any story** | Low (name it) → high (§17.1) | **Observed in play** — a child asked what it's for |
+| ~~G10~~ | ~~The bike isn't part of any story~~ | — | **Fixed** 2026-09-20 — he rides to a cake |
 | ~~G9~~ | ~~Badge for accuracy, none for speed~~ | — | **Fixed** 2026-09-20 |
 | G7 | Hardest-setting fallback | Very low | Latent, one-line fix |
 | G6 | Global not per-fact adaptivity (§16) | High | Genuinely Phase 2; depends on G3 |
@@ -300,15 +337,20 @@ than from reading the code. That makes it better evidence than anything above it
 told, the game's own goal is measurable, and the anti-counting rule is applied consistently.
 Nothing left on this list can actively harm a child.
 
-What remains: **G5** (misses never resurface — still the cheapest learning win, and the one to do
-next), then the two added from playing the game rather than reading it — **G10** (the bike means
-nothing to the player) and **G9** (speed has no badge, while the accuracy badge's snail-to-dino
-art already looks like it's about speed). **G7** is a one-line fallback fix and **G6** is
-genuinely Phase 2, now unblocked by G3's correctness flag.
+**G9 and G10 are done too** (2026-09-20) — the two that came from watching a child play rather
+than reading the code, and both were closed within a day of being written down.
 
-G9 and G10 both point at the same underlying thing: Fast mode measures and rewards speed
-correctly, but doesn't yet *mean* anything to the child playing it. That's §17.1, and these are
-the first two pieces of real evidence for it.
+What remains is three items and no easy ones left after the first: **G5** (misses never
+resurface — still the cheapest learning win, and the one to do next), **G7** (a one-line fallback
+fix, worth doing on the way past), and **G6** (genuinely Phase 2, now unblocked by G3's
+correctness flag). §17.5 is half-done: the anti-counting *caps* shipped, the speed-gated
+*sequencing* didn't.
+
+G9 and G10 pointed at the same underlying thing, and fixing them didn't move it: Fast mode
+measures and rewards speed correctly, and now dresses it in a story, but the maths still doesn't
+*drive* anything — the cake is won by being fast, not by the sum itself powering the ride. That's
+§17.1, still the highest-leverage item in this file, and the evidence for it is now three pieces
+deep.
 
 ---
 
@@ -328,9 +370,11 @@ the first two pieces of real evidence for it.
   it — shipped as **Fast mode** (§18), deliberately behind an **explicit opt-in** rather than as a
   change to the default game: Easy mode is still the game described in §1–§16, with no timer and
   nothing speed-related visible anywhere. Still unbuilt: a speed-driven **core** mechanic (17.6
-  step 4 / §17.1), retiring counting-solvable presentations (step 5 / §17.5), and folding latency
-  into **fact-level** adaptivity (step 6 / §17.3) — Fast mode's adaptivity is one global drain
-  speed, not per-fact. Scoring (§6, §11) remains purely correctness-based in **both** modes.
+  step 4 / §17.1) and folding latency into **fact-level** adaptivity (step 6 / §17.3) — Fast
+  mode's adaptivity is one global drain speed, not per-fact. Retiring counting-solvable
+  presentations (step 5 / §17.5) is **half done** as of build 93: operands are capped at 6 and
+  object presentations at 7 per game, but nothing about that mix responds to the child's speed.
+  Scoring (§6, §11) remains purely correctness-based in **both** modes.
 - **Fast mode's drain speed is calibrated from a small sample.** The first-ever drain duration is
   seeded from this child's **maximum** Easy-mode response time + 2 s, then nudged by ±15% per
   finished game (§18.4). The seed is deliberately generous, but one game's worth of evidence per
@@ -373,6 +417,18 @@ Ordered by leverage toward that goal; each is paired with the theory it draws on
 > selection. What it is **not** is 17.1: the addition is still a gate in front of a reward, only
 > now a timed one. 17.2 (second-wrong scaffolding), 17.3's fact-level adaptivity, and 17.5
 > remain unaddressed — and 17.2 arguably matters *more* now that a timed mode exists.
+>
+> **Update (2026-09-20, builds 95–107):** four things shipped, and **no §17 item moved**. Two are
+> logged in section B — the **speed badge** (G9) and the **cake** the biker rides towards (G10).
+> The other two are engagement polish of the kind this note has recorded twice before: the
+> **four-of-a-kind prize merge** (four duplicates become a present that opens into a new prize,
+> spec §12) and a batch of **win-screen work** (the snake's swallow as a travelling wave, the
+> football's thump, the present's glow and the star turning behind it). The merge is the most
+> substantial of them and is worth naming precisely: it makes duplicate prizes a *currency* and
+> gives the collection its own economy — genuinely good engagement design, and **entirely
+> unrelated to the maths**, which is 17.1's complaint restated rather than answered. Worth
+> noting for whoever takes 17.1: the prize box is now where the game's richest systems live
+> (merge in easy, tap-combos in hard), and none of them run on recall.
 
 ### 17.1 Make the numbers have a purpose (intrinsic integration) — *highest leverage, revised*
 The Phase 1 game is a **drill with juice**: solve the sum → get the fireworks. The math is
@@ -454,6 +510,15 @@ should gate how much of the pip/emoji presentation stays in the mix at all. *(Co
 Representational–Abstract still applies to subitizing itself — recognizing "6 dots" instantly
 is its own representational skill — just not to the addition problem being solved here; Clements
 & Sarama, subitizing. See §17.6.)*
+
+**Partly shipped 2026-09-20 (as a status correction, not new work — the code landed in build
+93).** The *anti-counting* half of this item exists in `problem.js`: `SUBITIZE_CAP` holds every
+pip and emoji operand at ≤6, and `MAX_OBJECT_PROBLEMS` allows only **7 object-presentation
+problems per game**, after which easy mode rolls digits for the rest (spec §4). So object
+presentations do now thin out within a game. What is still missing is the *sequencing*: the
+7-problem allowance is a fixed quota spent in whatever order the random roll happens to spend it,
+not a mix that narrows as the child's own speed rises. Until speed gates the quota, this item
+stays open.
 
 ### 17.6 Speed & instant recognition — *stated future direction, added 2026-09-18, safety-first revision*
 This game's actual target skill is **fast, automatic recall** — `3 + 4 = 7` retrieved instantly,
