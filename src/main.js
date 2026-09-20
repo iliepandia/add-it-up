@@ -19,17 +19,17 @@ import {
   GOAL, SUM_START, SUM_MIN, SUM_MAX_CAP, SEE_RESULT, STAR_FLY, IMPACT_AT,
   POST_HOLD, WIN_HOLD, WRONG_HOLD,
   REVEAL_FLASH, REVEAL_TO_FLASH, FLASH_REPEATS, KEY_FLASH_ON, KEY_FLASH_GAP, reduceMotion,
-  WRONG_FACES, pick, FLYBY_DURATION, REWARD_SHOWER_DURATION, BONUS_GLYPH
+  WRONG_FACES, pick, FLYBY_DURATION, REWARD_SHOWER_DURATION, BONUS_REWARD_GLYPH
 } from "./config.js";
 import {
   card, keypad, flash, win, picker, statsLink, statsScreen, prizeBoxLink, prizeBox,
-  difficultyToggle, difficultyHint, statsDifficultyToggle, presentationPickerEl, waterRiderEl
+  difficultyToggle, difficultyHint, statsDifficultyToggle, presentationPickerEl, waterCakeEl
 } from "./dom.js";
 import { audio, sTada, sError, sDing } from "./audio.js";
 import { applyTheme, themeState, checkStreak } from "./themes.js";
 import { newProblem, renderAns, showOperandHints } from "./problem.js";
 import { buildStars, fillStar, refreshStars, prepareBonusStar, revealBonusStar } from "./stars.js";
-import { celebrate, tadaSparkles, flyStar, flyRiderTo } from "./fx.js";
+import { celebrate, tadaSparkles, flyStar, flyCakeTo } from "./fx.js";
 import { showWin } from "./win.js";
 import { showPicker, wirePicker } from "./picker.js";
 import { state, keyByDigit } from "./state.js";
@@ -39,7 +39,7 @@ import { showPrizeBox, wirePrizeBox } from "./prizeBox.js";
 import { handlePickerKeydown, wireMasteryBadge, renderMasteryBadge } from "./mastery.js";
 import { renderDifficultyToggle, attemptToggleMode, applyModeLook } from "./difficulty.js";
 import { getHardDrainDuration, adjustHardDrainDuration } from "./hardDifficulty.js";
-import { showWaterBar, hideWaterBar, freezeWaterBar, waterHasWater } from "./waterBar.js";
+import { showWaterBar, hideWaterBar, freezeWaterBar, takeWaterCake, waterHasWater } from "./waterBar.js";
 import { showPresentationPicker, resetPresentationRotation } from "./presentationPicker.js";
 
 // ---- input ----
@@ -105,14 +105,15 @@ function correct(){
     const onImpact=()=>{
       fillStar(idx); refreshStars(); celebrate();
       if(bonus){
-        // Speed bonus: a second big star flies in after the regular one lands.
-        // The streak reward waits for that flight to land too, so a shower or
-        // flyby never plays over the biker.
+        // Speed bonus: the biker beat the bar to the cake, so the cake itself
+        // flies up from the bar's start and lands under the star, after the
+        // regular star. The streak reward waits for that flight to land too,
+        // so a shower or flyby never plays over the cake.
         const b=prepareBonusStar(idx);
-        if(reduceMotion){ revealBonusStar(b); checkStreak(); }
+        if(reduceMotion){ takeWaterCake(); revealBonusStar(b); checkStreak(); }
         else setTimeout(()=>{
-          flyRiderTo(waterRiderEl, b, BONUS_GLYPH, ()=>{ revealBonusStar(b); checkStreak(); });
-          waterRiderEl.hidden=true; // it left the bar — rect already captured above
+          flyCakeTo(waterCakeEl, b, BONUS_REWARD_GLYPH, ()=>{ revealBonusStar(b); checkStreak(); });
+          takeWaterCake(); // it left the bar — rect already captured above
         }, BONUS_GAP);
       }else checkStreak();
     };
@@ -132,7 +133,7 @@ function correct(){
       // Hard mode's presentation picker is a full-screen overlay, so it must
       // wait for the bonus-star flight and any streak reward to finish.
       const bonusExtra = bonus ? BONUS_GAP + impactAt : 0;
-      // With a bonus the reward only starts once the biker lands, so its
+      // With a bonus the reward only starts once the cake lands, so its
       // duration stacks on top of bonusExtra instead of overlapping it.
       const rewardMs = state.mode==="hard" && !won
         ? ([3,9].includes(state.streak) ? REWARD_SHOWER_DURATION : state.streak===6 ? FLYBY_DURATION : 0) : 0;

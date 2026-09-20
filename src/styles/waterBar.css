@@ -1,7 +1,8 @@
 /* ---- hard mode's water bar: horizontal, under the problem card. Full at the
    start of every problem; the fill is left-anchored and its width shrinks, so
    the water drains right to left (see waterBar.js), with a biker riding the
-   draining edge until the bar runs dry. ---- */
+   draining edge towards the cake parked at the far left. Beat the bar and the
+   cake flies off to the star; let it run dry and both vanish. ---- */
 .water-bar{position:relative; width:100%; max-width:min(720px,94vw); flex:0 0 auto;}
 .water-bar[hidden]{display:none;}
 .water-track{width:100%; height:clamp(14px,3vw,20px); border-radius:999px; overflow:hidden;
@@ -13,3 +14,8 @@
   font-size:clamp(22px,6vw,32px); line-height:1; pointer-events:none;
   filter:drop-shadow(0 1px 2px rgba(46,58,89,.3));}
 .water-rider[hidden]{display:none;}
+/* The prize the biker is riding towards, parked at the bar's start. */
+.water-cake{position:absolute; top:50%; left:0; transform:translate(-50%,-52%);
+  font-size:clamp(20px,5.2vw,28px); line-height:1; pointer-events:none;
+  filter:drop-shadow(0 1px 2px rgba(46,58,89,.3));}
+.water-cake[hidden]{display:none;}

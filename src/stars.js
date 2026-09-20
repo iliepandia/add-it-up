@@ -1,7 +1,7 @@
 // Star crown: fills as questions are answered, highlights the active streak,
 // and previews upcoming milestone badges.
 
-import { GOAL, BONUS_GLYPH } from "./config.js";
+import { GOAL, BONUS_REWARD_GLYPH } from "./config.js";
 import { starsEl } from "./dom.js";
 import { sStar } from "./audio.js";
 import { themeState } from "./themes.js";
@@ -25,11 +25,12 @@ export function fillStar(i){
   sStar();
 }
 
-// The hard-mode bonus star is added hidden (so its flight target has a real
-// position), then revealed once the flying star lands on it.
+// The hard-mode bonus badge — the cake won by beating the water bar — is added
+// hidden (so its flight target has a real position), then revealed once the
+// flying cake lands on it.
 export function prepareBonusStar(i){
   const slot=starsEl.children[i]; if(!slot) return null;
-  const b=document.createElement("span"); b.className="bonus-star"; b.textContent=BONUS_GLYPH;
+  const b=document.createElement("span"); b.className="bonus-star"; b.textContent=BONUS_REWARD_GLYPH;
   slot.appendChild(b);
   return b;
 }

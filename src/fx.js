@@ -53,11 +53,11 @@ function flyStarTo(target,onImpact,glyph){
   setTimeout(()=>{ onImpact(); impactRing(tx,ty); mega.remove(); }, STAR_FLY*IMPACT_AT);
 }
 
-/** The speed-bonus biker: lifts off from `source` (the water bar's rider) at
- *  its own small size, swells to full size as it rises, then snaps down onto
- *  `target` (the bonus slot under the star) — instead of just popping into
- *  existence big at screen centre the way the plain star does. */
-export function flyRiderTo(source,target,glyph,onImpact){
+/** The speed-bonus cake: lifts off from `source` (the cake parked at the water
+ *  bar's start) at its own small size, swells to full size as it rises, then
+ *  snaps down onto `target` (the bonus slot under the star) — instead of just
+ *  popping into existence big at screen centre the way the plain star does. */
+export function flyCakeTo(source,target,glyph,onImpact){
   const sr=source.getBoundingClientRect(), tr=target.getBoundingClientRect();
   const sx=sr.left+sr.width/2, sy=sr.top+sr.height/2;
   const tx=tr.left+tr.width/2, ty=tr.top+tr.height/2;

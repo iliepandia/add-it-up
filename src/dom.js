@@ -59,5 +59,6 @@ export const statsDifficultyToggle = $("#statsDifficultyToggle");
 export const waterBarEl = $("#waterBar");
 export const waterFillEl = $("#waterFill");
 export const waterRiderEl = $("#waterRider");
+export const waterCakeEl = $("#waterCake");
 
 export const presentationPickerEl = $("#presentationPicker");

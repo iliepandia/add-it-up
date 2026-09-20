@@ -1,6 +1,6 @@
 // End screen: trophy reveal + closing star explosion.
 
-import { pick, rnd, reduceMotion, WIN_END, HARD_WIN_END, BONUS_GLYPH } from "./config.js";
+import { pick, rnd, reduceMotion, WIN_END, HARD_WIN_END, BONUS_REWARD_GLYPH } from "./config.js";
 import { win, picker, trophiesEl, winfxEl } from "./dom.js";
 import { tone, sParty, sStar, sTada, sDing } from "./audio.js";
 import { spawnParticle } from "./fx.js";
@@ -78,8 +78,8 @@ function makeTrophiesClickable(){
 }
 
 // One trophy per glyph, revealed on a rising scale: the streak prizes first,
-// then one bike per speed bonus earned. They're all plain trophies, so the
-// bikes tap, freeze and get eaten by the snake exactly like the rest.
+// then one cake per speed bonus earned. They're all plain trophies, so the
+// cakes tap, freeze and get eaten by the snake exactly like the rest.
 function revealTrophies(glyphs){
   trophiesEl.style.cssText="";
   trophiesEl.innerHTML="";
@@ -131,7 +131,7 @@ export function showWin(){
   // as likely (1-in-2 vs easy's 1-in-3), matching its generally higher stakes.
   if(score>=10 && rnd(hard?2:3)===0) startSnake(onSnakeStep, hard?"hard":"easy");
   const trophies=Array(Math.max(1,state.maxStreak)).fill(glyph);
-  for(let i=0;i<state.bonusStarCount;i++) trophies.push(BONUS_GLYPH); // one bike per speed bonus
+  for(let i=0;i<state.bonusStarCount;i++) trophies.push(BONUS_REWARD_GLYPH); // one cake per speed bonus
   revealTrophies(trophies);
 }
 

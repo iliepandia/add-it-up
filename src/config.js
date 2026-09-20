@@ -2,7 +2,8 @@
 
 export const GOAL = 10;
 export const SUM_START = 5, SUM_MIN = 5, SUM_MAX_CAP = 12; // difficulty ramp: start, floor, ceiling
-export const BONUS_GLYPH = "🚴🏻‍♂️"; // hard mode's speed reward: a bike, matching the FAST toggle icon
+export const BONUS_GLYPH = "🚴🏻‍♂️"; // hard mode's identity glyph: the FAST toggle, the picker's falling field, the prize badge, and the water bar's rider
+export const BONUS_REWARD_GLYPH = "🎂"; // what beating the bar wins: the cake the biker was racing towards
 export const HARD_SUM_MIN = 6; // hard mode: no ramp, but the sum is never allowed below this
 // At most this many problems per game may show quantity as objects (pips or
 // emoji, counted together); the rest are digits. Object presentations are the

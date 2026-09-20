@@ -205,10 +205,10 @@ digit and clear handlers touch no stats at all.)*
   to reach shows no badge.
 
 > **Fast mode (§18.5)** inserts a **second flying star** into this sequence when the answer beat
-> the water bar: the biker 🚴 lifts off the bar and lands on the same slot **250 ms after** the
-> regular star smashes home. A **streak reward waits for that landing** before it fires, so a
-> candy rain or a fly-by never plays over the biker's flight — and the next problem is held back
-> by the biker's flight *plus* the reward's full length, not the two overlapped.
+> the water bar: the cake 🎂 lifts off the start of the bar and lands on the same slot **250 ms
+> after** the regular star smashes home. A **streak reward waits for that landing** before it
+> fires, so a candy rain or a fly-by never plays over the cake's flight — and the next problem is
+> held back by the cake's flight *plus* the reward's full length, not the two overlapped.
 
 ### Wrong
 - **Shake** the on-screen items.
@@ -256,7 +256,7 @@ Synthesized in-browser (Web Audio), unlocked on the first user tap (mobile autop
 | A snake-easter-egg trophy touch (§14) | ding (same two-tone chime as the Space theme's key press) |
 | Tapping a prize in the prize box (§12) | a sound matched to *that specific prize*, not random |
 | Tapping the mastery badge (§13) | ding |
-| Star fills (including Fast mode's bonus biker landing, §18.5) | star "ting" |
+| Star fills (including Fast mode's bonus cake landing, §18.5) | star "ting" |
 | Flipping the Easy/Fast toggle (§18.1) | ding on success; the wrong-answer ding-ding when Fast is still locked |
 
 Sound is best-effort — the game must remain fully playable if audio is unavailable.
@@ -280,7 +280,7 @@ Sound is best-effort — the game must remain fully playable if audio is unavail
 - Show **"Good job!"**, then a **randomly chosen emoji** (from a pool of **60** — animals,
   nature, treats, vehicles, and household objects) **repeated once per point of the longest
   streak** reached this game. That same emoji is also the game's **prize** — see §12.
-  *(Fast mode draws from its own separate 60-emoji pool and appends one 🚴 trophy per speed
+  *(Fast mode draws from its own separate 60-emoji pool and appends one 🎂 trophy per speed
   bonus earned — §18.7.)*
 - The copies **reveal one at a time**, each with a **rising musical note**; when the reveal
   finishes (the sound is over), a **star explosion** bursts over the screen.
@@ -779,7 +779,8 @@ selection is one choice per game; this is one per problem.
 
 A horizontal bar sits **under the problem card**. It starts **full** for every problem and drains
 **right to left** over a fixed duration, with the **🚴 biker riding the draining edge** (facing
-left, the way it travels) until the bar runs dry and the biker is gone.
+left, the way it travels) towards a **🎂 cake parked at the start of the bar** — the prize he's
+racing for. Run the bar dry and he reaches it: **biker and cake both vanish**, nothing won.
 
 - **Constant within a game, personal across games.** The drain duration is one number, identical
   for all 10 problems of a game, and stored in its own `localStorage` key (a difficulty setting,
@@ -800,22 +801,24 @@ left, the way it travels) until the bar runs dry and the biker is gone.
   answer (§7) doesn't refill it — the same problem re-asked is the same problem. It refills only
   for a genuinely new one.
 - **Freezes on a correct answer**, holding the fill and the biker in place through the celebration
-  instead of draining on underneath it.
+  instead of draining on underneath it — the biker **stops** short of the cake, which is exactly
+  what winning it looks like.
 - **Whether the bar still had water is read at the instant ✓ is pressed** — not after the 200 ms
   see-your-answer pause (§6), so that pause can never cost the bonus.
 
 ### 18.5 The speed bonus: a second star
 
-Beat the bar on a correct answer and the star slot earns a **second, bonus star** — the 🚴 biker —
-alongside the regular ⭐.
+Beat the bar on a correct answer and the star slot earns a **second, bonus star** — the 🎂 cake the
+biker was racing towards — alongside the regular ⭐.
 
 - **Sequence:** the regular star flies and smashes home exactly as in §7; **250 ms later** the
-  biker **lifts off the water bar itself** at its small on-bar size, swells to full size as it
+  **cake lifts off the start of the water bar** at its small on-bar size, swells to full size as it
   rises, and snaps down onto the same slot with its own impact ring (it doesn't just pop into
-  existence at screen centre the way the plain star does), and the bar's biker is gone — it left.
-- **Streak rewards wait for it.** A 3/6/9-streak reward (§7) fires only once the biker has landed,
+  existence at screen centre the way the plain star does). The **cake leaves the bar** — it was
+  won — while the **biker stays frozen** where he stopped. The next problem puts a fresh cake back.
+- **Streak rewards wait for it.** A 3/6/9-streak reward (§7) fires only once the cake has landed,
   so a candy rain or fly-by never plays over the flight, and the next problem is held for the
-  biker's flight *plus* the reward's full run.
+  cake's flight *plus* the reward's full run.
 - Under `prefers-reduced-motion` the bonus star simply **appears** on the slot, no flight.
 - **Missing the bar is silent.** No sound, no message, no mark on the star — the regular star and
   its full celebration land identically either way. The *only* difference is the absence of an
@@ -847,9 +850,9 @@ proves out.
 
 - **Its own trophy pool:** 60 glyphs deliberately disjoint from Easy's (§9) — gems, dragons,
   medals, tools — so a glance at the prize box separates the two even before the badge is noticed.
-- **The trophy row** is the usual one-per-longest-streak-point (§9), plus **one 🚴 appended per
-  speed bonus** earned that game, so the row shows both what was answered right and what was
-  answered fast.
+- **The trophy row** is the usual one-per-longest-streak-point (§9), plus **one 🎂 appended per
+  speed bonus** earned that game — the cakes won off the water bar (§18.5) — so the row shows both
+  what was answered right and what was answered fast.
 - **The prize box** (§12) is shared by both modes, one chronological shelf; a Fast-mode tile wears
   a small **🚴 badge** in its corner. Tile size still follows that game's score, identically.
 - **The snake easter egg** (§14) still needs a perfect game, but in Fast mode it's **1-in-2**
