@@ -5,15 +5,19 @@ game *is*; this one describes what it is *not yet*** — plus, struck through, t
 started here and have since shipped, kept as a record of what closed them and when.
 
 **Closed so far:** §17.2 and §17.4, and gaps G1, G2, G3, G4, G8. **Still open:** §17.1, §17.3,
-§17.5, §17.6 steps 4–6, and gaps G5, G6, G7 — with **G5 (misses never resurface) the one to do
-next**, being the cheapest real learning win left: the data already exists and only the
-problem-selection call site has to change.
+§17.5, §17.6 steps 4–6, and gaps G5, G6, G7, G9, G10 — with **G5 (misses never resurface) the
+one to do next**, being the cheapest real learning win left: the data already exists and only
+the problem-selection call site has to change.
+
+**G9 and G10 came from watching a child play, not from reading the code** — a badge for speed to
+match the one for accuracy, and a cyclist the player couldn't make sense of. Both are §17.1 in
+practice: Fast mode measures speed correctly but doesn't yet *mean* anything to the child.
 
 Section numbers (§16, §17.x) match the spec's original numbering and are deliberately preserved
 — the two files cross-reference each other roughly 39 times, so renumbering would break every
 link. §16 and §17 keep anchor headings in the spec pointing here.
 
-**Last evaluated:** 2026-09-19, against build 85 (speed trend, recall-only latency, emoji cap).
+**Last evaluated:** 2026-09-19, against build 94. G9/G10 added the same day from playtest.
 
 ---
 
@@ -203,6 +207,59 @@ files stay flat in `src/`), and a **Docs** section links `addition-game-spec.md`
 `addition-game-future.md`. Kept here as a record rather than deleted, since docs drift is the
 kind of thing worth re-checking whenever a batch of modules lands.
 
+### G9. There's a badge for accuracy but none for speed
+The mastery badge (§13) is the game's only persistent, cross-session progress signal, and it is
+driven **entirely by 7-day accuracy** (`getPrecision7d`). Speed — the thing §1 names as the
+actual goal — has no badge at all. Since G2/G3 shipped, a per-game median recall time is
+recorded and trended, so the data for one already exists and is already clean.
+
+**The current badge is also sending a mixed signal.** Its 11 tiers are 🐌 → 🐔 → 🐢 → 🐝 → 🐷 →
+🐱 → 🐶 → 🐄 → 🐻 → 🦖 → 🏆 — a **speed** metaphor, a snail through to a dinosaur. A child reading
+it will reasonably assume the snail means *slow*, when it actually means *inaccurate*. So the
+gap isn't only that speed lacks a badge; it's that the badge that exists looks like it's already
+about speed.
+
+**Recommendation — two options, and they're genuinely different products:**
+1. **A second badge beside it**, driven by the 30-day speed trend, with its own visual language
+   (something about motion, distinct from the animals). Keeps accuracy and speed legible as two
+   separate things a child is getting better at.
+2. **Re-base the existing badge on speed** and give accuracy a different metaphor. The animals
+   already read as speed, so this resolves the mixed signal rather than adding to it.
+
+Either way §17.6's constraint governs: a badge may only ever move **up** on improvement and sit
+still otherwise. It must never drop a tier because a child had a slow day, and a slow child must
+never be shown a snail *for being slow* — which is exactly what option 2 risks if the bottom tier
+is reachable by anything other than not playing. Worth designing the floor before the ceiling.
+
+### G10. The bike isn't part of any story — a child asked why it's there
+**Playtest observation (2026-09-19):** the child kept asking *"why is the guy on the bike?"*.
+
+The cyclist (`BONUS_GLYPH`) carries a lot of Fast mode: it's the Easy/Fast toggle icon, the rider
+on the water bar, the bonus star, the trophy-screen tally, and the badge on hard-mode prizes in
+the box. It appears everywhere — and nothing in the game ever explains it. There's no race, no
+course, nothing being chased or outrun. It's a decoration attached to a timer, so a child with no
+story to hang it on has nowhere to put it.
+
+This is **§17.1 (intrinsic integration) showing up in playtest** rather than in theory. §17.1's
+complaint is that the reward is unrelated to the maths; this is the same disconnect noticed by
+the actual player, which makes it the most concrete evidence the backlog has that 17.1 is worth
+doing. It is also a warning about *how*: §17.6 step 4 is explicit that a chase must never make
+"not fast" feel like losing, so "explain the bike by giving it something to outrun" is exactly
+the design that needs the most care.
+
+**Cheapest fixes, smallest first:**
+- **Give it a destination, not an opponent.** The bar becomes a road the rider travels; beating
+  it means arriving. Nothing pursues the child, so an emptied bar is "didn't arrive this time",
+  never "caught".
+- **Name it once**, on the Fast-mode screen the child already sees, so the glyph arrives with a
+  sentence instead of unexplained.
+- **Or drop the cyclist** for something whose meaning is self-evident at a glance (a stopwatch,
+  a rocket) — the cheapest option, and it costs the least if the eventual §17.1 mechanic wants
+  entirely different imagery anyway.
+
+*Worth noting: this is the first entry in this file sourced from watching someone play rather
+than from reading the code. That makes it better evidence than anything above it.*
+
 ---
 
 ## C. Priority summary
@@ -214,15 +271,25 @@ kind of thing worth re-checking whenever a batch of modules lands.
 | ~~G3~~ | ~~Latency log lacks correctness flag~~ | — | **Fixed** 2026-09-19 |
 | G5 | Misses never resurface (§17.3) | Low–medium | Data already exists; best learning-per-line-changed |
 | ~~G4~~ | ~~Emoji groups invite counting~~ | — | **Fixed** 2026-09-19 |
+| **G10** | **The bike isn't part of any story** | Low (name it) → high (§17.1) | **Observed in play** — a child asked what it's for |
+| **G9** | **Badge for accuracy, none for speed** | Medium | Speed is the stated goal; the badge's own art already implies it |
 | G7 | Hardest-setting fallback | Very low | Latent, one-line fix |
 | G6 | Global not per-fact adaptivity (§16) | High | Genuinely Phase 2; depends on G3 |
 | ~~G8~~ | ~~README module map stale~~ | — | **Fixed** 2026-09-19 |
 
 **G1, G2, G3, G4 and G8 are done** (2026-09-19) — a stuck child is now helped rather than just
 told, the game's own goal is measurable, and the anti-counting rule is applied consistently.
-What remains: **G5** (misses never resurface — the cheapest learning win on the board, and the
-one to do next), **G7** (a one-line fallback fix), and **G6** (genuinely Phase 2, now unblocked
-by G3's correctness flag). Nothing left on this list can actively harm a child.
+Nothing left on this list can actively harm a child.
+
+What remains: **G5** (misses never resurface — still the cheapest learning win, and the one to do
+next), then the two added from playing the game rather than reading it — **G10** (the bike means
+nothing to the player) and **G9** (speed has no badge, while the accuracy badge's snail-to-dino
+art already looks like it's about speed). **G7** is a one-line fallback fix and **G6** is
+genuinely Phase 2, now unblocked by G3's correctness flag.
+
+G9 and G10 both point at the same underlying thing: Fast mode measures and rewards speed
+correctly, but doesn't yet *mean* anything to the child playing it. That's §17.1, and these are
+the first two pieces of real evidence for it.
 
 ---
 
