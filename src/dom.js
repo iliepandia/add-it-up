@@ -45,6 +45,13 @@ export const masteryBalloon = $("#masteryBalloon");
 export const masteryBalloonEmoji = $("#masteryBalloonEmoji");
 export const masteryBalloonCaption = $("#masteryBalloonCaption");
 
+export const speedBadge = $("#speedBadge");
+export const speedEmoji = $("#speedEmoji");
+export const speedArc = $("#speedArc");
+export const speedBalloon = $("#speedBalloon");
+export const speedBalloonEmoji = $("#speedBalloonEmoji");
+export const speedBalloonCaption = $("#speedBalloonCaption");
+
 export const difficultyToggle = $("#difficultyToggle");
 export const difficultyHint = $("#difficultyHint");
 export const statsDifficultyToggle = $("#statsDifficultyToggle");

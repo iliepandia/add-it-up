@@ -21,7 +21,9 @@ function dayKey(t){
 function blankMode(){
   return {
     session: { totalMs: 0, count: 0, minMs: null, maxMs: null },
-    games: { totalScore: 0, count: 0, bestScore: 0, bestStreak: 0, totalCorrect: 0, totalWrong: 0, history: [] },
+    // speedBest: the best speed gain ever reached (see getSpeedProgress) — a
+    // ratchet, so a slow week can never take a badge tier away.
+    games: { totalScore: 0, count: 0, bestScore: 0, bestStreak: 0, totalCorrect: 0, totalWrong: 0, speedBest: 1, history: [] },
     mistakeLog: [], // [{a,b,t}] — recent wrong submissions, pruned to MISTAKE_LOG_DAYS on every write
     latencyLog: [], // [{presentation,maxOperand,ms,t}] — one entry per problem's first attempt, pruned to LATENCY_LOG_DAYS
     days: {},
@@ -145,6 +147,9 @@ export function recordGame(mode, { wrongCount, theme, streak, latencies }){
   const ms = times.length ? Math.round(median([...times].sort((a, b) => a - b))) : null;
   g.history.push({ t: Date.now(), score, theme, ms });
   if(g.history.length > MAX_GAME_HISTORY) g.history.splice(0, g.history.length - MAX_GAME_HISTORY);
+  // Ratchet the speed badge on the write path, so reading it stays a pure read.
+  const gain = speedGainFrom(g.history);
+  if(gain != null) g.speedBest = Math.max(Number.isFinite(g.speedBest) ? g.speedBest : 1, gain);
   save(data);
 }
 
@@ -345,6 +350,40 @@ export function getPrecision7d(mode){
   let correctTotal = 0, wrongTotal = 0;
   for(const g of recent){ correctTotal += 10; wrongTotal += Math.max(0, 10 - g.score); }
   return { hasData: true, precision: correctTotal / (correctTotal + wrongTotal) * 100, correctTotal, wrongTotal };
+}
+
+// ---- speed progress, for the Fast-mode speed badge (§13) ----
+// Measured against THIS CHILD'S OWN starting pace, never a fixed number of
+// milliseconds — §17.6 rules out a guessed threshold, and a 7-year-old's
+// normal answer time is not a shortfall. The ladder tops out at SPEED_TOP_GAIN
+// (answering twice as fast as when they began), and it RATCHETS: recordGame
+// only ever raises `speedBest`, so an off week never takes a tier away. The
+// worst a child can do is stay where they are.
+export const SPEED_SAMPLE = 3;    // games at each end of the comparison
+export const SPEED_TOP_GAIN = 2;  // "twice as fast as you started" tops the ladder
+
+function speedGainFrom(history){
+  const times = history.filter(g => Number.isFinite(g.ms)).map(g => g.ms);
+  if(times.length < SPEED_SAMPLE * 2) return null; // not enough to compare then-vs-now yet
+  const med = list => median([...list].sort((a, b) => a - b));
+  const base = med(times.slice(0, SPEED_SAMPLE));
+  const now = med(times.slice(-SPEED_SAMPLE));
+  if(!base || !now) return null;
+  return base / now; // > 1 means faster now than at the start
+}
+
+/** { hasData, gain, games, needed } — `gain` is never below 1, so the badge
+ *  has no "you got slower" state to show. */
+export function getSpeedProgress(mode){
+  const g = load()[modeKey(mode)].games;
+  const live = speedGainFrom(g.history);
+  const best = Number.isFinite(g.speedBest) ? g.speedBest : 1;
+  return {
+    hasData: live != null,
+    gain: Math.max(1, best, live == null ? 1 : live),
+    games: g.history.filter(x => Number.isFinite(x.ms)).length,
+    needed: SPEED_SAMPLE * 2
+  };
 }
 
 export function resetStats(mode){

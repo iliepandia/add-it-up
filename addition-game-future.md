@@ -4,14 +4,16 @@ Companion to [`addition-game-spec.md`](addition-game-spec.md). **That file descr
 game *is*; this one describes what it is *not yet*** — plus, struck through, the items that
 started here and have since shipped, kept as a record of what closed them and when.
 
-**Closed so far:** §17.2 and §17.4, and gaps G1, G2, G3, G4, G8. **Still open:** §17.1, §17.3,
-§17.5, §17.6 steps 4–6, and gaps G5, G6, G7, G9, G10 — with **G5 (misses never resurface) the
+**Closed so far:** §17.2 and §17.4, and gaps G1, G2, G3, G4, G8, G9. **Still open:** §17.1,
+§17.3, §17.5, §17.6 steps 4–6, and gaps G5, G6, G7, G10 — with **G5 (misses never resurface) the
 one to do next**, being the cheapest real learning win left: the data already exists and only
 the problem-selection call site has to change.
 
-**G9 and G10 came from watching a child play, not from reading the code** — a badge for speed to
-match the one for accuracy, and a cyclist the player couldn't make sense of. Both are §17.1 in
-practice: Fast mode measures speed correctly but doesn't yet *mean* anything to the child.
+**G9 and G10 came from watching a child play, not from reading the code.** G9 (speed had no
+badge, and the accuracy badge's art already looked like speed) is now fixed. **G10 remains**: the
+cyclist still isn't part of any story, though putting the bike on the speed ladder's rung 4 gives
+it somewhere to belong. Both are §17.1 in practice — Fast mode measures speed correctly but
+doesn't yet *mean* much to the child.
 
 Section numbers (§16, §17.x) match the spec's original numbering and are deliberately preserved
 — the two files cross-reference each other roughly 39 times, so renumbering would break every
@@ -207,7 +209,24 @@ files stay flat in `src/`), and a **Docs** section links `addition-game-spec.md`
 `addition-game-future.md`. Kept here as a record rather than deleted, since docs drift is the
 kind of thing worth re-checking whenever a batch of modules lands.
 
-### G9. There's a badge for accuracy but none for speed
+### ~~G9. There's a badge for accuracy but none for speed~~ — **fixed 2026-09-20**
+
+**Resolved:** both halves of this were taken.
+
+- **Speed got its own badge**, shown beside the accuracy one in **Fast mode only** (spec §13.2).
+  It climbs 🚶🏃🛴🚲🛵🏍️🚗🚄✈️🛸🚀 as the child answers faster *than they themselves used to* —
+  their first 3 recorded games' median against their most recent 3, topping out at twice their
+  own starting pace. No fixed time threshold appears anywhere, per §17.6.
+- **The mixed signal is gone**: the accuracy badge was re-themed off the animals onto
+  🪨🧱🪙🔮💍🎖️🥉🥈🥇💎👑 — a rough-stone-to-crown-jewel ladder that says *flawless*, which is what
+  accuracy actually measures.
+
+The two §17.6 hazards this gap warned about were both designed out rather than accepted: the
+speed ladder's bottom rung is **walking, not a snail** (there is no "you are slow" state — the
+gain is floored at 1×), and the badge **ratchets**, so a slow week can never take a tier away.
+Side benefit for G10: the bike is rung 4, so the cyclist now belongs to something.
+
+#### Original finding
 The mastery badge (§13) is the game's only persistent, cross-session progress signal, and it is
 driven **entirely by 7-day accuracy** (`getPrecision7d`). Speed — the thing §1 names as the
 actual goal — has no badge at all. Since G2/G3 shipped, a per-game median recall time is
@@ -272,7 +291,7 @@ than from reading the code. That makes it better evidence than anything above it
 | G5 | Misses never resurface (§17.3) | Low–medium | Data already exists; best learning-per-line-changed |
 | ~~G4~~ | ~~Emoji groups invite counting~~ | — | **Fixed** 2026-09-19 |
 | **G10** | **The bike isn't part of any story** | Low (name it) → high (§17.1) | **Observed in play** — a child asked what it's for |
-| **G9** | **Badge for accuracy, none for speed** | Medium | Speed is the stated goal; the badge's own art already implies it |
+| ~~G9~~ | ~~Badge for accuracy, none for speed~~ | — | **Fixed** 2026-09-20 |
 | G7 | Hardest-setting fallback | Very low | Latent, one-line fix |
 | G6 | Global not per-fact adaptivity (§16) | High | Genuinely Phase 2; depends on G3 |
 | ~~G8~~ | ~~README module map stale~~ | — | **Fixed** 2026-09-19 |

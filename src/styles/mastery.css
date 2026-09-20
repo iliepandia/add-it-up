@@ -11,6 +11,13 @@
 .mastery-emoji{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
   font-size:calc(clamp(26px,7vw,36px) * var(--scale)); line-height:1; transition:font-size .3s ease;}
 
+/* Speed badge (Fast mode only, §13): the same widget with a different ladder
+   behind it, so it only needs to be told apart — a green arc instead of the
+   accuracy badge's gold. Explicit [hidden] rule because it sits in a flex row
+   and gets shown/hidden with the mode. */
+.speed-badge[hidden]{display:none;}
+.speed-badge .mastery-ring-fg{stroke:var(--good);}
+
 /* The trophy tier (exact 100% over the last 7 days) swaps the plain gold
    arc for a spinning rainbow ring — colors cycle in place, the ring itself
    never rotates/moves — echoing the perfect-game prize-box ring. */

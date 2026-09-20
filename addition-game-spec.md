@@ -532,33 +532,73 @@ as one growing collection while still telling the two apart — see §18.7.
 
 ---
 
-## 13. Mastery badge
+## 13. Mastery badges
 
-A round badge sits next to the 📦 button on the theme-picker screen (§10), showing a **7-day
-precision** (accuracy) signal that persists across sessions — a visible mastery signal beyond
-any single game (directly addresses §17.4's competence-signal recommendation).
+Round badges sit next to the 📦 button on the theme-picker screen (§10), showing progress that
+persists across sessions — a visible mastery signal beyond any single game (directly addresses
+§17.4's competence-signal recommendation). **Easy mode shows one** (accuracy); **Fast mode shows
+two**, accuracy and speed side by side.
 
-- **11 emoji tiers:** 🐌🐔🐢🐝🐷🐱🐶🐄🐻🦖, spanning **50%–100%** 7-day precision in even
-  **5-point bands** (below 50%, or no games in the trailing 7 days, shows the snail at 0%
-  fill), plus a bonus **🏆** reserved exclusively for an **exact** 100% — zero wrong submissions
+### 13.1 Accuracy badge (both modes)
+
+Shows a **7-day precision** signal.
+
+- **11 emoji tiers:** 🪨🧱🪙🔮💍🎖️🥉🥈🥇💎, spanning **50%–100%** 7-day precision in even
+  **5-point bands** (below 50%, or no games in the trailing 7 days, shows the rough stone at 0%
+  fill), plus a bonus **👑** reserved exclusively for an **exact** 100% — zero wrong submissions
   in the window, not just rounding up to it.
+  - *Re-themed 2026-09-20.* The ladder used to run 🐌🐔🐢🐝🐷🐱🐶🐄🐻🦖🏆 — a **speed** metaphor
+    driving an **accuracy** number. A child reading the snail as "you are slow" was reading it
+    wrong, and the confusion got worse once speed became a tracked, rewarded thing (§18). A
+    rough-stone-to-crown-jewel ladder says *flawless*, which is what accuracy measures, and it
+    frees the movement imagery for §13.2.
 - **Precision** reuses the same correct ÷ (correct + wrong) formula as §11's all-time Accuracy
   stat, scoped to games finished in the last 7 days — and, like every other stat, **to the
   currently selected mode** (§11, §18.6). Flipping the toggle re-reads the badge against that
   mode's own 7 days, so a strong Easy record never dresses up a shaky Fast one.
 - **Arc:** a thin gold ring fills across each tier's own 5-point span, so every **0.5%** of
   precision moves the arc a fixed **10%** (10 half-percent steps = one full tier).
-- **Emoji size** scales evenly from **1.0×** (snail) to **2.0×** (trophy) across the 11 tiers.
-- **Trophy tier** swaps the gold ring for a **spinning rainbow ring** — colors cycle in place,
+- **Emoji size** scales evenly from **1.0×** (rough stone) to **2.0×** (crown) across the 11 tiers.
+- **Crown tier** swaps the gold ring for a **spinning rainbow ring** — colors cycle in place,
   the ring itself never rotates — the same technique as the perfect-game prize-tile ring (§12).
 - **Next-badge preview:** tapping the badge dings and pops up a speech-bubble balloon (bounce-in,
   ~0.45s) showing the **next tier's emoji** and the precision needed to reach it (or "You're a
-  champion!" once at the trophy). A second tap, or **3 seconds** of no input, pops it back down
+  champion!" once at the crown). A second tap, or **3 seconds** of no input, pops it back down
   with a quick shrink-out. The "stay open" state is a plain CSS class rather than relying on an
   animation's fill-mode to hold its last frame, so the 3-second dwell can't be silently cut short.
 - **Test mode:** a hidden developer shortcut for previewing every tier without grinding out real
   games — see §15 for how to enable it and what it unlocks (including a fast path to testing
   §14's snake).
+
+### 13.2 Speed badge (Fast mode only) — *added 2026-09-20*
+
+A second badge beside the accuracy one, shown **only in Fast mode**. Easy mode surfaces nothing
+speed-related anywhere (§18.8), and that includes here — switching modes shows and hides it.
+
+- **11 vehicle tiers:** 🚶🏃🛴🚲🛵🏍️🚗🚄✈️🛸🚀 — walking up to a rocket. The **bike sits at rung
+  4**, which also gives Fast mode's cyclist somewhere to belong rather than appearing with no
+  explanation (a child asked what it was for; see the companion file's G10).
+- **Measured against the child's own starting pace, never a clock.** §17.6 forbids a guessed
+  threshold, so there is no "answer within N seconds" anywhere in this. The badge compares the
+  **median of their first 3 recorded games** against the **median of their most recent 3**
+  (per-game medians come from §11's speed trend). The ladder tops out at **twice as fast as they
+  began**.
+- **Two safety properties, both non-negotiable (§17.6):**
+  1. **The bottom rung is walking, not a snail.** A child who hasn't sped up sees something
+     ordinary and neutral. There is no "you are slow" state on this ladder — the gain is floored
+     at 1×, so a child who only ever got *slower* still sees the walker, never anything worse.
+  2. **It ratchets.** A tier once reached is kept forever; a tired week cannot take a badge away.
+     The stored best only ever rises.
+- **Not enough data yet:** before 6 games with recorded times it shows the walker and its balloon
+  reads "Play 6 games to start!".
+- **Arc** is green rather than the accuracy badge's gold, so a glance tells the two apart. Tier
+  rungs, emoji scaling (1.0×→2.0×), the top-tier rainbow ring and the tap-for-balloon behaviour
+  are all identical to §13.1 — it's the same widget with a different ladder behind it.
+- **The balloon never names a time.** It shows the next vehicle and "Answer a bit quicker!", or
+  "Top speed!" at the rocket. Telling a child a number of seconds to beat is exactly what §17.6's
+  constraint rules out.
+- **Test mode:** Left/Right arrows walk the speed ladder, the way Up/Down walk the accuracy one
+  (§15).
 
 ---
 
