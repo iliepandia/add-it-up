@@ -13,8 +13,8 @@ import { themeState } from "./themes.js";
 const SUBITIZE_CAP = 6;
 const COUNTABLE_CAPPED = new Set(["pips", "emoji"]);
 
-function pipCard(v){
-  const el=document.createElement("div"); el.className="pip-card "+state.pipStyle;
+function pipCard(v, style){
+  const el=document.createElement("div"); el.className="pip-card "+(style || state.pipStyle);
   const on=new Set(PIPS[v]);
   for(let i=0;i<9;i++){ const d=document.createElement("div"); d.className="pip "+(on.has(i)?"on":"off"); el.appendChild(d); }
   return el;
@@ -33,6 +33,45 @@ function emojiGroup(v,glyph){
   for(let i=0;i<v;i++){ const s=document.createElement("span"); s.textContent=glyph; g.appendChild(s); }
   return g;
 }
+// ---- second-wrong scaffold (§17.2) ----
+// On the second miss the problem gains a quantity hint under each operand: the
+// same number shown the *other* way, so a child who can't recall the fact can
+// still work it out instead of only being told the answer. Nothing already on
+// screen is removed or changed — help is added beneath it.
+//   digits -> countable pips
+//   pips   -> the numeral, so the face gets a name
+//   emoji  -> the numeral, same reason
+// A die face only reaches 6, so 7/8/9 split across two of them. The splits are
+// anchored on 5 (the X face, the easiest to read at a glance) rather than on 6,
+// so the pair reads as "five and some more".
+const HINT_SPLIT = { 7: [5, 2], 8: [5, 3], 9: [5, 4] };
+
+function numeralHint(v){
+  const el = document.createElement("div");
+  el.className = "operand-hint operand-hint-num";
+  el.textContent = v;
+  return el;
+}
+
+function pipsHint(v){
+  const wrap = document.createElement("div");
+  wrap.className = "operand-hint operand-hint-pips";
+  // Always dice: state.pipStyle carries whatever the last pips *problem*
+  // happened to roll, which has nothing to do with this hint.
+  (HINT_SPLIT[v] || [v]).forEach(n => wrap.appendChild(pipCard(n, "dice")));
+  return wrap;
+}
+
+/** Adds the hint under both operands. Idempotent — a further miss on the same
+ *  problem leaves the hint that's already up alone rather than stacking. */
+export function showOperandHints(){
+  [[opA, state.a], [opB, state.b]].forEach(([el, v]) => {
+    if(el.querySelector(".operand-hint")) return;
+    el.classList.add("with-hint");
+    el.appendChild(state.presentation === "digits" ? pipsHint(v) : numeralHint(v));
+  });
+}
+
 function numEl(v,cls){ const s=document.createElement("div"); s.className="num"+(cls?" "+cls:""); s.textContent=v; return s; }
 
 // A "tada" overshoot pop, played once whenever a key flips from dimmed to active.
@@ -44,6 +83,8 @@ function popKey(el){
 
 function render(){
   opA.innerHTML=""; opB.innerHTML="";
+  // innerHTML drops the hint elements; the layout class has to go too.
+  opA.classList.remove("with-hint"); opB.classList.remove("with-hint");
   if(state.presentation==="digits"){ opA.appendChild(numEl(state.a)); opB.appendChild(numEl(state.b)); }
   else if(state.presentation==="emoji"){ const glyph=pick(EMOJI[pick(themeState.current.emojiCats)]); opA.appendChild(emojiGroup(state.a,glyph)); opB.appendChild(emojiGroup(state.b,glyph)); }
   else{ state.pipStyle=Math.random()<0.5?"dice":"domino"; opA.appendChild(pipCard(state.a)); opB.appendChild(pipCard(state.b)); }

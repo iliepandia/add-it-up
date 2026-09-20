@@ -25,26 +25,35 @@
 /* Eating: a bulge pops through the body head-to-tail when the snake
    swallows a prize (see snake.js's eatPrize) — biggest at the head, tapering
    for the rest of the body. */
-.snake-seg-face.snake-eating{animation:eatBulge .26s ease-out; z-index:2;}
-.snake-head .snake-seg-face.snake-eating{animation:eatBulgeHead .26s ease-out;}
+/* The bulge SNAPS to full size (the keyframes start there, so there is no
+   ramp up at all) and only the deflation is animated, over --eat-return —
+   set from snake.js's EAT_RETURN_MS so there is one knob, not two. The
+   fallback matches that constant and only applies if the property is missing. */
+.snake-seg-face.snake-eating{animation:eatBulge var(--eat-return,500ms) ease-out; z-index:2;}
+.snake-head .snake-seg-face.snake-eating{animation:eatBulgeHead var(--eat-return,500ms) ease-out;}
 @keyframes eatBulge{
-  0%{transform:scale(1);}
-  40%{transform:scale(3.49);}
+  0%{transform:scale(3.49);}
   100%{transform:scale(1);}
 }
 @keyframes eatBulgeHead{
-  0%{transform:scale(1);}
-  40%{transform:scale(4.28);}
+  0%{transform:scale(4.28);}
   100%{transform:scale(1);}
 }
 
 /* Big "O" mouth, hidden until the head pops open mid-bite. */
-.snake-mouth{position:absolute; left:50%; top:62%; width:60%; height:60%;
+/* top is the mouth's CENTRE (it's translated back by half its own size below).
+   62% + half the mouth's 60% height = 92%, i.e. offset down by 50% of its own
+   size — which clears the eyes (they end at ~42% of the head) instead of
+   sitting over them. Expressed on `top` rather than in the transform so the
+   open/close keyframes don't each have to carry the offset. */
+.snake-mouth{position:absolute; left:50%; top:92%; width:60%; height:60%;
   border-radius:50%; background:#7A2020; border:2px solid #4A1010;
   transform:translate(-50%,-50%) scale(0); opacity:0;}
-.snake-head .snake-seg-face.snake-eating .snake-mouth{animation:mouthOpen .26s ease-out;}
+/* The mouth follows the same shape as the bulge it belongs to: open at once,
+   close on the way back down, on the same clock. */
+.snake-head .snake-seg-face.snake-eating .snake-mouth{animation:mouthOpen var(--eat-return,500ms) ease-out;}
 @keyframes mouthOpen{
-  0%{transform:translate(-50%,-50%) scale(0); opacity:0;}
-  35%{transform:translate(-50%,-50%) scale(1); opacity:1;}
+  0%{transform:translate(-50%,-50%) scale(1); opacity:1;}
+  70%{transform:translate(-50%,-50%) scale(.85); opacity:1;}
   100%{transform:translate(-50%,-50%) scale(0); opacity:0;}
 }

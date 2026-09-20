@@ -169,6 +169,18 @@ answer on screen, *then* trigger the celebration.
 - **1st wrong:** after **1 second**, reset the input to empty and **re-show the exact same
   problem in the exact same presentation**. No star awarded.
 - **2nd wrong (same problem):** guided correction so the child enters it themselves —
+  0. **Quantity scaffold (§17.2, added 2026-09-19).** Before anything is revealed, a hint appears
+     **under each operand**, showing that same number the *other* way, so the fact can be worked
+     out rather than only be read off. Nothing already on screen changes — help is **added
+     beneath** the problem, which stays exactly as it was.
+     - **Digits →** countable **pips** under each numeral. A die face only reaches 6, so **7, 8
+       and 9 appear as two dice side by side** that add to it — split **5+2, 5+3, 5+4**, anchored
+       on the 5 (the X face) so the pair reads as "five and some more".
+     - **Pips →** the **numeral** under the die face, giving the face a name.
+     - **Emoji →** the **numeral** under the pile, same reason.
+     The hint **stays up** through the reveal and the re-ask below, so it's still there while the
+     child types — and clears with the problem when the next one is generated. It is purely
+     additive help: no penalty, no "too slow", nothing withheld (§17.6's constraint).
   1. **Reveal** the correct answer (green, **"ta-da!" pop** + sparkles + fanfare) and **keep it on
      screen**.
   2. **Wait 500 ms.**
@@ -178,8 +190,9 @@ answer on screen, *then* trigger the celebration.
   4. **Reset the exercise:** clear the answer and re-ask the **same** problem — the child types it.
   - The re-ask is a **fresh attempt**: wrong-count resets, and a correct entry now **earns the
     star**. (If a twice-missed problem should never award a star, gate this — currently it does.)
-  *(Prevents the child getting trapped on a fact they don't know; a light Phase-1 version of the
-  scaffolding in §17.2.)*
+  *(Prevents the child getting trapped on a fact they don't know. With step 0 this is now
+  §17.2 proper, not just a light version of it: the child is helped to work the fact out before
+  being told it.)*
 
 ---
 
@@ -528,11 +541,23 @@ occasionally crawls across the win screen (§9).
 - **Eating animation:** each touch also queues an "eat" — the snake **stops moving** and plays a
   bulge: the head **pops to ~4.3× its normal size** and opens a big dark **"O" mouth**, then the
   pop **travels tail-ward through the body** (each segment popping to ~3.5×, staggered ~90ms
-  apart, ~0.26s per segment's own pop). **2 or more prizes touched at once** (easy with a dense
-  field of trophies) queue their eat animations and play them **one at a time**, snake frozen the
-  whole time — never overlapping. Movement (and new-touch detection) **resumes automatically**
-  once the queue empties. Implementation note: each body block is a positioning shell plus an
-  inner "face" div, so the pop's scale animation never fights the shell's movement transform.
+  apart). **2 or more prizes touched at once** (easy with a dense field of trophies) queue their
+  eat animations and play them **one at a time**, snake frozen the whole time — never
+  overlapping. Movement (and new-touch detection) **resumes automatically** once the queue
+  empties.
+  - **The pop is instant; only the return is animated** *(revised 2026-09-19 — it used to ramp
+    up over ~0.1s and drop back inside a single 0.26s animation)*. A segment **snaps** to full
+    size in one frame — a swallow should look like a sudden bulge, not a swell — and then
+    **deflates over a configurable duration, currently 500 ms**. That duration is a single
+    constant (`EAT_RETURN_MS`) that the code pushes into CSS, so the keyframes and the timing
+    that waits for them can't drift apart. The head's "O" mouth runs on the same clock.
+  - **The mouth sits below the eyes** *(fixed 2026-09-19)* — offset down by half its own height
+    so it no longer overlaps them.
+  - Implementation note: each body block is a positioning shell plus an inner "face" div, so the
+    pop's scale animation never fights the shell's movement transform. Blocks are stacked
+    **head-highest** *(fixed 2026-09-19)*: they're built head-first, so without explicit
+    ordering the tail painted *over* the head and the snake looked like it was crawling under
+    itself.
 - **Shrinking away:** after crawling at full length for **20s**, the snake starts shedding one
   tail block roughly every 400ms until it's gone (~3s to fully vanish) — it doesn't crawl
   forever.

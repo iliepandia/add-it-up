@@ -27,7 +27,7 @@ import {
 } from "./dom.js";
 import { audio, sTada, sError, sDing } from "./audio.js";
 import { applyTheme, themeState, checkStreak } from "./themes.js";
-import { newProblem, renderAns } from "./problem.js";
+import { newProblem, renderAns, showOperandHints } from "./problem.js";
 import { buildStars, fillStar, refreshStars, prepareBonusStar, revealBonusStar } from "./stars.js";
 import { celebrate, tadaSparkles, flyStar, flyRiderTo } from "./fx.js";
 import { showWin } from "./win.js";
@@ -142,7 +142,11 @@ function wrong(){
   flash.textContent=pick(WRONG_FACES);
   flash.classList.remove("show"); void flash.offsetWidth; flash.classList.add("show");
   state.wrongCount++;
-  if(state.wrongCount>=2) setTimeout(revealAnswer, REVEAL_FLASH);
+  // Second miss: help before telling (§17.2). The quantity hint goes up under
+  // both operands and stays there through the reveal and the re-ask, so the
+  // child can actually work the fact out instead of only being shown it.
+  // Never-skip is unchanged — the same problem still comes back.
+  if(state.wrongCount>=2){ showOperandHints(); setTimeout(revealAnswer, REVEAL_FLASH); }
   else setTimeout(()=>{ state.entry=""; renderAns(); state.locked=false; }, WRONG_HOLD);
 }
 function revealAnswer(){

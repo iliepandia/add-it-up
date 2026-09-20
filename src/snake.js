@@ -16,7 +16,12 @@ const HARD_LENGTH_MULT = 2, HARD_LIFE_MULT = 2; // hard variant: twice as long, 
 const SHRINK_AFTER_MS = 20000; // how long the snake crawls at full length first
 const SHRINK_STEP_MS = 400;    // how long each tail segment takes to disappear once shrinking starts
 const EAT_STEP_MS = 90;   // stagger between each segment's pop starting, head to tail
-const EAT_POP_MS = 260;   // how long one segment's own pop animation lasts
+// A segment snaps to full size instantly — a swallow should look like a sudden
+// bulge, not a swell — and then eases back down over EAT_RETURN_MS. Only the
+// return is animated, and this is the single knob for how slow it is:
+// buildSegs() pushes it into CSS, so the keyframes and the JS timing that waits
+// on them can't drift apart.
+const EAT_RETURN_MS = 500;
 
 const DIRS = [[1,0], [-1,0], [0,1], [0,-1]];
 
@@ -63,10 +68,18 @@ function layout(){
 
 function buildSegs(){
   snakeLayer.innerHTML = "";
+  snakeLayer.style.setProperty("--eat-return", EAT_RETURN_MS + "ms");
   segEls = []; segFaces = [];
   for(let i = 0; i < maxLen; i++){
     const s = document.createElement("div");
     s.className = "snake-seg" + (i === 0 ? " snake-head" : "");
+    // Segments are built head-first, so without this the tail would paint over
+    // the head — the snake would look like it was crawling under itself, and
+    // an eating head would be hidden behind the segment right behind it.
+    // Descending z-index puts the head on top and each segment above the one
+    // behind it. Contained by #snakeLayer's own stacking context, so none of
+    // this can rise above the win screen's content.
+    s.style.zIndex = String(maxLen - i);
     const face = document.createElement("div");
     face.className = "snake-seg-face";
     if(i === 0){
@@ -106,9 +119,11 @@ function tick(){
 }
 
 /** Plays a bulge that pops the head bigger, then travels tail-ward through
- *  the body — the visual of swallowing one prize. Pauses movement (and stops
- *  new touches from being detected) for the duration, then calls onDone so a
- *  caller can either resume play or immediately queue the next eat. */
+ *  the body — the visual of swallowing one prize. Each segment snaps to full
+ *  size at once, then deflates over EAT_RETURN_MS. Pauses movement (and stops
+ *  new touches from being detected) until the last segment has finished
+ *  deflating, then calls onDone so a caller can either resume play or
+ *  immediately queue the next eat. */
 export function eatPrize(onDone){
   eating = true;
   if(!segFaces.length){ eating = false; if(onDone) onDone(); return; }
@@ -122,7 +137,7 @@ export function eatPrize(onDone){
     }
     i++;
     if(i < segFaces.length) setTimeout(step, EAT_STEP_MS);
-    else setTimeout(() => { eating = false; if(onDone) onDone(); }, EAT_POP_MS);
+    else setTimeout(() => { eating = false; if(onDone) onDone(); }, EAT_RETURN_MS);
   })();
 }
 

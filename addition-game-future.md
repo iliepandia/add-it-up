@@ -4,9 +4,10 @@ Companion to [`addition-game-spec.md`](addition-game-spec.md). **That file descr
 game *is*; this one describes what it is *not yet*** — plus, struck through, the items that
 started here and have since shipped, kept as a record of what closed them and when.
 
-**Closed so far:** §17.4 (competence + autonomy), and gaps G2, G3, G4, G8. **Still open:** §17.1,
-§17.2, §17.3, §17.5, §17.6 steps 4–6, and gaps G1, G5, G6, G7 — with **G1 (scaffold the second
-wrong answer) the one to do next**, being the only remaining item that can actively harm.
+**Closed so far:** §17.2 and §17.4, and gaps G1, G2, G3, G4, G8. **Still open:** §17.1, §17.3,
+§17.5, §17.6 steps 4–6, and gaps G5, G6, G7 — with **G5 (misses never resurface) the one to do
+next**, being the cheapest real learning win left: the data already exists and only the
+problem-selection call site has to change.
 
 Section numbers (§16, §17.x) match the spec's original numbering and are deliberately preserved
 — the two files cross-reference each other roughly 39 times, so renumbering would break every
@@ -31,9 +32,9 @@ bodies are the thing most likely to drift — the dated progress notes above the
 | Item | Spec claims | Found in code | Verdict |
 |---|---|---|---|
 | **17.1** Intrinsic integration | Unaddressed | The math still gates an unrelated reward. Fast mode times the gate; it doesn't make the reward *run on* recall | ✅ claim accurate — **not built** |
-| **17.2** Scaffold 2nd wrong | Unaddressed | `wrong()` in `main.js`: second miss calls `revealAnswer()` and nothing else — no pips, no count-up, no decomposition | ✅ claim accurate — **not built** |
+| **17.2** Scaffold 2nd wrong | Unaddressed *(at time of review)* | `wrong()` now calls `showOperandHints()` before `revealAnswer()` — pips under digits, numerals under pips/emoji, 7/8/9 split across two dice | ✅ **CLOSED** 2026-09-19 — see G1 |
 | **17.3** Adaptivity + fact memory | Unaddressed | `getTopMistakes()` is imported by `statsScreen.js` only. `newProblem()` picks operands uniformly at random within the sum bound | ✅ claim accurate — **not built** |
-| **17.4** Competence + autonomy | Both halves shipped | `mastery.js` (11 tiers) = competence; `presentationPicker.js` (per-problem choice) + the Easy/Fast sub-mode = autonomy | ✅ **CLOSED** — the only §17 item fully done |
+| **17.4** Competence + autonomy | Both halves shipped | `mastery.js` (11 tiers) = competence; `presentationPicker.js` (per-problem choice) + the Easy/Fast sub-mode = autonomy | ✅ **CLOSED** 2026-09-19 |
 | **17.5** Sequence representations | Unaddressed | Easy mode: `pick(["digits","emoji","pips"])`, uniform. Pips correctly capped at ≤6; emoji groups are not (see G4) | ✅ claim accurate — **not built** |
 | **17.6** steps 1–3 (baseline, personal target, additive reward) | Shipped | `recordLatency()` per first attempt; Fast mode's seeded-and-ratcheting drain; bonus star is purely additive | ✅ claim accurate — **built** |
 | **17.6** steps 4–6 (speed-driven core, retire counting, latency→adaptivity) | Unbuilt | Confirmed absent | ✅ claim accurate — **not built** |
@@ -51,7 +52,27 @@ the implementation does not violate it anywhere I could find.
 Ordered by priority. G1 is a safety issue; G2–G3 are measurement issues that block the items
 above from ever being calibrated properly; G4–G8 are correctness, design and documentation debt.
 
-### G1. Nothing helps a child who is genuinely stuck — *highest priority*
+### ~~G1. Nothing helps a child who is genuinely stuck~~ — **fixed 2026-09-19**
+
+**Resolved:** the second miss now shows a **quantity scaffold under each operand** before the
+answer is revealed — the same number in the *other* representation, so the fact can be worked
+out rather than only read off (spec §7, "2nd wrong", step 0):
+
+- **Digits →** countable pips under the numeral. A die reaches only 6, so **7/8/9 show two dice**
+  adding to it, split 5+2, 5+3, 5+4 — anchored on the 5 (the X face) so each pair reads as
+  "five and some more".
+- **Pips →** the numeral under the die face, giving the face a name.
+- **Emoji →** the numeral under the pile, same reason.
+
+The hint is **purely additive**: nothing already on screen moves or changes, the never-skip rule
+is untouched, and there is no penalty or "too slow" framing anywhere in it (§17.6's constraint).
+It stays visible through the reveal *and* the re-ask, so it's still there while the child types,
+and clears with the problem when the next one is generated.
+
+This closes the gap that was **the only remaining one that could actively harm**, and it makes
+§7's guided correction §17.2 proper rather than the "light version" it had been labelled.
+
+#### Original finding
 The second wrong answer reveals the correct one and moves on. There is no teaching step at all:
 no pips under the digits, no count-up, no number line, no decomposition. This is §17.2, still
 unbuilt, and it has become **more** urgent since Fast mode shipped — a child who doesn't know a
@@ -188,7 +209,7 @@ kind of thing worth re-checking whenever a batch of modules lands.
 
 | # | Gap | Cost | Why now |
 |---|---|---|---|
-| G1 | No scaffold on 2nd wrong (§17.2) | High | Only item that can cause harm; worse now a timer exists |
+| ~~G1~~ | ~~No scaffold on 2nd wrong (§17.2)~~ | — | **Fixed** 2026-09-19 |
 | ~~G2~~ | ~~No speed trend~~ | — | **Fixed** 2026-09-19 |
 | ~~G3~~ | ~~Latency log lacks correctness flag~~ | — | **Fixed** 2026-09-19 |
 | G5 | Misses never resurface (§17.3) | Low–medium | Data already exists; best learning-per-line-changed |
@@ -197,11 +218,11 @@ kind of thing worth re-checking whenever a batch of modules lands.
 | G6 | Global not per-fact adaptivity (§16) | High | Genuinely Phase 2; depends on G3 |
 | ~~G8~~ | ~~README module map stale~~ | — | **Fixed** 2026-09-19 |
 
-**G2, G3, G4 and G8 are done** (2026-09-19) — the game's own goal is now measurable, and the
-anti-counting rule is applied consistently. What remains: **G1** (scaffold the second wrong
-answer — the only gap left that can actively harm, and the one to do next), **G5** (misses never
-resurface — now the cheapest learning win on the board), **G7** (a one-line fallback fix), and
-**G6** (genuinely Phase 2, and now unblocked by G3's correctness flag).
+**G1, G2, G3, G4 and G8 are done** (2026-09-19) — a stuck child is now helped rather than just
+told, the game's own goal is measurable, and the anti-counting rule is applied consistently.
+What remains: **G5** (misses never resurface — the cheapest learning win on the board, and the
+one to do next), **G7** (a one-line fallback fix), and **G6** (genuinely Phase 2, now unblocked
+by G3's correctness flag). Nothing left on this list can actively harm a child.
 
 ---
 
@@ -283,12 +304,18 @@ neutral, never a losing state (§17.6's constraint is non-negotiable here too).
 examples common in this literature target concept acquisition, not fluency; §17.6 has the
 reasoning specific to this game.)*
 
-### 17.2 Scaffold the second wrong attempt — *highest safety priority*
+### ~~17.2 Scaffold the second wrong attempt~~ — **CLOSED 2026-09-19**
 Phase 1 re-shows the identical problem until correct, with no teaching — a recipe for math
 anxiety and learned helplessness when the child genuinely doesn't know the fact. Keep the
 never-skip rule, but on the **second** miss, *help*: reveal pips under the digits, animate a
 count-up, show a number line, or decompose (`8 + 7 → 8 + 2 = 10, then +5`). Reframe errors as
 information, not verdicts. *(Dweck, growth mindset; Seligman, learned helplessness.)*
+
+**Shipped** as the quantity scaffold in §7's "2nd wrong" step 0 — the first of this item's own
+suggestions ("reveal pips under the digits") taken literally, extended to every presentation,
+with 7/8/9 decomposed across two dice. Never-skip is unchanged; the help is purely additive.
+See **G1** above for the full description. This was the backlog's highest safety priority and
+is now the second §17 item closed, after §17.4.
 
 ### 17.3 Adaptivity + fact-memory — *revised: speed is half the signal*
 Flat random difficulty prevents flow and a felt sense of progress. Track which addend pairs the
@@ -301,8 +328,7 @@ like a miss by the backend resurfacing logic (both mean "not yet automatic"), bu
 to the child that way — §17.6's constraint applies here too, not just to scoring.
 
 ### ~~17.4 Surface competence + one autonomy choice~~ — **CLOSED, both halves shipped**
-*Closed 2026-09-19. This was the first §17 item to land in full, and the only one currently
-closed.*
+*Closed 2026-09-19, the first §17 item to land in full; §17.2 followed the same day.*
 
 Give a visible mastery signal beyond a single session (levels, cumulative progress) and at
 least one real choice (choose between two problems, or a sub-mode). *(Deci & Ryan,
