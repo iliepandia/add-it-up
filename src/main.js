@@ -57,16 +57,22 @@ function clearEntry(){
 }
 function submitEntry(){
   if(state.locked || state.entry==="") return;
+  const val=parseInt(state.entry,10);
+  const isCorrect = val===state.answer;
   if(!state.latencyLogged){
     // Response-time baseline (§17.6 step 1) — silent, first attempt only,
     // never shown to the child, never affects gameplay. maxOperand lets the
     // stats screen separate "this representation is slow" from "big numbers
-    // are slow" (see recordLatency in stats.js).
-    recordLatency(state.mode, state.presentation, performance.now() - state.problemShownAt, Math.max(state.a, state.b));
+    // are slow", and isCorrect keeps a fast wrong guess out of the
+    // recall-speed numbers entirely (see recordLatency in stats.js).
+    const ms = performance.now() - state.problemShownAt;
+    recordLatency(state.mode, state.presentation, ms, Math.max(state.a, state.b), isCorrect);
+    // Only correct first attempts feed this game's median — that median is
+    // what the stats screen's speed trend is built from.
+    if(isCorrect && Number.isFinite(ms) && ms >= 0) state.gameLatencies.push(ms);
     state.latencyLogged = true;
   }
-  const val=parseInt(state.entry,10);
-  if(val===state.answer){
+  if(isCorrect){
     // Hard mode's water bar: whether it still had water at this exact
     // instant decides the bonus (2nd) star — checked at submit time, then
     // carried through correct()'s SEE_RESULT delay to the star-fill itself.
@@ -102,7 +108,7 @@ function correct(){
       }else checkStreak();
     };
     if(won){
-      recordGame(state.mode, { wrongCount: state.gameWrongTotal, theme: themeState.name, streak: state.maxStreak });
+      recordGame(state.mode, { wrongCount: state.gameWrongTotal, theme: themeState.name, streak: state.maxStreak, latencies: state.gameLatencies });
       // Between-game adaptivity (not mid-game): a perfect-timing game speeds
       // the bar up next time, a game where it drained more than half the
       // time slows it back down — see hardDifficulty.js.
@@ -163,7 +169,7 @@ function startGame(){
   picker.classList.remove("show"); win.classList.remove("show");
   startSession(state.mode);
   state.starCount=0; state.sumMax=SUM_START; state.streak=0; state.maxStreak=0; state.gameWrongTotal=0;
-  state.bonusStarCount=0; state.pendingBonus=false;
+  state.bonusStarCount=0; state.pendingBonus=false; state.gameLatencies=[];
   resetPresentationRotation();
   if(state.mode==="hard") state.waterDrainMs=getHardDrainDuration(getLatencyStats("easy").combined?.max);
   buildStars(); refreshStars(); advanceProblem();

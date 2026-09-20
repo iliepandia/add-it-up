@@ -5,6 +5,14 @@ import { opA, opB, ansEl } from "./dom.js";
 import { state } from "./state.js";
 import { themeState } from "./themes.js";
 
+// Presentations that show quantity as objects rather than a numeral are capped
+// at SUBITIZE_CAP per operand: six is the top of the range a person reads at a
+// glance, and past it the pile gets *counted* one item at a time — which trains
+// exactly the habit this game is trying to replace (spec §17.5/§17.6 step 5).
+// Digits are uncapped; there is nothing to count in a "9".
+const SUBITIZE_CAP = 6;
+const COUNTABLE_CAPPED = new Set(["pips", "emoji"]);
+
 function pipCard(v){
   const el=document.createElement("div"); el.className="pip-card "+state.pipStyle;
   const on=new Set(PIPS[v]);
@@ -13,8 +21,8 @@ function pipCard(v){
 }
 function emojiGroup(v,glyph){
   const g=document.createElement("div"); g.className="emoji-group";
-  // Cap at 2 rows regardless of screen width, so a large operand (up to 9)
-  // never wraps onto enough lines to push the keypad off-screen.
+  // Cap at 2 rows regardless of screen width, so a larger operand (up to
+  // SUBITIZE_CAP) never wraps onto enough lines to push the keypad off-screen.
   const cols = v<=4 ? v : Math.ceil(v/2);
   g.style.gridTemplateColumns = `repeat(${cols},1fr)`;
   if(v>4){
@@ -68,7 +76,7 @@ export function newProblem(){
   do{ state.a=1+rnd(9); state.b=1+rnd(9); }
   while(
     (hard ? (state.a+state.b<HARD_SUM_MIN || state.a+state.b>SUM_MAX_CAP) : state.a+state.b>state.sumMax) ||
-    (state.presentation==="pips" && (state.a>6||state.b>6))
+    (COUNTABLE_CAPPED.has(state.presentation) && (state.a>SUBITIZE_CAP||state.b>SUBITIZE_CAP))
   );
   state.answer=state.a+state.b; state.entry=""; state.wrongCount=0;
   state.problemShownAt=performance.now(); state.latencyLogged=false; // response-time baseline (§17.6) — first attempt only, retries don't re-log

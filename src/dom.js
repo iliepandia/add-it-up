@@ -22,6 +22,7 @@ export const statsScreen = $("#statsScreen");
 export const statsGrid = $("#statsGrid");
 export const chartGames = $("#chartGames");
 export const chartMonth = $("#chartMonth");
+export const chartSpeed = $("#chartSpeed");
 export const mistakesList = $("#mistakesList");
 export const latencyTable = $("#latencyTable");
 export const latencySizeTable = $("#latencySizeTable");

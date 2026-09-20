@@ -65,6 +65,10 @@ pick, before every single problem — §18.3)*:
 
 1. **Digits** — `2 + 3 =`
 2. **Emoji groups** — one repeated emoji per operand, e.g. 😄😄😄😄 + 😄😄 =
+   - **Cap: 6 emoji per operand**, the same rule and the same reason as pips below — past six,
+     a pile stops being read at a glance and starts being *counted*, which trains the habit
+     the game exists to replace (§17.5 / §17.6 step 5). Added 2026-09-19; emoji operands
+     previously ran to 9 while pips were already capped.
    - **Emoji category matches the active theme (§10)**, so the pictures feel like they belong
      to that world instead of being generic:
      - **Nature** 🌳 draws only from the nature set (flowers, leaves, butterflies…).
@@ -74,13 +78,15 @@ pick, before every single problem — §18.3)*:
        it has no strong theme, so it keeps the original variety.
 3. **Pips** — dice faces or domino tiles, e.g. `.` + `..` =
    - **Cap: 6 pips per operand.** If either operand is > 6, re-roll the pair for this
-     problem (pip presentation only).
+     problem.
    - Groups are laid out on a small grid that never wraps past **2 rows**, with the glyph
-     size shrinking as the count grows — so even a 9-item group can't push the keypad off
+     size shrinking as the count grows — so a 6-item group can't push the keypad off
      the bottom of the screen on a narrow phone.
 
-> **Note:** the pip cap (6 per operand) allows sums up to `6 + 6 = 12`, which matches the ramp's
-> top. So **all three presentations cover the full 2–12 range** at max difficulty.
+> **Note:** the cap of 6 per operand applies to **both object presentations** (emoji and pips)
+> and to neither digits — there is nothing to count in a "9". It allows sums up to `6 + 6 = 12`,
+> which matches the ramp's top and Fast mode's ceiling, so **all three presentations still cover
+> the full range** at max difficulty; digits alone can show a single operand above 6.
 
 ---
 
@@ -306,6 +312,23 @@ as **abandoned** and excluded from the time stats (the day still counts toward "
 - **Last 30 games** — bar chart of the most recent games' scores.
 - **Last 30 days** — line chart of each day's average score across the last 30 calendar days
   (a day with no games leaves a gap in the line).
+- **Getting faster? (last 30 days)** — line chart of each day's **median time per correct
+  answer**, the only chart that tracks the game's actual goal (fluency, §1) rather than
+  accuracy. Added 2026-09-19. Three deliberate choices:
+  - **Its own chart, not a second line on "Last 30 days."** Milliseconds and a 0–10 score share
+    no axis, and an unlabelled sparkline carrying two units is unreadable.
+  - **The y-axis is inverted — faster sits higher** — so "the line is going up" means the same
+    thing here as on every other chart on the screen. Captioned *"Higher is faster"* so the
+    inversion is never a guess.
+  - **Scaled from 0 to the slowest day in view**, so the shape is honest about magnitude (a day
+    twice as slow sits at half the height) instead of stretching to fill whatever range happens
+    to be present. A footnote gives the best and slowest day in seconds.
+
+  Each game stores its own median alongside its score, so this is a genuine trend rather than a
+  re-slice of the rolling 30-day log below. It needs **two** separate days of play before it
+  draws anything; one day shows "play on another day to see a trend." Games recorded before
+  this shipped have no time attached and are simply skipped, as is any game with no correct
+  first attempts.
 
 **Trickiest problems (last 7 days):** the top 10 most-missed `a + b` combinations, each with a
 mistake counter, sorted by frequency. A wrong *submission* counts as a mistake, so missing the
@@ -316,9 +339,13 @@ forever — same reasoning as "Favorite this week" above. Backed by a timestampe
 
 **Response time (last 30 days):** §17.6's baseline-measurement step — see that section for the
 full reasoning and the non-negotiable safety constraint it operates under. In short: every
-problem's **first attempt** (correct or wrong; retries after a miss don't re-log) has its
-latency recorded — time from the problem appearing to ✓/Enter being pressed — tagged with its
-presentation (§4) and its larger operand. This is **purely passive**: no timer, countdown, or
+problem's **first attempt** (retries after a miss don't re-log) has its latency recorded — time
+from the problem appearing to ✓/Enter being pressed — tagged with its presentation (§4), its
+larger operand, and **whether that attempt was right**. Wrong first attempts are still logged
+but are **excluded from every response-time figure shown or used**, because a fast wrong guess
+and a fast correct recall are the same number of milliseconds and pooling them answers neither
+question. (Added 2026-09-19; entries recorded before the flag existed are counted as correct
+rather than discarded.) This is **purely passive**: no timer, countdown, or
 any speed-related feedback is ever shown to the child, and nothing here affects scoring, difficulty,
 or any in-game reward. Two views on the stats screen, both scoped to the trailing 30 days:
 - **By presentation** — Min / Median / Max (with sample count) for Digits, Emoji, Pips, and

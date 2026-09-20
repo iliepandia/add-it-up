@@ -51,7 +51,17 @@ priority" before the timed mode existed.
 **Recommendation:** build §17.2 before any further §17.6 work. It is the only item in the
 backlog whose absence can actively harm.
 
-### G2. Speed is measured but never trended — you cannot see whether the child is getting faster
+### ~~G2. Speed is measured but never trended~~ — **fixed 2026-09-19**
+
+**Resolved:** each game now stores its own median correct-answer time alongside its score, and
+the stats screen has a third chart, *"Getting faster? (last 30 days)"*, plotting each day's
+median. Built as its own chart with an **inverted** axis (faster = higher, captioned) and a
+0-to-slowest-day scale, rather than the second-line-on-the-30-day-chart this originally
+recommended — milliseconds and a 0–10 score share no axis, and an unlabelled 300×110 sparkline
+carrying two units is unreadable. Needs two days of play before it draws; games recorded before
+this shipped have no time attached and are skipped.
+
+#### Original finding
 This corrects an earlier note that said speed of play isn't tracked at all. **It is tracked.**
 `recordLatency()` (`main.js:65`) logs every problem's first-attempt time, tagged by presentation
 and operand size, and the stats screen renders min / median / max per presentation and per
@@ -69,7 +79,15 @@ plot it as a second series on the 30-day chart. Cheap, it reuses the existing ch
 turns the existing data into the answer to "is this working?". This is also a prerequisite for
 honestly calibrating §17.6 steps 2 and 4, which the spec says need real play data.
 
-### G3. The latency log doesn't record whether the answer was right
+### ~~G3. The latency log doesn't record whether the answer was right~~ — **fixed 2026-09-19**
+
+**Resolved:** `recordLatency()` now takes and stores a `correct` flag, and every response-time
+figure — both stats tables, and the drain-speed seed Fast mode reads — filters to correct first
+attempts only. Wrong attempts are still logged (they are the raw record) but never pooled into
+a recall-speed number. Entries written before the flag existed have no `correct` key and count
+as correct rather than being discarded, so no existing data was thrown away.
+
+#### Original finding
 `recordLatency()` fires in `submitEntry()` *before* the correctness check, and the stored entry
 is `{presentation, maxOperand, ms, t}` — there is no correct/incorrect flag. So a fast wrong
 guess and a fast correct recall are indistinguishable in the data, pooled into the same median.
@@ -87,7 +105,14 @@ every future use, and §17.3/§17.6 step 6 both depend on distinguishing "correc
 **Recommendation:** add a `correct` boolean to the latency entry. One field, backward-compatible
 (older entries read as unknown), and it unblocks G2, §17.3 and §17.6 step 6.
 
-### G4. Emoji groups run up to 9 items, which invites counting
+### ~~G4. Emoji groups run up to 9 items, which invites counting~~ — **fixed 2026-09-19**
+
+**Resolved:** emoji operands are capped at 6, the same rule pips already had, via a shared
+`SUBITIZE_CAP` / `COUNTABLE_CAPPED` pair in `problem.js` so the rule lives in one place and
+reads as deliberate rather than incidental. Digits stay uncapped — there is nothing to count
+in a "9". Verified both modes still reach their full sum range, Fast mode's 6–12 included.
+
+#### Original finding
 `newProblem()` caps pips at 6 (`state.a>6||state.b>6`) — correct, 6 is the top of the subitizing
 range and a die face is read at a glance. But `emojiGroup()` renders operands up to **9**, and
 has explicit layout code for the large case (two rows, shrinking font). Nine scattered emoji
@@ -154,17 +179,19 @@ kind of thing worth re-checking whenever a batch of modules lands.
 | # | Gap | Cost | Why now |
 |---|---|---|---|
 | G1 | No scaffold on 2nd wrong (§17.2) | High | Only item that can cause harm; worse now a timer exists |
-| G2 | No speed trend | Low | Measures the actual goal; unblocks calibrating §17.6 |
-| G3 | Latency log lacks correctness flag | Very low | One field; unblocks G2, §17.3, §17.6 step 6 |
+| ~~G2~~ | ~~No speed trend~~ | — | **Fixed** 2026-09-19 |
+| ~~G3~~ | ~~Latency log lacks correctness flag~~ | — | **Fixed** 2026-09-19 |
 | G5 | Misses never resurface (§17.3) | Low–medium | Data already exists; best learning-per-line-changed |
-| G4 | Emoji groups invite counting | Low | Rule already exists for pips; just inconsistent |
+| ~~G4~~ | ~~Emoji groups invite counting~~ | — | **Fixed** 2026-09-19 |
 | G7 | Hardest-setting fallback | Very low | Latent, one-line fix |
 | G6 | Global not per-fact adaptivity (§16) | High | Genuinely Phase 2; depends on G3 |
 | ~~G8~~ | ~~README module map stale~~ | — | **Fixed** 2026-09-19 |
 
-A reasonable next slice: **G3 → G2 → G1**. G3 and G2 are small and make the game's own goal
-measurable; G1 is the one that matters most and benefits from having that measurement in place
-before it's tuned.
+**G2, G3, G4 and G8 are done** (2026-09-19) — the game's own goal is now measurable, and the
+anti-counting rule is applied consistently. What remains: **G1** (scaffold the second wrong
+answer — the only gap left that can actively harm, and the one to do next), **G5** (misses never
+resurface — now the cheapest learning win on the board), **G7** (a one-line fallback fix), and
+**G6** (genuinely Phase 2, and now unblocked by G3's correctness flag).
 
 ---
 

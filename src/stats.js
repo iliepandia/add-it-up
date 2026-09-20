@@ -125,7 +125,13 @@ export function endSession(mode){
   if(m.active){ finalizeSession(m, m.active, Date.now()); save(data); }
 }
 
-export function recordGame(mode, { wrongCount, theme, streak }){
+// `latencies` is this game's correct first-attempt times (ms). Its median is
+// stored per game so speed can be trended the way score already is — the
+// rolling latency log (recordLatency) is a 30-day snapshot and can't answer
+// "is this child getting faster?", which is the actual goal (spec §1).
+// A game with no correct first attempts records `ms: null` and is simply
+// skipped by the trend, rather than counted as infinitely slow.
+export function recordGame(mode, { wrongCount, theme, streak, latencies }){
   const data = load();
   const m = data[modeKey(mode)];
   const score = Math.max(0, 10 - wrongCount);
@@ -135,7 +141,9 @@ export function recordGame(mode, { wrongCount, theme, streak }){
   g.bestStreak = Math.max(g.bestStreak, streak || 0);
   g.totalCorrect += 10;
   g.totalWrong += wrongCount;
-  g.history.push({ t: Date.now(), score, theme });
+  const times = Array.isArray(latencies) ? latencies.filter(Number.isFinite) : [];
+  const ms = times.length ? Math.round(median([...times].sort((a, b) => a - b))) : null;
+  g.history.push({ t: Date.now(), score, theme, ms });
   if(g.history.length > MAX_GAME_HISTORY) g.history.splice(0, g.history.length - MAX_GAME_HISTORY);
   save(data);
 }
@@ -195,20 +203,30 @@ export function getLast30Games(mode){
   return load()[modeKey(mode)].games.history.slice(-30);
 }
 
+// One entry per day for the last 30, each with that day's mean score (`avg`,
+// 0-10) and median recall time (`ms`, or null before per-game times were
+// recorded). Two series off one pass, since both charts want the same days.
 export function getLast30DaysSeries(mode){
   const data = load()[modeKey(mode)];
   const byDay = {};
   for(const g of data.games.history){
     const key = dayKey(g.t);
-    (byDay[key] || (byDay[key] = [])).push(g.score);
+    const day = byDay[key] || (byDay[key] = { scores: [], times: [] });
+    day.scores.push(g.score);
+    if(Number.isFinite(g.ms)) day.times.push(g.ms);
   }
   const now = Date.now();
   const out = [];
   for(let i = 29; i >= 0; i--){
     const t = now - i * 86400000;
     const key = dayKey(t);
-    const scores = byDay[key];
-    out.push({ dayOffset: 29 - i, date: key, avg: scores ? scores.reduce((a, b) => a + b, 0) / scores.length : null });
+    const day = byDay[key];
+    out.push({
+      dayOffset: 29 - i,
+      date: key,
+      avg: day && day.scores.length ? day.scores.reduce((a, b) => a + b, 0) / day.scores.length : null,
+      ms: day && day.times.length ? median([...day.times].sort((a, b) => a - b)) : null
+    });
   }
   return out;
 }
@@ -240,15 +258,26 @@ export function getTopMistakes(mode, limit = 10){
 // emoji/pips add a "count the pile" step that scales with the larger operand
 // and digits doesn't have at all, so raw presentation medians alone can't
 // tell a slow-representation apart from a slow-because-it's-big problem.
-export function recordLatency(mode, presentation, ms, maxOperand){
+// `correct` is what makes this a *recall-speed* log rather than a
+// time-to-press-a-key log: a fast wrong guess and a fast correct recall are
+// the same number of milliseconds, and pooling them answers neither question.
+// Entries written before this field existed have no `correct` at all, and are
+// treated as correct rather than discarded (see isRecall) — the alternative is
+// throwing away every response time recorded up to now.
+export function recordLatency(mode, presentation, ms, maxOperand, correct){
   if(!Number.isFinite(ms) || ms < 0) return; // guard against clock/tab-switch weirdness
   const data = load();
   const m = data[modeKey(mode)];
   const cutoff = Date.now() - LATENCY_LOG_DAYS * 86400000;
   m.latencyLog = m.latencyLog.filter(e => e.t >= cutoff);
-  m.latencyLog.push({ presentation, maxOperand, ms: Math.round(ms), t: Date.now() });
+  m.latencyLog.push({ presentation, maxOperand, ms: Math.round(ms), t: Date.now(), correct: !!correct });
   save(data);
 }
+
+// Only first attempts that were actually right describe how fast this child
+// *recalls* a fact. Legacy entries (no `correct` key) count as recall; an
+// explicit `false` does not.
+const isRecall = e => e.correct !== false;
 
 function median(sortedAsc){
   const n = sortedAsc.length;
@@ -274,7 +303,7 @@ function summarizeLatencies(msList){
 export function getLatencyStats(mode){
   const data = load()[modeKey(mode)];
   const cutoff = Date.now() - LATENCY_LOG_DAYS * 86400000;
-  const recent = data.latencyLog.filter(e => e.t >= cutoff);
+  const recent = data.latencyLog.filter(e => e.t >= cutoff && isRecall(e));
 
   const byPresentation = { digits: [], emoji: [], pips: [] };
   const bySize = {

@@ -23,6 +23,12 @@
 .chart-bar{fill:var(--hero);}
 .chart-line{stroke:var(--grape); stroke-width:2;}
 .chart-dot{fill:var(--grape);}
+/* Speed trend (its own chart, inverted axis — see renderSpeedChart): green,
+   not grape, so a glance never confuses it with the score line above it. */
+.chart-line-speed{stroke:var(--good);}
+.chart-dot-speed{fill:var(--good);}
+.chart-note{margin:8px 2px 0; font-size:12px; font-weight:600; color:var(--muted);}
+.chart-caption{margin:6px 2px 0; font-size:12px; font-weight:700; color:var(--good);}
 .chart-empty{margin:0; padding:22px 4px; text-align:center; color:var(--muted); font-size:13px;}
 
 .mistakes-list{list-style:none; margin:0; padding:0; background:var(--surface); border-radius:16px;

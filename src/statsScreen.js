@@ -2,7 +2,7 @@
 // trickiest-problems list. Reachable only from the theme-picker screen.
 
 import {
-  statsScreen, statsGrid, chartGames, chartMonth, mistakesList, latencyTable, latencySizeTable,
+  statsScreen, statsGrid, chartGames, chartMonth, chartSpeed, mistakesList, latencyTable, latencySizeTable,
   statsClose, statsResetBtn, resetConfirm, resetCancel, resetConfirmBtn
 } from "./dom.js";
 import { getSummary, getLast30Games, getLast30DaysSeries, getTopMistakes, getLatencyStats, resetStats } from "./stats.js";
@@ -107,6 +107,48 @@ function renderMonthChart(){
   chartMonth.appendChild(svg);
 }
 
+// Speed over time — the one chart that tracks the actual goal (fluency, spec
+// §1). Deliberately its own chart rather than a second line on the 30-day
+// score chart: milliseconds and a 0-10 score share no axis, and an unlabelled
+// 300x110 sparkline carrying two units is unreadable.
+//
+// The y-axis is INVERTED — faster sits higher — so "the line is going up"
+// means the same thing here as on every other chart on this screen. The scale
+// runs from 0 to the slowest day in view, so the shape is honest about
+// magnitude (a day twice as slow sits at half the height) rather than
+// stretching whatever range happens to be present.
+function renderSpeedChart(){
+  chartSpeed.innerHTML = "";
+  const days = getLast30DaysSeries(state.mode).filter(d => d.ms != null);
+  if(days.length < 2){
+    chartSpeed.appendChild(emptyNote(days.length
+      ? "One day recorded so far — play on another day to see a trend."
+      : "Finish a game to start tracking how fast you answer."));
+    return;
+  }
+  const W = 300, H = 110, pad = 6;
+  const slowest = Math.max(...days.map(d => d.ms));
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none", class: "chart-svg" });
+  [0, 0.5, 1].forEach(f => {
+    const y = pad + f * (H - pad * 2);
+    svg.appendChild(svgEl("line", { x1: pad, x2: W - pad, y1: y, y2: y, class: "chart-grid" }));
+  });
+  const xFor = i => pad + (i / 29) * (W - pad * 2);
+  const yFor = ms => pad + (ms / slowest) * (H - pad * 2);   // inverted: 0ms at the top
+  let path = "";
+  days.forEach(d => { path += `${path ? "L" : "M"}${xFor(d.dayOffset).toFixed(1)},${yFor(d.ms).toFixed(1)} `; });
+  svg.appendChild(svgEl("path", { d: path.trim(), class: "chart-line chart-line-speed", fill: "none" }));
+  days.forEach(d => {
+    svg.appendChild(svgEl("circle", { cx: xFor(d.dayOffset), cy: yFor(d.ms), r: 2.6, class: "chart-dot chart-dot-speed" }));
+  });
+  chartSpeed.appendChild(svg);
+  const best = Math.min(...days.map(d => d.ms));
+  const note = document.createElement("p");
+  note.className = "chart-caption";
+  note.textContent = `Best day ${formatLatency(best)} · slowest ${formatLatency(slowest)}`;
+  chartSpeed.appendChild(note);
+}
+
 function renderMistakes(){
   mistakesList.innerHTML = "";
   const top = getTopMistakes(state.mode, 10);
@@ -207,6 +249,7 @@ function renderAll(){
   renderGamesChart();
   renderMonthChart();
   renderMistakes();
+  renderSpeedChart();
   renderLatency();
   renderLatencyBySize();
   resetConfirm.hidden = true;

@@ -11,6 +11,7 @@ export const state = {
   gameWrongTotal: 0, // mistakes across the whole game, for the stats score (10 - mistakes, floor 0)
   problemShownAt: 0, // performance.now() when this problem first became answerable — response-time baseline (§17.6)
   latencyLogged: false, // true once this problem's first-attempt latency has been recorded, so retries don't log again
+  gameLatencies: [], // this game's correct first-attempt times (ms); its median is stored per game so speed can be trended
 
   mode: "easy", // "easy" | "hard" — the difficulty toggle; shared by the picker and stats screens
   waterDrainMs: 0, // hard mode only: how long this game's water bar takes to fully drain (constant for the whole game)
