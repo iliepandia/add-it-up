@@ -1,13 +1,18 @@
 # Add It Up — future improvements, recommendations & gaps
 
 Companion to [`addition-game-spec.md`](addition-game-spec.md). **That file describes what the
-game *is*; this one describes what it is *not yet*.** Nothing here is built.
+game *is*; this one describes what it is *not yet*** — plus, struck through, the items that
+started here and have since shipped, kept as a record of what closed them and when.
+
+**Closed so far:** §17.4 (competence + autonomy), and gaps G2, G3, G4, G8. **Still open:** §17.1,
+§17.2, §17.3, §17.5, §17.6 steps 4–6, and gaps G1, G5, G6, G7 — with **G1 (scaffold the second
+wrong answer) the one to do next**, being the only remaining item that can actively harm.
 
 Section numbers (§16, §17.x) match the spec's original numbering and are deliberately preserved
 — the two files cross-reference each other roughly 39 times, so renumbering would break every
 link. §16 and §17 keep anchor headings in the spec pointing here.
 
-**Last evaluated:** 2026-09-19, against build 82 (the hard-mode prize combo merge).
+**Last evaluated:** 2026-09-19, against build 85 (speed trend, recall-only latency, emoji cap).
 
 ---
 
@@ -18,12 +23,17 @@ version: **the spec's self-assessment is accurate.** Every item it claims is shi
 genuinely shipped, and every item it claims is unbuilt is genuinely absent from the code. That
 is worth stating plainly, because it means the notes below can be trusted going forward.
 
+One caveat found on re-read (2026-09-19): §17.4's own body text still described its autonomy
+half as unbuilt, contradicting both §17's progress note and §18.3, which had already recorded it
+as closed. The code was right and the item text was stale; it has since been corrected. Per-item
+bodies are the thing most likely to drift — the dated progress notes above them were accurate.
+
 | Item | Spec claims | Found in code | Verdict |
 |---|---|---|---|
 | **17.1** Intrinsic integration | Unaddressed | The math still gates an unrelated reward. Fast mode times the gate; it doesn't make the reward *run on* recall | ✅ claim accurate — **not built** |
 | **17.2** Scaffold 2nd wrong | Unaddressed | `wrong()` in `main.js`: second miss calls `revealAnswer()` and nothing else — no pips, no count-up, no decomposition | ✅ claim accurate — **not built** |
 | **17.3** Adaptivity + fact memory | Unaddressed | `getTopMistakes()` is imported by `statsScreen.js` only. `newProblem()` picks operands uniformly at random within the sum bound | ✅ claim accurate — **not built** |
-| **17.4** Competence + autonomy | Both halves shipped | `mastery.js` (11 tiers) = competence; `presentationPicker.js` (per-problem choice) + mode choice = autonomy | ✅ claim accurate — **built** |
+| **17.4** Competence + autonomy | Both halves shipped | `mastery.js` (11 tiers) = competence; `presentationPicker.js` (per-problem choice) + the Easy/Fast sub-mode = autonomy | ✅ **CLOSED** — the only §17 item fully done |
 | **17.5** Sequence representations | Unaddressed | Easy mode: `pick(["digits","emoji","pips"])`, uniform. Pips correctly capped at ≤6; emoji groups are not (see G4) | ✅ claim accurate — **not built** |
 | **17.6** steps 1–3 (baseline, personal target, additive reward) | Shipped | `recordLatency()` per first attempt; Fast mode's seeded-and-ratcheting drain; bonus star is purely additive | ✅ claim accurate — **built** |
 | **17.6** steps 4–6 (speed-driven core, retire counting, latency→adaptivity) | Unbuilt | Confirmed absent | ✅ claim accurate — **not built** |
@@ -290,14 +300,34 @@ latency tracking called out in §16/§17.6 — a fact answered correctly but slo
 like a miss by the backend resurfacing logic (both mean "not yet automatic"), but never *shown*
 to the child that way — §17.6's constraint applies here too, not just to scoring.
 
-### 17.4 Surface competence + one autonomy choice — *competence half now shipped*
+### ~~17.4 Surface competence + one autonomy choice~~ — **CLOSED, both halves shipped**
+*Closed 2026-09-19. This was the first §17 item to land in full, and the only one currently
+closed.*
+
 Give a visible mastery signal beyond a single session (levels, cumulative progress) and at
 least one real choice (choose between two problems, or a sub-mode). *(Deci & Ryan,
-Self-Determination Theory — competence + autonomy.)* The **competence** half is now addressed:
-the mastery badge (§13) is exactly this — an 11-tier, cross-session progress signal — layered
-on the stats screen's (§11) existing persistent numbers. World/theme selection (§10) still
-covers only the shallow end of **autonomy**; a deeper in-game choice (between two problems, or
-a sub-mode) remains unbuilt.
+Self-Determination Theory — competence + autonomy.)*
+
+- **Competence — shipped 2026-09-18.** The mastery badge (§13) is exactly this: an 11-tier,
+  cross-session progress signal, layered on the stats screen's (§11) existing persistent
+  numbers.
+- **Autonomy — shipped 2026-09-19, twice over.** Fast mode (§18) delivers both grades of choice
+  this item asked for:
+  1. **A sub-mode choice.** Easy vs Fast is a real, opt-in fork in how the game plays, not a
+     cosmetic setting — different problem rules, a timer, and a second star (§18).
+  2. **A per-problem choice.** In Fast mode, *before every single problem*, a full-screen
+     "Pick how to see it!" overlay asks the child to choose pips, digits or emoji (§18.3), and
+     the problem isn't generated until they pick. Theme selection (§10) is one choice per game;
+     this is one per problem, and it's the deeper in-game choice this item said was missing.
+
+  The anti-rut rotation (§18.3 — a representation picked 5 times running sits out the next 5)
+  narrows the *offered set*, never the choice in the moment, so it doesn't dilute the autonomy:
+  the child is never overruled on a pick they've made.
+
+**Why this was still marked open:** the paragraph above was written on 2026-09-17, before Fast
+mode existed, and was never revised when it shipped — even though §17's own 2026-09-19 progress
+note and §18.3 both already stated this item was closed. Corrected here so the per-item status
+and the summary notes agree.
 
 ### 17.5 Sequence the representations (don't randomize blindly) — *revised*
 The original framing here — lead concrete, fade toward abstract, as if pips/emoji were a
