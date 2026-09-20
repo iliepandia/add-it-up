@@ -33,9 +33,13 @@
   display:flex; align-items:center; justify-content:center;
   cursor:pointer;}
 /* Animated face: everything that pops/scales/reacts lives here, inside the
-   fixed-size cell, so neighboring cells never shift. */
+   fixed-size cell, so neighboring cells never shift. The transition only ever
+   shows on the combo cool-down (prizeCombo.js) — every tap keyframe both
+   starts and ends at the face's resting transform, and a running animation
+   outranks a transition anyway — so a charged tile deflates, never snaps. */
 .prize-emoji{display:flex; align-items:center; justify-content:center;
-  width:100%; height:100%; font-size:calc(clamp(38px,11vw,58px) * var(--scale)); transform-origin:center;}
+  width:100%; height:100%; font-size:calc(clamp(38px,11vw,58px) * var(--scale)); transform-origin:center;
+  transition:transform .3s ease;}
 .prize-empty{margin:0 auto; padding:0 24px; text-align:center; font-size:16px; font-weight:600;
   color:rgba(74,46,18,.75); max-width:280px;}
 
@@ -116,4 +120,69 @@
   28%{transform:scale(1)}
   42%{transform:scale(1.22)}
   70%{transform:scale(1)}
+}
+
+/* ---- hard-mode combo escalation (see prizeCombo.js) ---- */
+
+/* Effects layer over the shelf. Inside #prizeBox (itself fixed, inset:0) so
+   its coordinates match the viewport ones getBoundingClientRect hands back,
+   and above the tiles + back button — but never intercepting a tap. */
+#prizeFx{position:absolute; inset:0; z-index:2; pointer-events:none; overflow:hidden;}
+.prize-shock{position:absolute; border-radius:50%; border:7px solid rgba(255,163,46,.9);
+  transform:translate(-50%,-50%); pointer-events:none;
+  box-shadow:0 0 24px rgba(255,140,30,.6);}
+.prize-sweep{position:absolute; top:0; left:0; line-height:1; pointer-events:none;
+  filter:drop-shadow(0 10px 20px rgba(0,0,0,.3));}
+.prize-flash{position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen;}
+
+/* Tap 2 leaves the tile charged: bigger, lit, and visibly holding something
+   in. The face keeps the scale the combo-charge keyframes end on, so the
+   animation hands straight over to this with no snap back. */
+.prize-tile.combo-charged{
+  box-shadow:0 6px 0 rgba(0,0,0,.22), inset 0 0 0 3px rgba(255,255,255,.5),
+    0 0 0 4px rgba(255,152,40,.6), 0 0 28px 8px rgba(255,136,26,.55);
+  animation:comboGlow .5s ease-in-out infinite alternate; z-index:1;}
+.prize-tile.combo-charged .prize-emoji{transform:scale(1.14);}
+@keyframes comboGlow{ from{filter:brightness(1)} to{filter:brightness(1.28)} }
+
+/* Winds back, shudders, then swells and stays swollen at 1.14 — matching
+   .combo-charged above. */
+@keyframes combo-charge{
+  0%{transform:scale(1) rotate(0)}
+  14%{transform:scale(.82) rotate(-6deg)}
+  28%{transform:scale(1.18) rotate(5deg)}
+  40%{transform:scale(1.1) translateX(-5px) rotate(-3deg)}
+  52%{transform:scale(1.14) translateX(5px) rotate(3deg)}
+  64%{transform:scale(1.1) translateX(-4px) rotate(-2deg)}
+  76%{transform:scale(1.14) translateX(4px) rotate(2deg)}
+  88%{transform:scale(1.26) rotate(0)}
+  100%{transform:scale(1.14) rotate(0)}
+}
+
+/* Tap 3 lets it go: a hard compression, then a punch well past the tile's own
+   bounds (nothing clips it — the cell has no overflow rule), settling back. */
+@keyframes combo-erupt{
+  0%{transform:scale(1.14) rotate(0)}
+  10%{transform:scale(.66) rotate(-9deg)}
+  32%{transform:scale(2.15) rotate(7deg)}
+  50%{transform:scale(1.45) rotate(-4deg)}
+  68%{transform:scale(1.8) rotate(3deg)}
+  84%{transform:scale(1.2) rotate(-1deg)}
+  100%{transform:scale(1) rotate(0)}
+}
+
+/* The whole shelf shudders as one unit, so tiles never move relative to each
+   other — the grid-stability rule above still holds, it just all shakes. */
+.prize-strip.shelf-quake{animation:shelfQuake .6s ease-out;}
+@keyframes shelfQuake{
+  0%,100%{transform:translate(0,0)}
+  10%{transform:translate(-9px,5px)}
+  20%{transform:translate(8px,-6px)}
+  30%{transform:translate(-7px,-3px)}
+  40%{transform:translate(6px,5px)}
+  50%{transform:translate(-5px,3px)}
+  60%{transform:translate(5px,-3px)}
+  70%{transform:translate(-4px,2px)}
+  80%{transform:translate(3px,-2px)}
+  90%{transform:translate(-2px,1px)}
 }

@@ -30,6 +30,7 @@ import {
 } from "./audio.js";
 import { pick, BONUS_GLYPH } from "./config.js";
 import { getPrizeTiles } from "./prizes.js";
+import { hardPrizeTap, playAnim, resetPrizeFx } from "./prizeCombo.js";
 
 // Every prize emoji (see WIN_END in config.js) maps to a sound that matches
 // what it actually is, so a tap sounds like that prize instead of a random
@@ -92,9 +93,7 @@ const TAP_ANIMS = [
 
 function playTapAnim(el){
   const { name, dur } = pick(TAP_ANIMS);
-  el.style.animation = "none"; void el.offsetWidth; // restart cleanly even mid-animation
-  el.style.animation = `${name} ${dur}s ease`;
-  el.addEventListener("animationend", () => { el.style.animation = ""; }, { once: true });
+  playAnim(el, name, dur);
 }
 
 function renderPrizes(){
@@ -129,17 +128,27 @@ function renderPrizes(){
       cell.appendChild(badge);
     }
 
-    cell.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); audio(); playTapAnim(face); playPrizeSound(emoji); });
+    // Easy prizes react once per tap and forget. Hard prizes remember, and a
+    // third tap in quick succession sets them off (see prizeCombo.js).
+    const tapOne = () => playTapAnim(face);
+    const tapSound = () => playPrizeSound(emoji);
+    cell.addEventListener("pointerdown", e => {
+      e.preventDefault(); e.stopPropagation(); audio();
+      if(hard) hardPrizeTap(cell, face, emoji, tapOne, tapSound);
+      else { tapOne(); tapSound(); }
+    });
     prizeStrip.appendChild(cell);
   });
 }
 
 export function showPrizeBox(){
   renderPrizes();
+  resetPrizeFx();
   prizeBox.classList.add("show");
 }
 
 function hidePrizeBox(){
+  resetPrizeFx();
   prizeBox.classList.remove("show");
 }
 
