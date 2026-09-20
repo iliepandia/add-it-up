@@ -28,9 +28,12 @@ const SHRINK_STEP_MS = 400;    // how long each tail segment takes to disappear 
 // block every EAT_RISE_MS / EAT_SPREAD, and its trailing edge stretches over
 // however many blocks EAT_RETURN_MS buys at that speed. Make the settle longer
 // than the rise and the lump just grows a longer tail behind it.
+// 280ms is 500/1.8: the wave shape at 500 read as too slow in play, and 1.8x
+// is what it takes to land back at the pace the old per-block pop ran at
+// (~1.2s per swallow for the easy snake, ~2.0s for Fast's longer one).
 const EAT_SPREAD = 3;       // blocks ahead of the wave that have already started to swell
-const EAT_RISE_MS = 500;    // normal size -> full, for any one block
-const EAT_RETURN_MS = 500;  // full -> normal
+const EAT_RISE_MS = 280;    // normal size -> full, for any one block
+const EAT_RETURN_MS = 280;  // full -> normal
 const EAT_STEP_MS = EAT_RISE_MS / EAT_SPREAD;        // ms for the wave to cross one block
 const EAT_FALL_BLOCKS = EAT_RETURN_MS / EAT_STEP_MS; // how far the settling tail reaches
 const HEAD_PEAK = 4.28, BODY_PEAK = 3.49;            // full-size multipliers; the head bulges more
