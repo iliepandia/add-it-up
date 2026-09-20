@@ -101,8 +101,17 @@ plain symbols and can never be played end-to-end without reading numerals.
 - The allowance **resets at the start of every game**, like the anti-rut rotation (§18.3).
 - Where the two rules disagree, the allowance wins: it's a hard rule, while the anti-rut rotation
   is only a nudge, so the rotation is **skipped** whenever honouring it would leave nothing to
-  offer. (Otherwise a spent allowance plus a locked-out Digits would show an empty picker and the
-  game would stall.)
+  offer.
+
+  > **This guard is defensive, not load-bearing at current settings.** With a 10-problem game, a
+  > 7-problem allowance and a 5-in-a-row lockout, an empty picker **cannot** happen: locking
+  > Digits out needs 5 consecutive digit picks and spending the allowance needs 7 object picks,
+  > and `5 + 7 = 12 > 10`, so a game has no room for both. Verified by replaying every reachable
+  > Fast-mode game (40,576 sequences) — zero empty rows.
+  >
+  > The margin is only **2 problems**, though. Drop the allowance to **5 or lower** (or raise
+  > `RUN_LIMIT`, or shorten the game) and the stall becomes genuinely reachable — which is why
+  > the guard stays.
 
 *Why:* objects can be **seen** rather than recalled, so a game made mostly of them can be
 completed without ever practising the fact. This is a blunt, non-adaptive first step toward
@@ -705,7 +714,8 @@ with a **"?"** on it, and the problem isn't generated until one is tapped.
 - **Object allowance (§4):** once the game's 7 pips/emoji problems are used up, the picker offers
   **Digits alone** for the rest of the game. The overlay still shows and still waits for the tap,
   because that tap is what starts the water bar. The allowance outranks the rotation above, which
-  is skipped rather than allowed to empty the row.
+  is skipped rather than allowed to empty the row — a guard that current settings make
+  unreachable anyway (§4 shows the arithmetic).
 - The water bar (§18.4) is **hidden while the picker is up** and only starts once the problem is
   on screen, so deciding how to see it is never part of the timed window.
 

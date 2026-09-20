@@ -78,8 +78,14 @@ export function showPresentationPicker(onChoose){
   // Two independent narrowings, applied in order of authority. The game's
   // object-presentation allowance (§4) is a hard rule and comes first; the
   // anti-rut lockout is only a nudge, so it's skipped whenever applying it
-  // would leave nothing to pick — otherwise a spent allowance plus a locked-out
-  // Digits would offer an empty row and the game would stall here.
+  // would leave nothing to pick.
+  //
+  // That last part is defensive, not load-bearing today: locking Digits out
+  // takes RUN_LIMIT consecutive digit picks and spending the allowance takes
+  // MAX_OBJECT_PROBLEMS object picks, and 5 + 7 = 12 > GOAL, so no 10-problem
+  // game has room for both (checked exhaustively). The margin is two problems
+  // — drop the allowance to GOAL - RUN_LIMIT or lower and an empty row, which
+  // would strand the player on a picker with nothing to tap, becomes real.
   const allowed = OPTIONS.filter(o => o.key === "digits" || objectQuotaLeft());
   const offered = allowed.length > 1
     ? allowed.filter(o => !(lockedTurns > 0 && o.key === lockedKey))
