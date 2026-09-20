@@ -11,6 +11,7 @@ export const keypad = $("#keypad");
 export const fx = $("#fx");
 export const flash = $("#flash");
 export const win = $("#win");
+export const playBtn = $("#playBtn");
 export const trophiesEl = $("#trophies");
 export const winfxEl = $("#winfx");
 export const snakeLayer = $("#snakeLayer");

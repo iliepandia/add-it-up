@@ -638,20 +638,22 @@ occasionally crawls across the win screen (§9).
     head to tail, and **the blocks around it swell too, on a sliding scale** — so a bulge in the
     middle of the snake visibly pushes out its neighbours on both sides, rather than one block
     inflating alone while the rest sit still.
-    - **Two knobs**, both per block: **rise 500 ms** (normal size → full) and **settle 500 ms**
+    - **Two knobs**, both per block: **rise 280 ms** (normal size → full) and **settle 280 ms**
       (full → normal). Everything else follows from them. A block starts swelling once the wave
       is **3 blocks away** (`EAT_SPREAD`), which fixes the wave's speed at one block per
-      rise ÷ spread ≈ **167 ms**; the settle then spans however many blocks it buys at that
+      rise ÷ spread ≈ **93 ms**; the settle then spans however many blocks it buys at that
       speed — 3 at the current numbers. Set a longer settle than rise and the lump simply grows
       a longer tail behind it.
+      *(Both were 500 ms when the wave first shipped, which played too slow — 280 ms is that
+      ÷ 1.8, chosen to land the whole swallow back at the pace the old per-block pop ran at.)*
     - **Driven in JavaScript, frame by frame, not by CSS keyframes.** The whole point is that a
       block's size depends on where the wave is relative to its *neighbours*, and a CSS
       animation can only ever describe one element on its own clock. The head's "O" mouth opens
       in step with the head's own swell, from the same loop.
-    - **Cost:** one swallow now takes **~2.2 s** (easy, 8 blocks) or **~3.5 s** (Fast, 16), about
-      **1.8× the old timing**, and the snake is frozen for all of it — so a handful of prizes
-      touched at once stacks up. Lower `EAT_RISE_MS` to speed the whole thing up; it scales
-      everything together.
+    - **Timing:** one swallow takes **~1.2 s** (easy, 8 blocks) or **~2.0 s** (Fast, 16 blocks),
+      and the snake is frozen for all of it, so several prizes touched at once still play
+      strictly one after another. `EAT_RISE_MS` scales the whole effect — halve it and
+      everything, wave speed included, moves twice as fast.
   - **The mouth sits below the eyes** *(fixed 2026-09-19)* — offset down by half its own height
     so it no longer overlaps them.
   - Implementation note: each body block is a positioning shell plus an inner "face" div, so the
