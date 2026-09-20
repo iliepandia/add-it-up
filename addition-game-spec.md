@@ -432,6 +432,8 @@ and response-time logs above, which live in the same storage.
 Reachable via a **📦 button** on the theme-picker screen (§10), below the world-select grid.
 Stored **locally on-device only** (its own `localStorage` key, separate from stats — §11's
 "Reset stats" never touches it), so prizes are permanent unless a dedicated reset is added later.
+The **one** thing that ever removes a prize is the child's own four-of-a-kind merge (below), which
+spends four duplicates to buy one new prize.
 
 **One box for both modes** (unlike stats, §11, which split). A Fast-mode prize is drawn from its
 own glyph pool and carries a small **🚴 badge** in the tile's top-right corner, so the shelf reads
@@ -464,8 +466,9 @@ as one growing collection while still telling the two apart — see §18.7.
   reactions below. Keeping the two separate means a tile reacting to a tap never shifts its
   neighbors.
 - **Tapping a prize** plays one random visual reaction from a set of ten (tada, shake, jump,
-  rotate, wobble, bounce, pulse, flip, swing, heartbeat) — just a fun, replayable touch, no game
-  effect.
+  rotate, wobble, bounce, pulse, flip, swing, heartbeat) — a fun, replayable touch in its own
+  right. That reaction is also the *first* rung of both games a tap can feed: the Fast-mode combo
+  and the easy-mode merge game, both below.
 - **Tap sounds are matched to the specific prize**, not random: all 60 win-pool emoji (§9) each
   map to one of ~40 synthesized "sound families" — animal calls (bark, meow, moo, oink, quack,
   neigh, roar, ribbit, hoot, …), vehicle noises (rocket whoosh, bike bell, car horn, train
@@ -491,9 +494,10 @@ as one growing collection while still telling the two apart — see §18.7.
   shooting star, comet whoosh, satellite beeps). These run **punchier and lower** than the easy
   set, matching hard mode's higher stakes. 🥇 and 🎖️ share one medal chime, and 🦖 — the only glyph
   in both pools — reuses the same roar either way, so all 60 hard glyphs are covered by 59 sounds.
-- **Hard-mode prizes build combos; easy-mode prizes don't.** This is the one way the two kinds of
-  prize behave differently on tap, and it exists so a Fast-mode prize is visibly *worth more* than
-  an easy one once it's sitting on the shelf. Tapping the **same** hard tile again within
+- **Hard-mode prizes build combos; easy-mode prizes don't.** This is one of the two ways the kinds
+  of prize behave differently on tap (the other being the merge game below, which is easy-only),
+  and it exists so a Fast-mode prize is visibly *worth more* than an easy one once it's sitting on
+  the shelf. Tapping the **same** hard tile again within
   **1.2s** escalates:
   1. **Tap 1** — exactly the easy-mode reaction: one random visual of the ten, plus that prize's
      own sound. The two modes are indistinguishable until a combo is actually under way.
@@ -528,6 +532,54 @@ as one growing collection while still telling the two apart — see §18.7.
 - Eruption effects render in their **own layer above the shelf** that never intercepts a tap, and
   are cleared whenever the box opens or closes, so a finale never bleeds into the next visit.
 - A **← back button** (top-left) returns to the theme picker.
+
+**The four-of-a-kind merge game (easy-mode prizes only).** Added 2026-09-20. Collecting duplicates
+of the same prize is otherwise dead weight on the shelf, so duplicates become a *currency*: four
+of a kind trade up into one brand-new prize. It is **easy-mode prizes only** — a Fast-mode prize
+can't be grouped, which keeps §18.7's "a Fast prize is visibly worth more" intact (a Fast prize
+keeps its combo, §12 above, and is never spendable).
+
+1. **Tap a prize** → a **count badge** appears in its top-right corner reading **1**. A group is
+   now building.
+2. **Tap another tile showing the same emoji** → **2**, then **3**.
+3. **Tap a fourth** → the group completes (no badge — it goes straight to the merge).
+
+- **Four distinct tiles, not four taps.** Re-tapping a tile already in the group still plays its
+  reaction and sound, but the count doesn't move. The child must actually *own* four copies —
+  that is the whole game.
+- **A group drops** — badges and all — on any of: a tap on a **different easy emoji** (the count
+  restarts at **1** on the new one), a tap on **any Fast-mode prize**, **10 seconds** of silence
+  (long, because finding the next copy means scrolling the shelf), or **leaving the box**.
+
+**The merge.** The three other tiles **fly across the shelf into the fourth** — transform and
+opacity only, so nothing they pass nudges its neighbors — then are removed. The fourth tile, the
+**last one tapped**, stays exactly where it is and becomes a **🎁 present**, so it is obvious where
+the reward landed. The present:
+- carries a **pulsing glow pooling underneath it**, and is lifted above its neighbors so the glow
+  is never half-painted-over by the next tile along;
+- is **already sized to the reward inside it** (see below), previewing what is coming;
+- **breathes** gently in place until it is tapped.
+
+**Opening the present.** Tapping it bursts it open — it shivers, squashes, then blows wide, and at
+the animation's widest point the 🎁 **becomes the new prize**, with sparkle particles and that
+prize's own tap sound. The new prize is drawn at random from the **easy 60-emoji pool** (§9),
+**excluding the emoji just spent**, so a merge always trades *into something else*. It lands in the
+present's slot and is immediately a normal prize — tappable, and able to start a group of its own.
+
+**What it costs.** The trade is **permanent and net −3**: the four entries are deleted from storage
+and the one new prize takes the last-tapped one's position, keeping the rest of the shelf in its
+earned order. Two rules protect the child here:
+- **Nothing is written until the present is actually opened.** A present left sitting — because
+  the child wandered off or went back to the picker — costs nothing; all four prizes are still
+  there on the next visit.
+- **The reward inherits the largest of the four**, rainbow ring and all (four 1×'s → a 1×, and
+  four perfect 1.5× tiles → a perfect 1.5× tile). A merge is never a downgrade. Merged entries
+  store their **size directly** rather than a score, since they were never played for — the one
+  kind of prize whose tile size isn't derived from a game result.
+
+**Only one present at a time.** While a present is pending, tiles still react to taps but no new
+group builds. This is what keeps the trade safe: a group holds storage *positions*, and the
+pending write is about to shift every one of them.
 - **Empty state:** "Finish a game to win your first prize!" if none are collected yet.
 
 ---

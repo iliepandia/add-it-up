@@ -40,6 +40,8 @@ src/
     prizes.js     persistent prize collection (localStorage, survives a stats reset)
     prizeBox.js   the prize-box shelf screen + per-prize tap sounds
     prizeCombo.js hard-mode tap combos: charge on tap 2, erupt on tap 3
+    prizeMerge.js easy-mode four-of-a-kind: badge, merge into a present, open
+                  it for a new prize
     mastery.js    7-day mastery badge (snail → dinosaur → trophy)
     stats.js      local play-stats storage (sessions, scores, mistakes, response
                   times) — localStorage only, no network
