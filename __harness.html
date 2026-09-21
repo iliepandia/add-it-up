@@ -1,0 +1,42 @@
+<!DOCTYPE html><meta charset="utf-8">
+<style>html,body{margin:0;background:#222}iframe{width:390px;height:844px;border:0;display:block}
+#log{position:fixed;left:0;bottom:0;width:390px;font:11px monospace;color:#0f0;background:#000;z-index:9;white-space:pre-wrap}</style>
+<body>
+<iframe id="f" src="/addition-game.html"></iframe><div id="log"></div>
+<script>
+const easy=["🐶","🐱","🦄","🌈","⚽","🍦","🐸","🎈"], hard=["🐉","💎","⚡","🌋","🦈","👑"];
+const list=[];
+const n = location.search.includes("few") ? 5 : 34;
+for(let i=0;i<n;i++){
+  const h=i%3===0;
+  list.push({emoji:h?hard[i%hard.length]:easy[i%easy.length], score:[2,5,8,10][i%4], mode:h?"hard":"easy"});
+}
+localStorage.setItem("addItUpPrizes", JSON.stringify(list));
+const f=document.getElementById("f"), log=document.getElementById("log");
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const tap=el=>el.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));
+f.addEventListener("load",async()=>{
+  await wait(300);
+  const d=f.contentDocument;
+  tap(d.getElementById("prizeBoxLink"));
+  await wait(300);
+  const s=d.getElementById("prizeScroll");
+  const step=(location.hash.slice(1)||"top");
+  if(step==="mid"){ s.scrollTop=s.scrollHeight/2; return; }
+  if(step==="end"){ s.scrollTop=s.scrollHeight; return; }
+  if(step==="top"||step==="few"){ return; }
+  const dragons=[...d.querySelectorAll(".prize-tile")].filter(c=>c.querySelector(".prize-emoji").textContent==="🐉");
+  tap(dragons[0]); await wait(120); tap(dragons[1]);
+  await wait(900);
+  const p=d.querySelector(".prize-present");
+  log.textContent="tiles before "+list.length+"  present? "+!!p+"  bike on present? "+!!(p&&p.querySelector(".prize-hard-badge"));
+  if(step==="present"){ p.scrollIntoView({block:"center"}); return; }
+  tap(p); await wait(1600);
+  const store=JSON.parse(localStorage.getItem("addItUpPrizes"));
+  const m=store.find(e=>e.merged);
+  const tile=[...d.querySelectorAll(".prize-tile")].find(c=>c.querySelector(".prize-emoji").textContent===m.emoji);
+  tile.scrollIntoView({block:"center"});
+  log.textContent="stored "+JSON.stringify(m)+"\nlen "+store.length+" (was "+list.length+")  bike on new tile? "+!!tile.querySelector(".prize-hard-badge");
+});
+f.src=f.src;
+</script>

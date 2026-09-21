@@ -1,27 +1,30 @@
-// The four-of-a-kind merge game, played on the prize-box shelf. Both kinds of
-// prize play it: an easy group trades into a new easy prize, a Fast group into
-// a new Fast prize (bike badge and all).
+// The matching-set merge game, played on the prize-box shelf. Both kinds of
+// prize play it: an easy set trades into a new easy prize, a Fast set into a
+// new Fast prize (bike badge and all). GROUP_SIZE below is how many copies a
+// set takes — the wording here stays deliberately vague about the number,
+// because that number has moved before and will again.
 //
-//   tap a prize            - it gets a "1" badge; a group is now building
-//   tap another of the SAME emoji - "2", then "3"
-//   tap a fourth           - the other three fly into the fourth tile, which
-//                            becomes a 🎁 present sitting in that exact slot,
-//                            lit by a glow underneath so it can't be missed
+//   tap a prize            - it gets a "1" badge; a set is now building
+//   tap another of the SAME emoji - "2", "3", ... until the set is full
+//   the last tap completes it - every other tile in the set flies into the one
+//                            just tapped, which becomes a 🎁 present sitting in
+//                            that exact slot, lit by a glow underneath so it
+//                            can't be missed
 //   tap the present        - it bursts open into a brand-new prize from that
-//                            group's own pool, and that prize can immediately
-//                            start a group of its own
+//                            set's own pool, and that prize can immediately
+//                            start a set of its own
 //
-// A group is keyed on emoji *and* mode, not emoji alone: 🦖 is in both pools
+// A set is keyed on emoji *and* mode, not emoji alone: 🦖 is in both pools
 // (see config.js), and an easy 🦖 must not be spendable against a Fast one —
 // the trade would have to pick a pool to reward from.
 //
-// A group drops (badges and all) on: a tap on a prize that doesn't match on
+// A set drops (badges and all) on: a tap on a prize that doesn't match on
 // both counts, GROUP_WINDOW of silence, or leaving the box.
 //
 // Nothing is written to storage until a present is actually *opened* — that is
-// the moment the trade becomes permanent (four entries out, one new one in, at
-// the last-tapped tile's position). Until then the group is pure screen state,
-// so a child who wanders off keeps all four prizes.
+// the moment the trade becomes permanent (the whole set out, one new prize in,
+// at the last-tapped tile's position). Until then the set is pure screen
+// state, so a child who wanders off keeps every prize in it.
 
 import { HARD_WIN_END, WIN_END, pick, reduceMotion } from "./config.js";
 import { prizeFx } from "./dom.js";
@@ -30,19 +33,19 @@ import { mergeLock, presentPop } from "./audio.js";
 import { clearCombo, playAnim } from "./prizeCombo.js";
 import { mergePrizes } from "./prizes.js";
 
-const GROUP_SIZE = 2;
-const GROUP_WINDOW = 10000;  // ms of quiet that drops a part-built group — long,
+const GROUP_SIZE = 2;    // one number for both kinds of prize: a pair is a pair
+const GROUP_WINDOW = 10000;  // ms of quiet that drops a part-built set — long,
                              // because finding the next copy means scrolling a shelf
 const PRESENT_GLYPH = "🎁";
-const FLY_MS = 480;          // the three losing tiles' flight into the fourth
+const FLY_MS = 480;          // the losing tiles' flight into the one that was kept
 const BURST_REVEAL = 380;    // into present-burst, where 🎁 turns into the new prize
 const BURST_MS = 900;        // the whole burst, after which the shelf is rebuilt
 
-// The group being built, if any: the emoji *and* mode everyone must match, and
+// The set being built, if any: the emoji *and* mode everyone must match, and
 // one entry per tile already in it. `tile` is the render record from
 // getPrizeTiles(), carrying the storage index the trade will need.
 let group = null;    // { emoji, hard, members: [{ cell, face, tile }], timer }
-// A merged present waiting to be opened. While one exists no new group builds:
+// A merged present waiting to be opened. While one exists no new set builds:
 // the group's storage indices are still unwritten, and a second pending trade
 // would be computed against indices the first one is about to invalidate.
 let present = null;  // { cell, face, emoji, hard, indices, keepIndex, scale, perfect }
@@ -56,7 +59,7 @@ export function initPrizeMerge({ rerender, prizeSound }){
   playPrizeSound = prizeSound;
 }
 
-/** Drop everything — called when the box opens and when it closes, so a group
+/** Drop everything — called when the box opens and when it closes, so a set
  *  or an unopened present never survives a visit. The DOM is rebuilt from
  *  scratch on open, so only the bookkeeping needs clearing here. */
 export function resetPrizeMerge(){
@@ -65,7 +68,7 @@ export function resetPrizeMerge(){
   present = null;
 }
 
-/** Abandon a part-built group, taking its badges off the shelf. */
+/** Abandon a part-built set, taking its badges off the shelf. */
 export function breakGroup(){
   if(!group) return;
   clearTimeout(group.timer);
@@ -84,21 +87,21 @@ export function presentTap(cell){
 /** One tap on any prize, easy or Fast. `react` is that prize's ordinary
  *  reaction with its own voice — the shelf's random wiggle for an easy prize,
  *  the combo escalation (prizeCombo.js) for a Fast one — reused verbatim, so a
- *  tap that isn't completing a group behaves exactly as it always has.
+ *  tap that isn't completing a set behaves exactly as it always has.
  *  `voice` is the prize's sound on its own, for the tap that goes straight
  *  into the merge and so has no reaction to play. */
 export function prizeTap(tile, cell, face, react, voice){
-  // A pending present has the floor: tiles still react, but no group builds
+  // A pending present has the floor: tiles still react, but no set builds
   // until it is opened.
   if(present){ react(); return; }
 
-  // Same glyph *and* same pool, or the group starts over on the new prize.
+  // Same glyph *and* same pool, or the set starts over on the new prize.
   if(group && (group.emoji !== tile.emoji || group.hard !== tile.hard)) breakGroup();
   if(!group) group = { emoji: tile.emoji, hard: tile.hard, members: [], timer: 0 };
   clearTimeout(group.timer);
 
-  // Four *distinct* tiles, not four taps: re-tapping one already in the group
-  // still plays, but the count doesn't move. Owning four copies is the game.
+  // *Distinct* tiles, not repeat taps: re-tapping one already in the set still
+  // plays, but the count doesn't move. Owning the copies is the game.
   const already = group.members.some(m => m.tile.index === tile.index);
   if(already){
     react();
@@ -109,7 +112,7 @@ export function prizeTap(tile, cell, face, react, voice){
   group.members.push({ cell, face, tile });
   if(group.members.length >= GROUP_SIZE){
     voice();      // the prize's own voice, then straight into the merge — no
-    merge();      // reaction, because the tile is about to fly anyway
+    merge();      // reaction, because the shelf is about to rearrange anyway
     return;
   }
 
@@ -136,8 +139,8 @@ function unbadge(cell){
 function merge(){
   const members = group.members;
   const last = members[members.length - 1];
-  // The reward inherits the biggest of the four, rainbow ring and all, so a
-  // merge is never a downgrade and four big prizes are worth grouping.
+  // The reward inherits the biggest of the set, rainbow ring and all, so a
+  // merge is never a downgrade and big prizes are worth grouping.
   const best = members.reduce((a, m) => (m.tile.scale > a.tile.scale ? m : a), members[0]);
 
   clearTimeout(group.timer);
@@ -166,7 +169,7 @@ function merge(){
 }
 
 /** Send a losing tile across the shelf into the winner. Transform and opacity
- *  only, so the three in flight never nudge the tiles they leave behind — the
+ *  only, so a tile in flight never nudges the ones it leaves behind — the
  *  grid doesn't re-pack until they are actually removed. */
 function flyInto(cell, target){
   const r = cell.getBoundingClientRect();
@@ -188,7 +191,7 @@ function becomePresent(cell, face, scale){
   cell.style.setProperty("--scale", scale);
   face.textContent = PRESENT_GLYPH;
   playAnim(face, "present-appear", 0.7);
-  // Removing three tiles re-packs the grid, so the present may have moved.
+  // Removing the spent tiles re-packs the grid, so the present may have moved.
   cell.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 

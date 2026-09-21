@@ -28,10 +28,16 @@
    page (pull-to-refresh) — the JS in prizeBox.js backs this up on iOS. */
 .prize-scroll-wrap{flex:1 1 auto; min-height:0; overflow-x:hidden; overflow-y:auto;
   -webkit-overflow-scrolling:touch; touch-action:pan-y; overscroll-behavior:contain;
-  padding:8px var(--scroll-gutter) 8px clamp(16px,6vw,40px);}
+  display:flex; flex-direction:column;}
 #prizeBox{--scroll-gutter:clamp(56px,16vw,96px);}
-.prize-strip{display:flex; flex-wrap:wrap; align-content:flex-start; align-items:center;
-  justify-content:center; gap:14px;}
+/* The padding lives here, not on the scroll container, so the end bars above
+   and below can still run the full width of the screen. flex:1 0 auto makes a
+   short shelf fill the viewport, which pushes the bottom bar down to the
+   screen edge instead of leaving it floating under a couple of tiles. */
+.prize-strip{flex:1 0 auto;
+  display:flex; flex-wrap:wrap; align-content:flex-start; align-items:center;
+  justify-content:center; gap:14px;
+  padding:8px var(--scroll-gutter) 8px clamp(16px,6vw,40px);}
 /* Stable grid cell: fixed size/position, never itself animated. */
 .prize-tile{--scale:1; position:relative; flex:0 0 auto;
   width:calc(clamp(72px,20vw,104px) * var(--scale)); height:calc(clamp(72px,20vw,104px) * var(--scale));
@@ -67,13 +73,13 @@
 @keyframes rainbowHue{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
 
 /* ---- dark-wood end bars ---- */
-/* The two ends of the box itself: a dark plank above the shelf and another
-   below it, so the list visibly runs between two hard edges instead of fading
-   off the screen. Each one carries a drop shadow on its inner face that shows
-   *only while there is more list that way* — so an unshadowed plank means
-   "this really is the end", which is the whole point of them. The classes
-   come from prizeBox.js on every scroll. */
-.prize-edge{flex:0 0 auto; position:relative; z-index:3;
+/* The two ends of the box itself: a dark plank before the first prize and
+   another after the last one. They sit *inside* the scroller and scroll with
+   the list, so a plank coming into view is itself the signal — see the top
+   plank and you are at the top of your prizes, see the bottom one and there
+   is nothing more below. A bar pinned to the screen would be there whatever
+   the scroll position and so could never say that. */
+.prize-edge{flex:0 0 auto;
   height:clamp(15px,3.4vw,24px);
   background:
     radial-gradient(ellipse 14px 5px at 22% 50%, rgba(0,0,0,.45) 0%, transparent 70%),
@@ -84,23 +90,16 @@
       transparent 49px 103px),
     linear-gradient(180deg,#5C3818 0%,#41250F 46%,#2A1608 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.16), inset 0 -2px 0 rgba(0,0,0,.45);}
-.prize-edge::after{content:""; position:absolute; left:0; right:0; height:24px;
-  opacity:0; transition:opacity .18s ease; pointer-events:none;}
-.prize-edge-top::after{top:100%;
-  background:linear-gradient(180deg, rgba(42,22,8,.5), rgba(42,22,8,0));}
-/* The bottom plank runs to the physical bottom of the screen, swallowing the
-   safe-area inset (#prizeBox has no bottom padding of its own), so on a
-   notched phone the wood reaches the edge instead of floating above a gap. */
+/* The bottom plank swallows the safe-area inset (#prizeBox has no bottom
+   padding of its own), so once it is scrolled to it reaches the physical
+   bottom of a notched phone rather than floating above a gap. */
 .prize-edge-bottom{height:calc(clamp(15px,3.4vw,24px) + env(safe-area-inset-bottom));}
-.prize-edge-bottom::after{bottom:100%;
-  background:linear-gradient(0deg, rgba(42,22,8,.5), rgba(42,22,8,0));}
-#prizeBox.can-scroll-up .prize-edge-top::after,
-#prizeBox.can-scroll-down .prize-edge-bottom::after{opacity:1;}
 
-/* ---- four-of-a-kind merge game (see prizeMerge.js) ---- */
+/* ---- matching-set merge game (see prizeMerge.js) ---- */
 
-/* Running count on a tile already in the group: 1, 2, 3. The fourth tap never
-   gets a badge — it goes straight to the merge. Top-right by default, but a
+/* Running count on a tile already in the set: 1, 2, 3... The tap that fills
+   the set never gets a badge — it goes straight to the merge. Top-right by
+   default, but a
    Fast tile already flies the 🚴 badge there, so on those the count moves to
    the top-left rather than the two stacking on top of each other. */
 .prize-count{position:absolute; top:-6px; right:-6px; z-index:3;
@@ -112,7 +111,7 @@
 .prize-tile.prize-hard .prize-count{right:auto; left:-6px;}
 @keyframes countPop{ 0%{transform:scale(0) rotate(-25deg)} 100%{transform:scale(1) rotate(0)} }
 
-/* The merged present, sitting in the slot the fourth-tapped prize held. The
+/* The merged present, sitting in the slot the last-tapped prize held. The
    ::after is a white 20-point star turning slowly behind it — sized past the
    cell and stacked behind its background (same z-index:-1 trick the perfect
    ring uses), so only the points spill out and the tile reads as lit from
@@ -146,7 +145,7 @@
 @keyframes presentStarSpin{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
 @keyframes presentBreathe{ from{transform:scale(1)} to{transform:scale(1.12)} }
 
-/* The four tiles have just landed as one: drop in spinning and settle. */
+/* The whole set has just landed as one tile: drop in spinning and settle. */
 @keyframes present-appear{
   0%{transform:scale(0) rotate(-180deg)}
   55%{transform:scale(1.35) rotate(12deg)}

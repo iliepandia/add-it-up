@@ -428,7 +428,7 @@ export function comboBoom(){
 }
 
 // ---- prize-box merge game (prizeMerge.js) ----
-// Four of a kind locking together: a four-note ladder that arrives somewhere,
+// A matching set locking together: a four-note ladder that arrives somewhere,
 // so "you completed the set" reads by ear before the tiles start moving.
 export function mergeLock(){
   [523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,i*0.08,0.22,"triangle",0.10));

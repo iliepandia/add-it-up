@@ -1,8 +1,9 @@
 // The prize box screen: a wrapping, vertically-scrolling shelf of every prize
 // won so far. Reachable only from the theme-picker screen (see main.js wiring).
-// The shelf runs between two dark-wood end bars that double as top/bottom-of-
-// list indicators, and leaves a tile-free gutter down its right edge to scroll
-// by — a tile itself eats the pointerdown, so a drag has to start off one.
+// The list scrolls between two dark-wood end bars — they scroll with it, so
+// reaching one is what tells you the list has ended — and leaves a tile-free
+// gutter down its right edge to scroll by, since a tile eats its own
+// pointerdown and a drag that starts on one can't move the shelf.
 
 import { prizeBox, prizeBoxBack, prizeScroll, prizeStrip } from "./dom.js";
 import {
@@ -128,7 +129,7 @@ function makeTile(tile, pop){
   }
 
   // Every tap goes through the merge game (prizeMerge.js), which either spends
-  // it on a group or hands it straight back to the tile's ordinary reaction:
+  // it on a matching set or hands it straight back to the tile's ordinary reaction:
   //  - a pending present gets first refusal and bursts open;
   //  - an easy prize's reaction is one random wiggle plus its voice;
   //  - a Fast prize's reaction is the combo escalation (prizeCombo.js), which
@@ -162,28 +163,12 @@ function renderPrizes(focusIndex){
     p.className = "prize-empty";
     p.textContent = "Finish a game to win your first prize!";
     prizeStrip.appendChild(p);
-    updateEdges();
     return;
   }
   tiles.forEach(tile => prizeStrip.appendChild(makeTile(tile, !merged)));
   prizeScroll.scrollTop = keepScroll;
   const focus = merged && prizeStrip.children[focusIndex];
   if(focus) focus.scrollIntoView({ block: "nearest" });
-  updateEdges();
-}
-
-// ---- the dark-wood end bars ----
-
-/** Tell each plank whether there is still list on its side of the screen. Its
- *  inner shadow shows only while there is, so a bare plank means "that really
- *  is the end of your prizes" — see prizeBox.css. */
-function updateEdges(){
-  const { scrollTop, scrollHeight, clientHeight } = prizeScroll;
-  const slack = scrollHeight - clientHeight;
-  // 2px, not 0: a fractional scrollTop (zoom, retina rounding, the boundary
-  // nudge below) must still count as "at the end".
-  prizeBox.classList.toggle("can-scroll-up", scrollTop > 2);
-  prizeBox.classList.toggle("can-scroll-down", slack - scrollTop > 2);
 }
 
 /** Keep the shelf one pixel off each end whenever a touch starts there.
@@ -200,12 +185,10 @@ function pinScroll(){
 }
 
 export function showPrizeBox(){
-  // Shown first, then filled: the end bars decide what to display from the
-  // shelf's measured height, and a display:none box measures as zero.
-  prizeBox.classList.add("show");
   renderPrizes();
   resetPrizeFx();
   resetPrizeMerge();
+  prizeBox.classList.add("show");
 }
 
 function hidePrizeBox(){
@@ -216,8 +199,6 @@ function hidePrizeBox(){
 
 export function wirePrizeBox(){
   initPrizeMerge({ rerender: renderPrizes, prizeSound: playPrizeSound });
-  prizeScroll.addEventListener("scroll", updateEdges, { passive: true });
   prizeScroll.addEventListener("touchstart", pinScroll, { passive: true });
-  addEventListener("resize", () => { if(prizeBox.classList.contains("show")) updateEdges(); });
   prizeBoxBack.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); audio(); hidePrizeBox(); });
 }

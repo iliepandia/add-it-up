@@ -45,7 +45,7 @@ export function addPrize(emoji, score, mode){
 // existed have no mode recorded and are treated as easy.
 //
 // `index` is the tile's position in storage. The merge game (prizeMerge.js)
-// needs it to trade four specific entries for one, and it is only valid for
+// needs it to trade a set of specific entries for one, and it is only valid for
 // as long as the render it came from is on screen — any write shifts every
 // later index, which is why a merge re-renders the whole shelf.
 export function getPrizeTiles(){
@@ -56,20 +56,20 @@ export function getPrizeTiles(){
     const score = typeof entry === "string" ? null : entry.score;
     const mode = typeof entry === "string" ? "easy" : (entry.mode || "easy");
     // A merged prize was never played for, so it has no score to derive a
-    // size from — it carries the size inherited from the four it replaced.
+    // size from — it carries the size inherited from the set it replaced.
     const scale = entry && entry.scale != null ? entry.scale : sizeScaleForScore(score);
     const perfect = entry && entry.perfect != null ? !!entry.perfect : score === 10;
     return { emoji, scale, perfect, hard: mode === "hard", index };
   });
 }
 
-// The four-of-a-kind trade (see prizeMerge.js): the entries at `indices` are
+// The matching-set trade (see prizeMerge.js): the entries at `indices` are
 // deleted and one new prize takes the slot `keepIndex` held, so the reward
-// appears exactly where the last tapped prize was. Net effect on the
-// collection is -3 entries. Called only when the present is actually opened —
-// a present left unopened costs the child nothing.
-// `mode` is the mode of the four that were spent, so a Fast merge stays a Fast
-// prize: it keeps the 🚴 badge, its own tap sound and its eruption.
+// appears exactly where the last tapped prize was. The collection shrinks by
+// one less than the size of the set. Called only when the present is actually
+// opened — a present left unopened costs the child nothing.
+// `mode` is the mode of the prizes that were spent, so a Fast merge stays a
+// Fast prize: it keeps the 🚴 badge, its own tap sound and its eruption.
 // Returns the new prize's index in the rewritten list.
 export function mergePrizes(indices, keepIndex, emoji, scale, perfect, mode){
   const list = load();
@@ -82,7 +82,7 @@ export function mergePrizes(indices, keepIndex, emoji, scale, perfect, mode){
     else if(!drop.has(i)) next.push(entry);
   });
   // keepIndex fell off the end (storage changed underneath us) — still grant
-  // the prize rather than silently swallowing four tiles.
+  // the prize rather than silently swallowing the set.
   if(newIndex < 0){ newIndex = next.length; next.push(merged); }
   save(next);
   return newIndex;
