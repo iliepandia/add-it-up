@@ -12,7 +12,11 @@
   --win-bg:linear-gradient(180deg, rgba(174,224,255,.96), rgba(207,245,222,.98));
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;margin:0;}
+/* overscroll-behavior:none — the page itself never rubber-bands or reloads.
+   Every screen that scrolls does so in its own container (the prize shelf, the
+   stats sheet); a flick past the end of one of those used to chain up to here
+   and fire the browser's pull-to-refresh mid-game. */
+html,body{height:100%;margin:0; overscroll-behavior:none;}
 body{
   font-family:var(--font); color:var(--ink);
   background-color:#CFF5DE;

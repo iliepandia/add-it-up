@@ -1,7 +1,10 @@
-// The prize box screen: a horizontally-scrolling shelf of every prize won so
-// far. Reachable only from the theme-picker screen (see main.js wiring).
+// The prize box screen: a wrapping, vertically-scrolling shelf of every prize
+// won so far. Reachable only from the theme-picker screen (see main.js wiring).
+// The shelf runs between two dark-wood end bars that double as top/bottom-of-
+// list indicators, and leaves a tile-free gutter down its right edge to scroll
+// by — a tile itself eats the pointerdown, so a drag has to start off one.
 
-import { prizeBox, prizeBoxBack, prizeStrip } from "./dom.js";
+import { prizeBox, prizeBoxBack, prizeScroll, prizeStrip } from "./dom.js";
 import {
   audio,
   tapMoo, tapBark, tapMeow, tapOink, tapQuack, tapNeigh, tapRoar, tapRibbit, tapHoot,
@@ -31,7 +34,7 @@ import {
 import { pick, BONUS_GLYPH } from "./config.js";
 import { getPrizeTiles } from "./prizes.js";
 import { hardPrizeTap, playAnim, resetPrizeFx } from "./prizeCombo.js";
-import { breakGroup, easyPrizeTap, initPrizeMerge, presentTap, resetPrizeMerge } from "./prizeMerge.js";
+import { initPrizeMerge, presentTap, prizeTap, resetPrizeMerge } from "./prizeMerge.js";
 
 // Every prize emoji (see WIN_END in config.js) maps to a sound that matches
 // what it actually is, so a tap sounds like that prize instead of a random
@@ -103,7 +106,9 @@ function makeTile(tile, pop){
   // animates or moves, so its neighbors keep their position no matter what
   // happens to the emoji inside — only the inner face pops/scales/reacts.
   const cell = document.createElement("div");
-  cell.className = "prize-tile" + (perfect ? " prize-perfect" : "");
+  // prize-hard is what moves the merge game's count badge out from under the
+  // 🚴 badge (both want the top-right corner) — see prizeBox.css.
+  cell.className = "prize-tile" + (perfect ? " prize-perfect" : "") + (hard ? " prize-hard" : "");
   cell.style.setProperty("--scale", scale);
 
   const face = document.createElement("div");
@@ -122,18 +127,22 @@ function makeTile(tile, pop){
     cell.appendChild(badge);
   }
 
-  // Three behaviours share this one tap:
-  //  - a pending present gets first refusal and bursts open (prizeMerge.js);
-  //  - a hard prize builds a tap combo, and breaks any easy group under way,
-  //    since only easy prizes can be grouped (prizeCombo.js);
-  //  - an easy prize plays its reaction and feeds the merge game.
+  // Every tap goes through the merge game (prizeMerge.js), which either spends
+  // it on a group or hands it straight back to the tile's ordinary reaction:
+  //  - a pending present gets first refusal and bursts open;
+  //  - an easy prize's reaction is one random wiggle plus its voice;
+  //  - a Fast prize's reaction is the combo escalation (prizeCombo.js), which
+  //    counts taps on this one tile while the merge counts distinct tiles —
+  //    two ladders climbing at once, neither in the other's way.
   const tapOne = () => playTapAnim(face);
-  const tapSound = () => playPrizeSound(emoji);
+  const voice = () => playPrizeSound(emoji);
+  const react = hard
+    ? () => hardPrizeTap(cell, face, emoji, tapOne, voice)   // plays its own voice at every tier
+    : () => { tapOne(); voice(); };
   cell.addEventListener("pointerdown", e => {
     e.preventDefault(); e.stopPropagation(); audio();
     if(presentTap(cell)) return;
-    if(hard){ breakGroup(); hardPrizeTap(cell, face, emoji, tapOne, tapSound); }
-    else easyPrizeTap(tile, cell, face, tapOne, tapSound);
+    prizeTap(tile, cell, face, react, voice);
   });
   return cell;
 }
@@ -144,8 +153,7 @@ function makeTile(tile, pop){
  *  second time and the scroll position is put back where the child left it. */
 function renderPrizes(focusIndex){
   const merged = focusIndex != null;
-  const wrap = prizeStrip.parentElement;
-  const keepScroll = wrap ? wrap.scrollTop : 0;
+  const keepScroll = prizeScroll.scrollTop;
 
   prizeStrip.innerHTML = "";
   const tiles = getPrizeTiles();
@@ -154,19 +162,50 @@ function renderPrizes(focusIndex){
     p.className = "prize-empty";
     p.textContent = "Finish a game to win your first prize!";
     prizeStrip.appendChild(p);
+    updateEdges();
     return;
   }
   tiles.forEach(tile => prizeStrip.appendChild(makeTile(tile, !merged)));
-  if(wrap) wrap.scrollTop = keepScroll;
+  prizeScroll.scrollTop = keepScroll;
   const focus = merged && prizeStrip.children[focusIndex];
   if(focus) focus.scrollIntoView({ block: "nearest" });
+  updateEdges();
+}
+
+// ---- the dark-wood end bars ----
+
+/** Tell each plank whether there is still list on its side of the screen. Its
+ *  inner shadow shows only while there is, so a bare plank means "that really
+ *  is the end of your prizes" — see prizeBox.css. */
+function updateEdges(){
+  const { scrollTop, scrollHeight, clientHeight } = prizeScroll;
+  const slack = scrollHeight - clientHeight;
+  // 2px, not 0: a fractional scrollTop (zoom, retina rounding, the boundary
+  // nudge below) must still count as "at the end".
+  prizeBox.classList.toggle("can-scroll-up", scrollTop > 2);
+  prizeBox.classList.toggle("can-scroll-down", slack - scrollTop > 2);
+}
+
+/** Keep the shelf one pixel off each end whenever a touch starts there.
+ *  overscroll-behavior (prizeBox.css) already stops the flick from chaining
+ *  out to the page on every engine that honours it; older iOS Safari doesn't,
+ *  and reacts to a drag that begins at scrollTop 0 by dragging the *page* —
+ *  which is the pull-to-refresh the child kept triggering. Starting the drag
+ *  one pixel in means the shelf itself always has somewhere to go. */
+function pinScroll(){
+  const slack = prizeScroll.scrollHeight - prizeScroll.clientHeight;
+  if(slack <= 0) return;                                   // nothing to scroll: leave it be
+  if(prizeScroll.scrollTop <= 0) prizeScroll.scrollTop = 1;
+  else if(prizeScroll.scrollTop >= slack) prizeScroll.scrollTop = slack - 1;
 }
 
 export function showPrizeBox(){
+  // Shown first, then filled: the end bars decide what to display from the
+  // shelf's measured height, and a display:none box measures as zero.
+  prizeBox.classList.add("show");
   renderPrizes();
   resetPrizeFx();
   resetPrizeMerge();
-  prizeBox.classList.add("show");
 }
 
 function hidePrizeBox(){
@@ -177,5 +216,8 @@ function hidePrizeBox(){
 
 export function wirePrizeBox(){
   initPrizeMerge({ rerender: renderPrizes, prizeSound: playPrizeSound });
+  prizeScroll.addEventListener("scroll", updateEdges, { passive: true });
+  prizeScroll.addEventListener("touchstart", pinScroll, { passive: true });
+  addEventListener("resize", () => { if(prizeBox.classList.contains("show")) updateEdges(); });
   prizeBoxBack.addEventListener("pointerdown", e => { e.preventDefault(); e.stopPropagation(); audio(); hidePrizeBox(); });
 }

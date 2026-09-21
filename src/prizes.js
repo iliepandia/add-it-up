@@ -68,11 +68,13 @@ export function getPrizeTiles(){
 // appears exactly where the last tapped prize was. Net effect on the
 // collection is -3 entries. Called only when the present is actually opened —
 // a present left unopened costs the child nothing.
+// `mode` is the mode of the four that were spent, so a Fast merge stays a Fast
+// prize: it keeps the 🚴 badge, its own tap sound and its eruption.
 // Returns the new prize's index in the rewritten list.
-export function mergePrizes(indices, keepIndex, emoji, scale, perfect){
+export function mergePrizes(indices, keepIndex, emoji, scale, perfect, mode){
   const list = load();
   const drop = new Set(indices);
-  const merged = { emoji, scale, perfect, mode: "easy", merged: true };
+  const merged = { emoji, scale, perfect, mode: mode || "easy", merged: true };
   const next = [];
   let newIndex = -1;
   list.forEach((entry, i) => {

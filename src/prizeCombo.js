@@ -1,4 +1,7 @@
-// Hard-mode prize taps escalate; easy-mode ones don't (see prizeBox.js).
+// Hard-mode prize taps escalate; easy-mode ones don't (see prizeBox.js). The
+// escalation counts taps on one *tile*, while the merge game (prizeMerge.js)
+// counts *distinct* tiles of one emoji, so a Fast prize plays both at once
+// without either interfering with the other.
 //
 // Tapping the same hard prize again inside COMBO_WINDOW builds a combo:
 //   tap 1 - the same random reaction an easy prize gives (a wiggle + its sound)
@@ -61,6 +64,17 @@ export function hardPrizeTap(cell, face, emoji, tapOne, playSound){
 
   // A combo left hanging simply cools off, so a tile is never stuck charged.
   st.timer = setTimeout(() => { st.count = 0; cell.classList.remove("combo-charged"); }, COMBO_WINDOW);
+}
+
+/** Forget a tile's combo and strip its charged look. The merge game
+ *  (prizeMerge.js) calls this on every tile entering a merge: a charged tile is
+ *  about to fly off the shelf or turn into a present, so its held-up glow and
+ *  cool-down timer would outlive what they meant. */
+export function clearCombo(cell){
+  const st = combos.get(cell);
+  if(st) clearTimeout(st.timer);
+  combos.delete(cell);
+  cell.classList.remove("combo-charged");
 }
 
 /** Drop any particles still in flight — called when the box opens or closes so

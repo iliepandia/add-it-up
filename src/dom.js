@@ -36,6 +36,7 @@ export const resetConfirmBtn = $("#resetConfirmBtn");
 export const prizeBoxLink = $("#prizeBoxLink");
 export const prizeBox = $("#prizeBox");
 export const prizeBoxBack = $("#prizeBoxBack");
+export const prizeScroll = $("#prizeScroll");
 export const prizeStrip = $("#prizeStrip");
 export const prizeFx = $("#prizeFx");
 

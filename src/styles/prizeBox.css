@@ -7,7 +7,7 @@
     radial-gradient(circle at 65% 12%, rgba(0,0,0,.03) 0%, transparent 4%),
     repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 1px, transparent 1px 19px, rgba(255,255,255,.12) 19px 20px, transparent 20px 42px),
     linear-gradient(180deg,#FAE7C7 0%,#F3D6A5 55%,#EAC488 100%);
-  color:#4A2E12; padding:max(16px,env(safe-area-inset-top)) 0 max(16px,env(safe-area-inset-bottom)); cursor:default;}
+  color:#4A2E12; padding:max(16px,env(safe-area-inset-top)) 0 0; cursor:default;}
 #prizeBox.show{display:flex; animation:winIn .35s ease;}
 #prizeBox h1{font-family:var(--font); font-weight:700; font-size:clamp(24px,6vw,34px);
   margin:4px 0 18px; text-align:center; color:#4A2E12; text-shadow:0 2px 0 rgba(255,255,255,.35);}
@@ -20,9 +20,16 @@
   transition:transform .05s ease;}
 .prize-back-btn:active{transform:scale(.88);}
 
+/* A tile swallows its own pointerdown (it has a tap game to play), so a drag
+   that starts on one can't scroll the shelf. The right-hand gutter is the fix:
+   a strip of the scroll container that is guaranteed to hold no tile, wide
+   enough for a thumb, so there is always somewhere to grab and scroll.
+   overscroll-behavior stops a flick past either end from chaining out to the
+   page (pull-to-refresh) — the JS in prizeBox.js backs this up on iOS. */
 .prize-scroll-wrap{flex:1 1 auto; min-height:0; overflow-x:hidden; overflow-y:auto;
-  -webkit-overflow-scrolling:touch; touch-action:pan-y;
-  padding:8px clamp(16px,6vw,40px);}
+  -webkit-overflow-scrolling:touch; touch-action:pan-y; overscroll-behavior:contain;
+  padding:8px var(--scroll-gutter) 8px clamp(16px,6vw,40px);}
+#prizeBox{--scroll-gutter:clamp(56px,16vw,96px);}
 .prize-strip{display:flex; flex-wrap:wrap; align-content:flex-start; align-items:center;
   justify-content:center; gap:14px;}
 /* Stable grid cell: fixed size/position, never itself animated. */
@@ -59,18 +66,50 @@
 }
 @keyframes rainbowHue{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
 
+/* ---- dark-wood end bars ---- */
+/* The two ends of the box itself: a dark plank above the shelf and another
+   below it, so the list visibly runs between two hard edges instead of fading
+   off the screen. Each one carries a drop shadow on its inner face that shows
+   *only while there is more list that way* — so an unshadowed plank means
+   "this really is the end", which is the whole point of them. The classes
+   come from prizeBox.js on every scroll. */
+.prize-edge{flex:0 0 auto; position:relative; z-index:3;
+  height:clamp(15px,3.4vw,24px);
+  background:
+    radial-gradient(ellipse 14px 5px at 22% 50%, rgba(0,0,0,.45) 0%, transparent 70%),
+    radial-gradient(ellipse 10px 4px at 71% 46%, rgba(0,0,0,.4) 0%, transparent 70%),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.26) 0 2px, transparent 2px 9px,
+      rgba(255,255,255,.06) 9px 10px, transparent 10px 27px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.14) 0 46px, rgba(255,255,255,.05) 46px 49px,
+      transparent 49px 103px),
+    linear-gradient(180deg,#5C3818 0%,#41250F 46%,#2A1608 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16), inset 0 -2px 0 rgba(0,0,0,.45);}
+.prize-edge::after{content:""; position:absolute; left:0; right:0; height:24px;
+  opacity:0; transition:opacity .18s ease; pointer-events:none;}
+.prize-edge-top::after{top:100%;
+  background:linear-gradient(180deg, rgba(42,22,8,.5), rgba(42,22,8,0));}
+/* The bottom plank runs to the physical bottom of the screen, swallowing the
+   safe-area inset (#prizeBox has no bottom padding of its own), so on a
+   notched phone the wood reaches the edge instead of floating above a gap. */
+.prize-edge-bottom{height:calc(clamp(15px,3.4vw,24px) + env(safe-area-inset-bottom));}
+.prize-edge-bottom::after{bottom:100%;
+  background:linear-gradient(0deg, rgba(42,22,8,.5), rgba(42,22,8,0));}
+#prizeBox.can-scroll-up .prize-edge-top::after,
+#prizeBox.can-scroll-down .prize-edge-bottom::after{opacity:1;}
+
 /* ---- four-of-a-kind merge game (see prizeMerge.js) ---- */
 
 /* Running count on a tile already in the group: 1, 2, 3. The fourth tap never
-   gets a badge — it goes straight to the merge. Sits in the same top-right
-   corner the 🚴 badge uses, but the two can't collide: only easy-mode prizes
-   are groupable, and only hard-mode ones carry the bike. */
+   gets a badge — it goes straight to the merge. Top-right by default, but a
+   Fast tile already flies the 🚴 badge there, so on those the count moves to
+   the top-left rather than the two stacking on top of each other. */
 .prize-count{position:absolute; top:-6px; right:-6px; z-index:3;
   min-width:26px; height:26px; padding:0 6px; border-radius:13px;
   background:linear-gradient(180deg,#FF9A3B,#F26A16); color:#fff;
   font-family:var(--font); font-weight:700; font-size:16px; line-height:26px; text-align:center;
   box-shadow:0 2px 0 rgba(0,0,0,.28), 0 0 0 2px rgba(255,255,255,.85);
   pointer-events:none; animation:countPop .35s cubic-bezier(.34,1.56,.64,1);}
+.prize-tile.prize-hard .prize-count{right:auto; left:-6px;}
 @keyframes countPop{ 0%{transform:scale(0) rotate(-25deg)} 100%{transform:scale(1) rotate(0)} }
 
 /* The merged present, sitting in the slot the fourth-tapped prize held. The
