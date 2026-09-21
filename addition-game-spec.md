@@ -432,8 +432,8 @@ and response-time logs above, which live in the same storage.
 Reachable via a **📦 button** on the theme-picker screen (§10), below the world-select grid.
 Stored **locally on-device only** (its own `localStorage` key, separate from stats — §11's
 "Reset stats" never touches it), so prizes are permanent unless a dedicated reset is added later.
-The **one** thing that ever removes a prize is the child's own four-of-a-kind merge (below), which
-spends four duplicates to buy one new prize.
+The **one** thing that ever removes a prize is the child's own matching-set merge (below), which
+spends a set of duplicates to buy one new prize.
 
 **One box for both modes** (unlike stats, §11, which split). A Fast-mode prize is drawn from its
 own glyph pool and carries a small **🚴 badge** in the tile's top-right corner, so the shelf reads
@@ -464,12 +464,15 @@ as one growing collection while still telling the two apart — see §18.7.
   shelf, which made a full shelf awkward to get through without setting something off. A strip of
   the scroll area on the right is therefore kept **permanently free of tiles**, wide enough for a
   thumb, so there is always somewhere to grab.
-- **Dark-wood end bars, top and bottom** *(added 2026-09-20)*. The shelf runs between two dark
-  plank rectangles — the ends of the box itself — so the list visibly stops at a hard edge instead
-  of fading off the screen. The bottom plank absorbs the safe-area inset so it reaches the
-  physical bottom edge on a notched phone. Each plank carries a **drop shadow on its inner face
-  that shows only while there is more list that way**, so a *bare* plank is the signal "this
-  really is the top / the bottom of your prizes".
+- **Dark-wood end bars** *(added 2026-09-20)*. A dark plank rectangle sits **before the first
+  prize and after the last one** — the two ends of the box itself. They live *inside* the
+  scroller and **scroll with the list**, so they are only on screen when they have been scrolled
+  to: seeing the top plank *is* the signal "you are at the top", seeing the bottom one "there is
+  nothing more below", and mid-list neither is visible. A bar pinned to the screen edge would be
+  there at every scroll position and so could never say that. When the whole collection fits on
+  one page both planks show at once, with the bottom one pushed down to the screen edge rather
+  than left floating under the last row. The bottom plank absorbs the safe-area inset, so on a
+  notched phone it reaches the physical bottom edge.
 - **The page never pull-to-refreshes.** `overscroll-behavior:none` on the document and `contain`
   on the shelf stop a flick past either end from chaining out to the browser, and a touch that
   starts exactly at an end nudges the shelf one pixel in first — older iOS Safari otherwise reads
@@ -547,65 +550,72 @@ as one growing collection while still telling the two apart — see §18.7.
   are cleared whenever the box opens or closes, so a finale never bleeds into the next visit.
 - A **← back button** (top-left) returns to the theme picker.
 
-**The four-of-a-kind merge game (both modes).** Added 2026-09-20; extended to Fast-mode prizes the
+**The matching-set merge game (both modes).** Added 2026-09-20; extended to Fast-mode prizes the
 same day. Collecting duplicates of the same prize is otherwise dead weight on the shelf, so
-duplicates become a *currency*: four of a kind trade up into one brand-new prize.
+duplicates become a *currency*: a matching set trades up into one brand-new prize.
 
-1. **Tap a prize** → a **count badge** appears in its corner reading **1**. A group is now
+**Set size: 2** — a **pair**, one number shared by both modes. This has moved during development
+(it shipped at 4 first) and may move again; it is a single constant, `GROUP_SIZE` in
+`prizeMerge.js`, and nothing else in the game assumes a particular value. Read every "set" below
+as "`GROUP_SIZE` copies of one emoji".
+
+1. **Tap a prize** → a **count badge** appears in its corner reading **1**. A set is now
    building. (Top-right normally; on a Fast tile it sits **top-left**, because the 🚴 badge already
    has the top-right corner.)
-2. **Tap another tile showing the same emoji** → **2**, then **3**.
-3. **Tap a fourth** → the group completes (no badge — it goes straight to the merge).
+2. **Tap another tile showing the same emoji** → the set is full and goes straight to the merge
+   (the completing tap never gets a badge). At a larger set size the badge would climb **2**,
+   **3**, … first.
 
-- **Four distinct tiles, not four taps.** Re-tapping a tile already in the group still plays its
-  reaction and sound, but the count doesn't move. The child must actually *own* four copies —
+- **Distinct tiles, not repeat taps.** Re-tapping a tile already in the set still plays its
+  reaction and sound, but the count doesn't move. The child must actually *own* the copies —
   that is the whole game.
-- **A group matches on emoji *and* mode.** 🦖 is the one glyph in both pools (§16), and an easy 🦖
+- **A set matches on emoji *and* mode.** 🦖 is the one glyph in both pools (§16), and an easy 🦖
   must not be spendable against a Fast one — the trade would have no way to pick which pool to
   reward from.
 - **Fast prizes play both games at once.** The combo (§12 above) counts taps on **one tile**; the
   merge counts **distinct tiles** of one emoji. They never collide: hammering a single tile still
-  charges and erupts it, while working across four copies still builds a group. A tile that enters
-  a merge has its combo dropped first, so a charged glow never outlives the tile it meant
-  something on.
-- **A group drops** — badges and all — on any of: a tap on a prize that doesn't match on **both**
+  charges and erupts it, while working across copies still builds a set. A tile that enters a
+  merge has its combo dropped first, so a charged glow never outlives the tile it meant something
+  on.
+- **A set drops** — badges and all — on any of: a tap on a prize that doesn't match on **both**
   counts (the count restarts at **1** on the new one), **10 seconds** of silence (long, because
   finding the next copy means scrolling the shelf), or **leaving the box**.
 
-**The merge.** The three other tiles **fly across the shelf into the fourth** — transform and
-opacity only, so nothing they pass nudges its neighbors — then are removed. The fourth tile, the
-**last one tapped**, stays exactly where it is and becomes a **🎁 present**, so it is obvious where
-the reward landed. The present:
+**The merge.** Every other tile in the set **flies across the shelf into the one just tapped** —
+transform and opacity only, so nothing they pass nudges its neighbors — then is removed. That last
+tile stays exactly where it is and becomes a **🎁 present**, so it is obvious where the reward
+landed. The present:
 - carries a **pulsing glow pooling underneath it**, and is lifted above its neighbors so the glow
   is never half-painted-over by the next tile along;
 - is **already sized to the reward inside it** (see below), previewing what is coming;
 - **breathes** gently in place until it is tapped;
-- **keeps the 🚴 badge** if it came from a Fast group — the present is literally the last tapped
+- **keeps the 🚴 badge** if it came from a Fast set — the present is literally the last tapped
   tile, badge and all, so the trade visibly stays inside that mode.
 
 **Opening the present.** Tapping it bursts it open — it shivers, squashes, then blows wide, and at
 the animation's widest point the 🎁 **becomes the new prize**, with sparkle particles and that
-prize's own tap sound. The new prize is drawn at random from **that group's own pool** — the easy
-60-emoji pool (§9) for an easy group, the Fast pool (§16) for a Fast one — **excluding the emoji
+prize's own tap sound. The new prize is drawn at random from **that set's own pool** — the easy
+60-emoji pool (§9) for an easy set, the Fast pool (§16) for a Fast one — **excluding the emoji
 just spent**, so a merge always trades *into something else*. It lands in the present's slot and is
-immediately a normal prize: tappable, able to start a group of its own, and — if it came from a
-Fast group — stored as a Fast prize, so it keeps the 🚴 badge, its own hard-mode tap sound and its
+immediately a normal prize: tappable, able to start a set of its own, and — if it came from a Fast
+set — stored as a Fast prize, so it keeps the 🚴 badge, its own hard-mode tap sound and its
 eruption. **A merge never changes which mode a prize belongs to.**
 
-**What it costs.** The trade is **permanent and net −3**: the four entries are deleted from storage
-and the one new prize takes the last-tapped one's position, keeping the rest of the shelf in its
-earned order. Two rules protect the child here:
+**What it costs.** The trade is **permanent**, and the collection shrinks by one less than the set
+size (at a set of 2, **net −1**): the whole set is deleted from storage and the one new prize takes
+the last-tapped one's position, keeping the rest of the shelf in its earned order. Two rules
+protect the child here:
 - **Nothing is written until the present is actually opened.** A present left sitting — because
-  the child wandered off or went back to the picker — costs nothing; all four prizes are still
-  there on the next visit.
-- **The reward inherits the largest of the four**, rainbow ring and all (four 1×'s → a 1×, and
-  four perfect 1.5× tiles → a perfect 1.5× tile). A merge is never a downgrade. Merged entries
+  the child wandered off or went back to the picker — costs nothing; every prize in the set is
+  still there on the next visit.
+- **The reward inherits the largest of the set**, rainbow ring and all (all 1×'s → a 1×, and a
+  perfect 1.5× tile in the set → a perfect 1.5× tile). A merge is never a downgrade. Merged entries
   store their **size directly** rather than a score, since they were never played for — the one
   kind of prize whose tile size isn't derived from a game result.
 
 **Only one present at a time.** While a present is pending, tiles still react to taps but no new
-group builds. This is what keeps the trade safe: a group holds storage *positions*, and the
-pending write is about to shift every one of them.
+set builds. This is what keeps the trade safe: a set holds storage *positions*, and the pending
+write is about to shift every one of them.
 - **Empty state:** "Finish a game to win your first prize!" if none are collected yet.
 
 ---
@@ -935,9 +945,9 @@ proves out.
   what was answered right and what was answered fast.
 - **The prize box** (§12) is shared by both modes, one chronological shelf; a Fast-mode tile wears
   a small **🚴 badge** in its corner. Tile size still follows that game's score, identically. Fast
-  prizes play **both** shelf games — the tap combo *and* the four-of-a-kind merge — and a Fast
-  merge pays out another Fast prize, badge and all, so spending duplicates never quietly demotes
-  a Fast win into an easy one.
+  prizes play **both** shelf games — the tap combo *and* the matching-set merge — and a Fast merge
+  pays out another Fast prize, badge and all, so spending duplicates never quietly demotes a Fast
+  win into an easy one.
 - **The snake easter egg** (§14) still needs a perfect game, but in Fast mode it's **1-in-2**
   instead of 1-in-3, **red**, **twice as long**, and crawls **twice as long** before shedding.
 
